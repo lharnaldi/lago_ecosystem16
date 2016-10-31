@@ -72,10 +72,10 @@
     <pin index="63" name="adc_dat_b_i[15]" iostandard="LVCMOS18" loc="Y18"/>
 
     <pin index="64" name="adc_csn_o" 			 iostandard="LVCMOS18" loc="V18"/>
-    <pin index="65" name="adc_clk_p_i" 		 iostandard="DIFF_HSTL_I_18" loc="U18"/>
-    <pin index="66" name="adc_clk_n_i" 		 iostandard="DIFF_HSTL_I_18" loc="U19"/>
-    <pin index="67" name="adc_clk_p_o" 		 iostandard="LVCMOS18" loc="N20"/>
-		<pin index="68" name="adc_clk_n_o" 		 iostandard="LVCMOS18" loc="P20"/>
+    <pin index="65" name="adc_clk_n_i" 		 iostandard="DIFF_HSTL_I_18" loc="U19"/>
+    <pin index="66" name="adc_clk_p_i" 		 iostandard="DIFF_HSTL_I_18" loc="U18"/>
+		<pin index="67" name="adc_clk_n_o" 		 iostandard="LVCMOS18" loc="P20"/>
+    <pin index="68" name="adc_clk_p_o" 		 iostandard="LVCMOS18" loc="N20"/>
 
  		<pin index="69" name="dac_dat_o[0]"  iostandard="LVCMOS33" loc="M19"/>
     <pin index="70" name="dac_dat_o[1]"  iostandard="LVCMOS33" loc="M20"/>

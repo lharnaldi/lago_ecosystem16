@@ -18,7 +18,7 @@
       <description>FPGA part on the board</description>
 
       <interfaces>
-	      <interface mode="slave" name="adc_clk_in" type="xilinx.com:interface:diff_clock_rtl:1.0" of_component="adc_clk_in" preset_proc="adc_clk_in_preset">
+	      <interface mode="slave" name="adc_clk_in" type="xilinx.com:interface:diff_clock_rtl:1.0" of_component="adc_clk" preset_proc="adc_clk_preset">
 				<preferred_ips>
 					<preferred_ip vendor="xilinx.com" library="ip" name="clk_wiz" order="0"/>
 				</preferred_ips>
@@ -177,7 +177,7 @@
           </port_maps>
         </interface>
 
-        <interface mode="master" name="adc" type="xilinx.com:interface:gpio_rtl:1.0" of_component="adc">
+        <interface mode="master" name="adc" type="xilinx.com:interface:gpio_rtl:1.0" of_component="adc" preset_proc="adc_preset">
           <description>ADC</description>
           <parameters></parameters>
           <preferred_ips>
@@ -196,10 +196,6 @@
       
     </component>
 
-		<component name="adc_clk_in" display_name="ADC differential clock in" type="chip" sub_type="adc_clock_in" major_group="Clock Sources">
-			<description>Differential 125 MHz oscillator used as ADC differential clock on the board</description>
-		 </component>
-
     <component name="led_8bit" display_name="LED" type="chip" sub_type="led" major_group="General Purpose Input or Output" part_name="150060YS75000" vendor="http://www.we-online.com/" spec_url="http://katalog.we-online.com/led/datasheet/150060YS75000.pdf">
       <description>LED, 7 to 0, Active High</description>
     </component>
@@ -210,6 +206,10 @@
 
     <component name="daisy_2bit" display_name="DAISY" type="chip" sub_type="connector" major_group="General Purpose Input or Output">
       <description>DAISY SATA connectors</description>
+    </component>
+
+    <component name="adc" display_name="ADC_CS" type="chip" sub_type="adc" major_group="General Purpose Input or Output">
+      <description>ADC CSN</description>
     </component>
 
     <component name="clk_sys" display_name="System clock" type="chip" sub_type="system_clock" major_group="Clock Sources" part_name="7C-33.3330MBA-T">
@@ -240,6 +240,12 @@
     </connection>
     <connection name="part0_gpio" component1="part0" component2="gpio_16bit">
       <connection_map c1_st_index="8" c1_end_index="23" c2_st_index="0" c2_end_index="15"/>
+    </connection>
+    <connection name="part0_adc_csn" component1="part0" component2="adc">
+      <connection_map c1_st_index="64" c1_end_index="64" c2_st_index="0" c2_end_index="0"/>
+    </connection>
+    <connection name="part0_adc_clk" component1="part0" component2="clk_adc">
+      <connection_map c1_st_index="65" c1_end_index="66" c2_st_index="0" c2_end_index="1"/>
     </connection>
   </connections>
 

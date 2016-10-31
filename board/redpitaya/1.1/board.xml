@@ -18,6 +18,26 @@
       <description>FPGA part on the board</description>
 
       <interfaces>
+	      <interface mode="slave" name="sys_diff_clock" type="xilinx.com:interface:diff_clock_rtl:1.0" of_component="sys_diff_clock" preset_proc="sys_diff_clock_preset">
+				<preferred_ips>
+					<preferred_ip vendor="xilinx.com" library="ip" name="clk_wiz" order="0"/>
+				</preferred_ips>
+				<port_maps>
+				  <port_map logical_port="CLK_P" physical_port="sys_clk_p" dir="in">
+				  	<pin_maps>
+							<pin_map port_index="0" component_pin="sys_clk_p"/>
+						</pin_maps>
+          </port_map>
+          <port_map logical_port="CLK_N" physical_port="sys_clk_n" dir="in">
+            <pin_maps>
+              <pin_map port_index="0" component_pin="sys_clk_n"/>
+            </pin_maps>
+          </port_map>
+				</port_maps>
+				<parameters>
+				  <parameter name="frequency" value="200000000" />
+				</parameters>
+			</interface>
 
         <interface mode="master" name="led" type="xilinx.com:interface:gpio_rtl:1.0" of_component="led_8bit" preset_proc="led_8bit_preset">
           <description>LED[7:0] Yellow</description>
@@ -78,14 +98,14 @@
                 <pin_map port_index="5"  component_pin="exp_p_io[5]"/> 
                 <pin_map port_index="6"  component_pin="exp_p_io[6]"/> 
                 <pin_map port_index="7"  component_pin="exp_p_io[7]"/> 
-                <pin_map port_index="8"  component_pin="exp_0_io[0]"/> 
-                <pin_map port_index="9"  component_pin="exp_0_io[1]"/> 
-                <pin_map port_index="10" component_pin="exp_0_io[2]"/> 
-                <pin_map port_index="11" component_pin="exp_0_io[3]"/> 
-                <pin_map port_index="12" component_pin="exp_0_io[4]"/> 
-                <pin_map port_index="13" component_pin="exp_0_io[5]"/> 
-                <pin_map port_index="14" component_pin="exp_0_io[6]"/> 
-                <pin_map port_index="15" component_pin="exp_0_io[7]"/> 
+                <pin_map port_index="8"  component_pin="exp_n_io[0]"/> 
+                <pin_map port_index="9"  component_pin="exp_n_io[1]"/> 
+                <pin_map port_index="10" component_pin="exp_n_io[2]"/> 
+                <pin_map port_index="11" component_pin="exp_n_io[3]"/> 
+                <pin_map port_index="12" component_pin="exp_n_io[4]"/> 
+                <pin_map port_index="13" component_pin="exp_n_io[5]"/> 
+                <pin_map port_index="14" component_pin="exp_n_io[6]"/> 
+                <pin_map port_index="15" component_pin="exp_n_io[7]"/> 
               </pin_maps>
             </port_map>
             <port_map logical_port="TRI_T" physical_port="GPIO_T" dir="out" left="15" right="0"> 
@@ -98,14 +118,14 @@
                 <pin_map port_index="5"  component_pin="exp_p_io[5]"/> 
                 <pin_map port_index="6"  component_pin="exp_p_io[6]"/> 
                 <pin_map port_index="7"  component_pin="exp_p_io[7]"/> 
-                <pin_map port_index="8"  component_pin="exp_0_io[0]"/> 
-                <pin_map port_index="9"  component_pin="exp_0_io[1]"/> 
-                <pin_map port_index="10" component_pin="exp_0_io[2]"/> 
-                <pin_map port_index="11" component_pin="exp_0_io[3]"/> 
-                <pin_map port_index="12" component_pin="exp_0_io[4]"/> 
-                <pin_map port_index="13" component_pin="exp_0_io[5]"/> 
-                <pin_map port_index="14" component_pin="exp_0_io[6]"/> 
-                <pin_map port_index="15" component_pin="exp_0_io[7]"/> 
+                <pin_map port_index="8"  component_pin="exp_n_io[0]"/> 
+                <pin_map port_index="9"  component_pin="exp_n_io[1]"/> 
+                <pin_map port_index="10" component_pin="exp_n_io[2]"/> 
+                <pin_map port_index="11" component_pin="exp_n_io[3]"/> 
+                <pin_map port_index="12" component_pin="exp_n_io[4]"/> 
+                <pin_map port_index="13" component_pin="exp_n_io[5]"/> 
+                <pin_map port_index="14" component_pin="exp_n_io[6]"/> 
+                <pin_map port_index="15" component_pin="exp_n_io[7]"/> 
               </pin_maps>
             </port_map>
           </port_maps>
@@ -164,7 +184,11 @@
             <preferred_ip vendor="xilinx.com" library="ip" name="axi_gpio" order="0"/>
           </preferred_ips>
           <port_maps>
-            <port_map logical_port="ADC_CS"    physical_port="ADC_CS"     dir="out"> <pin_maps><pin_map port_index="0" component_pin="ADC_CS"/></pin_maps></port_map>
+					<port_map logical_port="ADC_CS" physical_port="ADC_CS" dir="out"> 
+							<pin_maps>
+								<pin_map port_index="0" component_pin="ADC_CS"/>
+							</pin_maps>
+					</port_map>
           </port_maps>
         </interface>
       

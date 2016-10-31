@@ -1,44 +1,39 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?> 
+<?xml version="1.0" encoding="UTF-8"?>
 <part_info part_name="xc7z010clg400-1">
-  <pins>
-
-    <pin index="0"  name="led_o[0]" iostandard="LVCMOS33" loc="F16"/>
-    <pin index="1"  name="led_o[1]" iostandard="LVCMOS33" loc="F17"/>
-    <pin index="2"  name="led_o[2]" iostandard="LVCMOS33" loc="G15"/>
-    <pin index="3"  name="led_o[3]" iostandard="LVCMOS33" loc="H15"/>
-    <pin index="4"  name="led_o[4]" iostandard="LVCMOS33" loc="K14"/>
-    <pin index="5"  name="led_o[5]" iostandard="LVCMOS33" loc="G14"/>
-    <pin index="6"  name="led_o[6]" iostandard="LVCMOS33" loc="J15"/>
-    <pin index="7"  name="led_o[7]" iostandard="LVCMOS33" loc="J14"/>
-
-    <pin index="8"  name="exp_p_io[0]" iostandard="LVCMOS33" loc="G17"/>
-    <pin index="9"  name="exp_p_io[1]" iostandard="LVCMOS33" loc="H16"/>
-    <pin index="10" name="exp_p_io[2]" iostandard="LVCMOS33" loc="J18"/>
-    <pin index="11" name="exp_p_io[3]" iostandard="LVCMOS33" loc="K17"/>
-    <pin index="12" name="exp_p_io[4]" iostandard="LVCMOS33" loc="L14"/>
-    <pin index="13" name="exp_p_io[5]" iostandard="LVCMOS33" loc="L16"/>
-    <pin index="14" name="exp_p_io[6]" iostandard="LVCMOS33" loc="K16"/>
-    <pin index="15" name="exp_p_io[7]" iostandard="LVCMOS33" loc="M14"/>
-
-    <pin index="16" name="exp_n_io[0]" iostandard="LVCMOS33" loc="G18"/>
-    <pin index="17" name="exp_n_io[1]" iostandard="LVCMOS33" loc="H17"/>
-    <pin index="18" name="exp_n_io[2]" iostandard="LVCMOS33" loc="H18"/>
-    <pin index="29" name="exp_n_io[3]" iostandard="LVCMOS33" loc="K18"/>
-    <pin index="20" name="exp_n_io[4]" iostandard="LVCMOS33" loc="L15"/>
-    <pin index="21" name="exp_n_io[5]" iostandard="LVCMOS33" loc="L17"/>
-    <pin index="22" name="exp_n_io[6]" iostandard="LVCMOS33" loc="J16"/>
-    <pin index="23" name="exp_n_io[7]" iostandard="LVCMOS33" loc="M15"/>
-
-    <pin index="24" name="daisy_p_i[0]" iostandard="LVCMOS33" loc="P14"/>
-    <pin index="25" name="daisy_n_i[0]" iostandard="LVCMOS33" loc="R14"/>
-    <pin index="26" name="daisy_p_i[1]" iostandard="LVCMOS33" loc="N18"/>
-    <pin index="27" name="daisy_n_i[1]" iostandard="LVCMOS33" loc="P19"/>
-    <pin index="28" name="daisy_p_o[0]" iostandard="LVCMOS33" loc="T12"/>
-    <pin index="29" name="daisy_n_o[0]" iostandard="LVCMOS33" loc="U12"/>
-    <pin index="30" name="daisy_p_o[1]" iostandard="LVCMOS33" loc="U14"/>
-    <pin index="31" name="daisy_n_o[1]" iostandard="LVCMOS33" loc="U15"/>
-
-    <pin index="32" name="adc_dat_a_i[0]"  iostandard="LVCMOS18" loc="V17"/>
+   <pins>
+      <pin index="0" name="led_o[0]" iostandard="LVCMOS33" loc="F16" />
+      <pin index="1" name="led_o[1]" iostandard="LVCMOS33" loc="F17" />
+      <pin index="2" name="led_o[2]" iostandard="LVCMOS33" loc="G15" />
+      <pin index="3" name="led_o[3]" iostandard="LVCMOS33" loc="H15" />
+      <pin index="4" name="led_o[4]" iostandard="LVCMOS33" loc="K14" />
+      <pin index="5" name="led_o[5]" iostandard="LVCMOS33" loc="G14" />
+      <pin index="6" name="led_o[6]" iostandard="LVCMOS33" loc="J15" />
+      <pin index="7" name="led_o[7]" iostandard="LVCMOS33" loc="J14" />
+      <pin index="8" name="exp_p_io[0]" iostandard="LVCMOS33" loc="G17" />
+      <pin index="9" name="exp_p_io[1]" iostandard="LVCMOS33" loc="H16" />
+      <pin index="10" name="exp_p_io[2]" iostandard="LVCMOS33" loc="J18" />
+      <pin index="11" name="exp_p_io[3]" iostandard="LVCMOS33" loc="K17" />
+      <pin index="12" name="exp_p_io[4]" iostandard="LVCMOS33" loc="L14" />
+      <pin index="13" name="exp_p_io[5]" iostandard="LVCMOS33" loc="L16" />
+      <pin index="14" name="exp_p_io[6]" iostandard="LVCMOS33" loc="K16" />
+      <pin index="15" name="exp_p_io[7]" iostandard="LVCMOS33" loc="M14" />
+      <pin index="16" name="exp_n_io[0]" iostandard="LVCMOS33" loc="G18" />
+      <pin index="17" name="exp_n_io[1]" iostandard="LVCMOS33" loc="H17" />
+      <pin index="18" name="exp_n_io[2]" iostandard="LVCMOS33" loc="H18" />
+      <pin index="29" name="exp_n_io[3]" iostandard="LVCMOS33" loc="K18" />
+      <pin index="20" name="exp_n_io[4]" iostandard="LVCMOS33" loc="L15" />
+      <pin index="21" name="exp_n_io[5]" iostandard="LVCMOS33" loc="L17" />
+      <pin index="22" name="exp_n_io[6]" iostandard="LVCMOS33" loc="J16" />
+      <pin index="23" name="exp_n_io[7]" iostandard="LVCMOS33" loc="M15" />
+      <pin index="24" name="daisy_p_i[0]" iostandard="LVCMOS33" loc="P14" />
+      <pin index="25" name="daisy_n_i[0]" iostandard="LVCMOS33" loc="R14" />
+      <pin index="26" name="daisy_p_i[1]" iostandard="LVCMOS33" loc="N18" />
+      <pin index="27" name="daisy_n_i[1]" iostandard="LVCMOS33" loc="P19" />
+      <pin index="28" name="daisy_p_o[0]" iostandard="LVCMOS33" loc="T12" />
+      <pin index="29" name="daisy_n_o[0]" iostandard="LVCMOS33" loc="U12" />
+      <pin index="30" name="daisy_p_o[1]" iostandard="LVCMOS33" loc="U14" />
+      <pin index="31" name="daisy_n_o[1]" iostandard="LVCMOS33" loc="U15" />
+      <!--    <pin index="32" name="adc_dat_a_i[0]"  iostandard="LVCMOS18" loc="V17"/>
 		<pin index="33" name="adc_dat_a_i[1]"  iostandard="LVCMOS18" loc="U17"/>
     <pin index="34" name="adc_dat_a_i[2]"  iostandard="LVCMOS18" loc="Y17"/>
     <pin index="35" name="adc_dat_a_i[3]"  iostandard="LVCMOS18" loc="W16"/>
@@ -69,12 +64,11 @@
     <pin index="60" name="adc_dat_b_i[12]" iostandard="LVCMOS18" loc="W19"/>
     <pin index="61" name="adc_dat_b_i[13]" iostandard="LVCMOS18" loc="Y19"/>
     <pin index="62" name="adc_dat_b_i[14]" iostandard="LVCMOS18" loc="W18"/>
-    <pin index="63" name="adc_dat_b_i[15]" iostandard="LVCMOS18" loc="Y18"/>
-
-    <pin index="64" name="adc_csn_o" 			 iostandard="LVCMOS18" loc="V18"/>
-    <pin index="65" name="adc_clk_n_i" 		 iostandard="DIFF_HSTL_I_18" loc="U19"/>
-    <pin index="66" name="adc_clk_p_i" 		 iostandard="DIFF_HSTL_I_18" loc="U18"/>
-		<pin index="67" name="adc_clk_n_o" 		 iostandard="LVCMOS18" loc="P20"/>
+    <pin index="63" name="adc_dat_b_i[15]" iostandard="LVCMOS18" loc="Y18"/>-->
+      <pin index="64" name="adc_csn_o" iostandard="LVCMOS18" loc="V18" />
+      <pin index="65" name="adc_clk_n_i" iostandard="DIFF_HSTL_I_18" loc="U19" />
+      <pin index="66" name="adc_clk_p_i" iostandard="DIFF_HSTL_I_18" loc="U18" />
+      <!--		<pin index="67" name="adc_clk_n_o" 		 iostandard="LVCMOS18" loc="P20"/>
     <pin index="68" name="adc_clk_p_o" 		 iostandard="LVCMOS18" loc="N20"/>
 
  		<pin index="69" name="dac_dat_o[0]"  iostandard="LVCMOS33" loc="M19"/>
@@ -95,10 +89,6 @@
     <pin index="83" name="dac_wrt_o" iostandard="LVCMOS33" loc="M17"/>
     <pin index="84" name="dac_sel_o" iostandard="LVCMOS33" loc="N16"/>
     <pin index="85" name="dac_clk_o" iostandard="LVCMOS33" loc="M18"/>
-    <pin index="86" name="dac_rst_o" iostandard="LVCMOS33" loc="N15"/>
-
-
-		
-
-  </pins>
+    <pin index="86" name="dac_rst_o" iostandard="LVCMOS33" loc="N15"/>-->
+   </pins>
 </part_info>

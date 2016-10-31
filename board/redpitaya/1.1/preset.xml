@@ -1,10 +1,9 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <ip_presets schema="1.0">
-<ip_preset preset_proc_name="ps7_preset">
-  <ip vendor="xilinx.com" library="ip" name="processing_system7" version="*">
-    <user_parameters>	
-    	<user_parameter name="CONFIG.preset" value="REDPITAYA" />
-  		<user_parameter name="CONFIG.PCW_UIPARAM_DDR_DQS_TO_CLK_DELAY_0" value="0.0" />
+   <ip_preset preset_proc_name="ps7_preset">
+      <ip vendor="xilinx.com" library="ip" name="processing_system7" version="*">
+         <user_parameters>
+            	<user_parameter name="CONFIG.PCW_UIPARAM_DDR_DQS_TO_CLK_DELAY_0" value="0.0" />
   		<user_parameter name="CONFIG.PCW_UIPARAM_DDR_DQS_TO_CLK_DELAY_1" value="0.0" />
   		<user_parameter name="CONFIG.PCW_UIPARAM_DDR_DQS_TO_CLK_DELAY_2" value="0.0" />
   		<user_parameter name="CONFIG.PCW_UIPARAM_DDR_DQS_TO_CLK_DELAY_3" value="0.0" />
@@ -862,44 +861,37 @@
   		<user_parameter name="CONFIG.PCW_SMC_CYCLE_T4" value="NA" />
   		<user_parameter name="CONFIG.PCW_SMC_CYCLE_T5" value="NA" />
   		<user_parameter name="CONFIG.PCW_SMC_CYCLE_T6" value="NA" />
-  		<user_parameter name="CONFIG.PCW_PACKAGE_NAME" value="clg400" />
- 		</user_parameters>
- 		</ip>
-	</ip_preset>
-
-  <ip_preset preset_proc_name="adc_clk_preset">
-    <ip vendor="xilinx.com" library="ip" name="clk_wiz" ip_interface="CLK_IN1_D">
-    <user_parameters>
-      <user_parameter name="CONFIG.PRIM_IN_FREQ" value="125"/>
-      <user_parameter name="CONFIG.PRIM_SOURCE" value="Differential_clock_capable_pin"/>
-      <user_parameter name="CONFIG.CLKOUT1_REQUESTED_OUT_FREQ" value="125"/>
-      <user_parameter name="CONFIG.USE_LOCKED" value="false"/>
-      <user_parameter name="CONFIG.USE_RESET" value="false"/>
-    </user_parameters>
-    </ip>
-  </ip_preset>
-
-  <ip_preset preset_proc_name="led_8bits_preset">
-    <ip vendor="xilinx.com" library="ip" name="axi_gpio" ip_interface="GPIO">
-    <user_parameters>
-      <user_parameter name="CONFIG.C_GPIO_WIDTH" value="8"/>
-      <user_parameter name="CONFIG.C_ALL_OUTPUTS" value="1"/>
-      <user_parameter name="CONFIG.C_ALL_INPUTS"  value="0"/>
-    </user_parameters>
-    </ip>
-  </ip_preset>
-
-  <ip_preset preset_proc_name="adc_preset">
-    <ip vendor="xilinx.com" library="ip" name="axi_gpio" ip_interface="GPIO">
-    <user_parameters>
-      <user_parameter name="CONFIG.C_GPIO_WIDTH" value="1"/>
-      <user_parameter name="CONFIG.C_ALL_OUTPUTS" value="1"/>
-      <user_parameter name="CONFIG.C_ALL_INPUTS"  value="0"/>
-    </user_parameters>
-    </ip>
-  </ip_preset>
-
+            <user_parameter name="CONFIG.PCW_PACKAGE_NAME" value="clg400" />
+         </user_parameters>
+      </ip>
+   </ip_preset>
+   <ip_preset preset_proc_name="adc_clk_preset">
+      <ip vendor="xilinx.com" library="ip" name="clk_wiz" ip_interface="CLK_IN1_D">
+         <user_parameters>
+            <user_parameter name="CONFIG.PRIM_IN_FREQ" value="125" />
+            <user_parameter name="CONFIG.PRIM_SOURCE" value="Differential_clock_capable_pin" />
+            <user_parameter name="CONFIG.CLKOUT1_REQUESTED_OUT_FREQ" value="125" />
+            <user_parameter name="CONFIG.USE_LOCKED" value="false" />
+            <user_parameter name="CONFIG.USE_RESET" value="false" />
+         </user_parameters>
+      </ip>
+   </ip_preset>
+   <ip_preset preset_proc_name="led_8bit_preset">
+      <ip vendor="xilinx.com" library="ip" name="axi_gpio" ip_interface="GPIO">
+         <user_parameters>
+            <user_parameter name="CONFIG.C_GPIO_WIDTH" value="8" />
+            <user_parameter name="CONFIG.C_ALL_OUTPUTS" value="1" />
+            <user_parameter name="CONFIG.C_ALL_INPUTS" value="0" />
+         </user_parameters>
+      </ip>
+   </ip_preset>
+   <ip_preset preset_proc_name="adc_preset">
+      <ip vendor="xilinx.com" library="ip" name="axi_gpio" ip_interface="GPIO">
+         <user_parameters>
+            <user_parameter name="CONFIG.C_GPIO_WIDTH" value="1" />
+            <user_parameter name="CONFIG.C_ALL_OUTPUTS" value="1" />
+            <user_parameter name="CONFIG.C_ALL_INPUTS" value="0" />
+         </user_parameters>
+      </ip>
+   </ip_preset>
 </ip_presets>
-
-
-

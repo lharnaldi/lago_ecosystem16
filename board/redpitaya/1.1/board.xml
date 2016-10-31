@@ -23,12 +23,12 @@
 					<preferred_ip vendor="xilinx.com" library="ip" name="clk_wiz" order="0"/>
 				</preferred_ips>
 					<port_maps>
-				  	<port_map logical_port="ADC_CLK_P_I" physical_port="adc_clk_p_i" dir="in">
+				  	<port_map logical_port="CLK_P" physical_port="ADC_CLK_P" dir="in">
 				  		<pin_maps>
 								<pin_map port_index="0" component_pin="adc_clk_p_i"/>
 							</pin_maps>
           	</port_map>
-          	<port_map logical_port="ADC_CLK_N_I" physical_port="adc_clk_n_i" dir="in">
+          	<port_map logical_port="CLK_N" physical_port="ADC_CLK_N" dir="in">
             <pin_maps>
               <pin_map port_index="0" component_pin="adc_clk_n_i"/>
             </pin_maps>
@@ -38,27 +38,6 @@
 				  	<parameter name="frequency" value="125000000" />
 					</parameters>
 				</interface>
-
-	      <interface mode="slave" name="adc_clk_out" type="xilinx.com:interface:diff_clock_rtl:1.0" of_component="adc_clk_out" preset_proc="adc_clk_out_preset">
-				<preferred_ips>
-					<preferred_ip vendor="xilinx.com" library="ip" name="clk_wiz" order="0"/>
-				</preferred_ips>
-				<port_maps>
-				  <port_map logical_port="ADC_CLK_P_O" physical_port="adc_clk_p_o" dir="out">
-				  	<pin_maps>
-							<pin_map port_index="0" component_pin="adc_clk_p_o"/>
-						</pin_maps>
-          </port_map>
-          <port_map logical_port="ADC_CLK_N_O" physical_port="adc_clk_n_o" dir="out">
-            <pin_maps>
-              <pin_map port_index="0" component_pin="adc_clk_n_o"/>
-            </pin_maps>
-          </port_map>
-				</port_maps>
-				<parameters>
-				  <parameter name="frequency" value="125000000" />
-				</parameters>
-			</interface>
 
         <interface mode="master" name="led" type="xilinx.com:interface:gpio_rtl:1.0" of_component="led_8bit" preset_proc="led_8bit_preset">
           <description>LED[7:0] Yellow</description>
@@ -205,9 +184,9 @@
             <preferred_ip vendor="xilinx.com" library="ip" name="axi_gpio" order="0"/>
           </preferred_ips>
           <port_maps>
-					<port_map logical_port="ADC_CS" physical_port="ADC_CS" dir="out"> 
+					<port_map logical_port="ADC_CS" physical_port="ADC_CS_N" dir="out"> 
 							<pin_maps>
-								<pin_map port_index="0" component_pin="ADC_CS"/>
+								<pin_map port_index="0" component_pin="adc_csn_o"/>
 							</pin_maps>
 					</port_map>
           </port_maps>
@@ -216,6 +195,10 @@
       </interfaces>
       
     </component>
+
+		<component name="adc_clk_in" display_name="ADC differential clock in" type="chip" sub_type="adc_clock_in" major_group="Clock Sources">
+			<description>Differential 125 MHz oscillator used as ADC differential clock on the board</description>
+		 </component>
 
     <component name="led_8bit" display_name="LED" type="chip" sub_type="led" major_group="General Purpose Input or Output" part_name="150060YS75000" vendor="http://www.we-online.com/" spec_url="http://katalog.we-online.com/led/datasheet/150060YS75000.pdf">
       <description>LED, 7 to 0, Active High</description>

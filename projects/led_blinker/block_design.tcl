@@ -5,8 +5,8 @@ cell xilinx.com:ip:proc_sys_reset:5.0 rst_0
 
 # ADC
 
-# Create axis_red_pitaya_adc
-cell labdpr:user:axis_red_pitaya_adc:1.0 adc_0 {} {
+# Create axis_rp_adc
+cell labdpr:user:axis_rp_adc:1.0 adc_0 {} {
   adc_clk_p adc_clk_p_i
   adc_clk_n adc_clk_n_i
   adc_dat_a adc_dat_a_i

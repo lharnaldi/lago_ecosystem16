@@ -73,7 +73,8 @@ rename module {}
 generate_target all [get_files $bd_path/system.bd]
 make_wrapper -files [get_files $bd_path/system.bd] -top
 
-add_files -norecurse $bd_path/hdl/system_wrapper.v
+#add_files -norecurse $bd_path/hdl/system_wrapper.v
+add_files -norecurse $bd_path/hdl/system_wrapper.vhd
 
 #set files [glob -nocomplain projects/$project_name/*.v projects/$project_name/*.sv projects/$project_name/*.vhd]
 set files [glob -nocomplain projects/$project_name/*.vhd]

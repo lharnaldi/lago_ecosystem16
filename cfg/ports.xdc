@@ -44,6 +44,8 @@ set_property PACKAGE_PIN Y18 [get_ports {adc_dat_b_i[13]}]
 
 # clock input
 
+#set_property IOSTANDARD LVCMOS18 [get_ports adc_clk_p_i]
+#set_property IOSTANDARD LVCMOS18 [get_ports adc_clk_n_i]
 set_property IOSTANDARD DIFF_HSTL_I_18 [get_ports adc_clk_p_i]
 set_property IOSTANDARD DIFF_HSTL_I_18 [get_ports adc_clk_n_i]
 set_property PACKAGE_PIN U18 [get_ports adc_clk_p_i]

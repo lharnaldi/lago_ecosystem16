@@ -21,8 +21,8 @@ set core [ipx::current_core]
 set_property VERSION $version $core
 set_property NAME $project_name $core
 set_property LIBRARY {user} $core
-set_property VENDOR {LabDPR} $core
-set_property VENDOR_DISPLAY_NAME {LabDPR} $core
+set_property VENDOR {labdpr} $core
+set_property VENDOR_DISPLAY_NAME {labdpr} $core
 set_property COMPANY_URL {http://labdpr.cab.cnea.gov.ar/} $core
 set_property SUPPORTED_FAMILIES {zynq Production} $core
 

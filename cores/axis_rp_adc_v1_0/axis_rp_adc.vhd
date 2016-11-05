@@ -6,7 +6,7 @@ use ieee.numeric_std.all;
 library unisim;
 use unisim.vcomponents.all;
 
-entity axis_red_pitaya_adc is
+entity axis_rp_adc is
   generic (
   ADC_DATA_WIDTH : integer := 14;
   AXIS_TDATA_WIDTH: integer := 32
@@ -26,9 +26,9 @@ port (
   m_axis_tvalid : out std_logic;
   m_axis_tdata : out std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0)
 );
-end axis_red_pitaya_adc;
+end axis_rp_adc;
 
-architecture rtl of axis_red_pitaya_adc is
+architecture rtl of axis_rp_adc is
 
   constant PADDING_WIDTH : integer := AXIS_TDATA_WIDTH/2 - ADC_DATA_WIDTH;
 

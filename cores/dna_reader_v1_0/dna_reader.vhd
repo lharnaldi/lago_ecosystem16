@@ -24,7 +24,7 @@ architecture rtl of dna_reader is
   signal int_read_reg, int_read_next: std_logic;
   signal int_shift_reg, int_shift_next : std_logic;
   signal int_cntr_reg, int_cntr_next: unsigned(CNTR_WIDTH-1 downto 0);
-  signal int_data_reg, int_data_next: std_logic_vector(CNTR_WIDTH-1 downto 0);
+  signal int_data_reg, int_data_next: std_logic_vector(DATA_WIDTH-1 downto 0);
   signal int_comp_wire, int_data_wire: std_logic;
 
 begin
@@ -62,16 +62,16 @@ begin
 		     	         int_enbl_reg;
 
   int_read_next <= '1' when (int_enbl_reg = '0') and (int_comp_wire = '1') else
-                   '0' when (int_cntr_reg(5 downto 0) = (others => '1')) else
+                   '0' when (int_cntr_reg(5 downto 0) = "111111") else
                    int_read_reg;
 
-  int_data_next <= int_data_reg(DATA_WIDTH-2 downto 0) & int_data_wire when (int_cntr_reg(5 downto 0) = (others => '1')) else
+  int_data_next <= int_data_reg(DATA_WIDTH-2 downto 0) & int_data_wire when (int_cntr_reg(5 downto 0) = "111111") else
                    int_data_reg;
 
   int_cntr_next <= int_cntr_reg + 1 when (int_enbl_reg = '1') else int_cntr_reg;
 
   int_shift_next <= '0' when (int_comp_wire = '0') else 
-                    '1' when (int_cntr_reg(5 downto 0) = (others => '1')) else 
+                    '1' when (int_cntr_reg(5 downto 0) = "111111") else 
                     int_shift_reg;
 
   dna_data <= int_data_reg;

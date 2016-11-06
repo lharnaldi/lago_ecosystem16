@@ -26,7 +26,8 @@ TEMP = tmp
 #  axis_tagger_v1_0 axis_timer_v1_0 axis_trigger_v1_0 axi_sts_register_v1_0 \
 #  axis_validator_v1_0 axis_variable_v1_0 axis_variant_v1_0 axis_zeroer_v1_0 \
 #  dna_reader_v1_0 gpio_debouncer_v1_0 pulse_generator_v1_0
-CORES = axis_rp_adc_v1_0 axis_rp_dac_v1_0 dna_reader_v1_0 axi_sts_register_v1_0
+CORES = axis_rp_adc_v1_0 axis_rp_dac_v1_0 dna_reader_v1_0 axi_sts_register_v1_0 \
+				axi_cfg_register
 
 VIVADO = vivado -nolog -nojournal -mode batch
 HSI = hsi -nolog -nojournal -mode batch
@@ -58,7 +59,6 @@ RTL_URL = https://www.dropbox.com/sh/5fy49wae6xwxa8a/AABNwuLz3dPHK06vEDHmG8mfa/r
 .PRECIOUS: $(TEMP)/cores/% $(TEMP)/%.xpr $(TEMP)/%.hwdef $(TEMP)/%.bit $(TEMP)/%.fsbl/executable.elf $(TEMP)/%.tree/system.dts
 
 all: boot.bin uImage devicetree.dtb fw_printenv
-#all: devicetree.dtb fw_printenv
 
 xpr: $(TEMP)/$(NAME).xpr
 

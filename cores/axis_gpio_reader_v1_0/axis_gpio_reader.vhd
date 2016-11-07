@@ -6,7 +6,7 @@ use ieee.numeric_std.all;
 library unisim;
 use unisim.vcomponents.all;
 
-entity axis_constant is
+entity axis_gpio_reader is
   generic (
   AXIS_TDATA_WIDTH: integer := 32
 );
@@ -20,9 +20,9 @@ port (
   m_axis_tdata : out std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
   m_axis_tvalid : out std_logic
 );
-end axis_constant;
+end axis_gpio_reader;
 
-architecture rtl of axis_constant is
+architecture rtl of axis_gpio_reader is
 
   type int_data_t is array (1 downto 0) of std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
   signal int_data_reg : int_data_t;

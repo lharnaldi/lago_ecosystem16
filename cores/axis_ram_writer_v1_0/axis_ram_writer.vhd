@@ -12,7 +12,7 @@ entity axis_ram_writer is
   AXI_ID_WIDTH : integer := 6;
   AXI_ADDR_WIDTH : integer := 32;
   AXI_DATA_WIDTH : integer := 64;
-  AXI_TDATA_WIDTH : integer := 64
+  AXIS_TDATA_WIDTH : integer := 64
   );
   port (
   -- System signals
@@ -43,7 +43,7 @@ entity axis_ram_writer is
 
   -- Slave side
   s_axis_tready: out std_logic;
-  s_axis_tdata: in std_logic_vector(AXI_TDATA_WIDTH-1 downto 0);
+  s_axis_tdata: in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
   s_axis_tvalid: in std_logic
 );
 end axis_ram_writer;
@@ -83,7 +83,7 @@ begin
   int_rden_wire <= m_axi_wready and int_wvalid_reg;
 	tmp_s1 <= not(aresetn);
 	tmp_s2 <= int_tready_wire and s_axis_tvalid;
-	tmp_s3 <= (tmp_s3'length downto AXI_TDATA_WIDTH => '0') & s_axis_tdata;
+	tmp_s3 <= (tmp_s3'length downto AXIS_TDATA_WIDTH => '0') & s_axis_tdata;
 
   FIFO36E1_inst: FIFO36E1 
 	generic map(

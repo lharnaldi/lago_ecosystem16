@@ -3,9 +3,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library unisim;
-use unisim.vcomponents.all;
-
 entity axis_trigger is
   generic (
   AXIS_TDATA_WIDTH : integer := 32;

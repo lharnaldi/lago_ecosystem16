@@ -74,7 +74,8 @@ architecture rtl of axis_ram_writer is
 	signal int_wdata_wire: std_logic_vector(71 downto 0);
 
 	signal tmp_s1, tmp_s2: std_logic;
-	signal tmp_s3: std_logic;
+	signal tmp_s3: std_logic_vector(71 downto 0);
+
 begin
 	
   int_tready_wire <= not(int_full_wire);
@@ -82,11 +83,11 @@ begin
   int_rden_wire <= m_axi_wready and int_wvalid_reg;
 	tmp_s1 <= not(aresetn);
 	tmp_s2 <= int_tready_wire and s_axis_tvalid;
-	tmp_s3 <= ({{(72-AXIS_TDATA_WIDTH){1'b0}}, s_axis_tdata});
+	tmp_s3 <= (tmp_s3'high downto (tmp_s3'high-AXI_TDATA_WIDTH) => '0') & s_axis_tdata;
 
   fifo_0: FIFO36E1 
 	generic map(
-    FIRST_WORD_FALL_THROUGH => "TRUE",
+    FIRST_WORD_FALL_THROUGH => TRUE,
     ALMOST_EMPTY_OFFSET => X"1FFF",
     DATA_WIDTH => 72,
     FIFO_MODE => "FIFO36_72"
@@ -135,9 +136,12 @@ begin
 
   sts_data <= std_logic_vector(int_addr_reg);
 
+--  tmp_s4 <= std_logic_vector(unsigned(cfg_data) + (int_addr_reg & ((ADDR_SIZE) => '0')));
+  tmp_s4 <= 
+
   m_axi_awid <= std_logic_vector(int_wid_reg);
-  m_axi_awaddr <= cfg_data + {int_addr_reg, {(ADDR_SIZE){1'b0}}};
-  m_axi_awlen <= 4'd15;
+  m_axi_awaddr <= std_logic_vector(unsigned(cfg_data) + (int_addr_reg & (AXI_ADDR_WIDTH-int_addr_reg'length downto 0 => '0')));
+  m_axi_awlen <= std_logic_vector(to_unsigned(15, m_axi_awlen'length));
   m_axi_awsize <= ADDR_SIZE;
   m_axi_awburst <= 2'b01;
   m_axi_awcache <= 4'b0011;

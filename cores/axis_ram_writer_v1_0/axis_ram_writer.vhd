@@ -101,8 +101,7 @@ begin
     DI => tmp_s3,
     RDCLK => aclk,
     RDEN => int_rden_wire,
-    DO => int_wdata_wire,
-    DIP => (others => '0')
+    DO => int_wdata_wire
   );
 
 	process(aclk, aresetn)

@@ -34,7 +34,7 @@ entity axis_ram_writer is
   m_axi_awready: in std_logic;                                   -- AXI master: Write address ready
   m_axi_wid: out std_logic_vector(AXI_ID_WIDTH-1 downto 0);      -- AXI master: Write data ID
   m_axi_wdata: out std_logic_vector(AXI_DATA_WIDTH-1 downto 0);  -- AXI master: Write data
-  m_axi_wstrb: out std_logic_vector(AXI_DATA_WIDTH-1 downto 0);  -- AXI master: Write strobes
+  m_axi_wstrb: out std_logic_vector(AXI_DATA_WIDTH/8-1 downto 0);-- AXI master: Write strobes
   m_axi_wlast: out std_logic;                                    -- AXI master: Write last
   m_axi_wvalid: out std_logic;                                   -- AXI master: Write valid
   m_axi_wready: in std_logic;                                    -- AXI master: Write ready
@@ -62,7 +62,7 @@ architecture rtl of axis_ram_writer is
 	return ret_val;
   end function;
 
-  constant ADDR_SIZE : integer := clogb2(AXI_DATA_WIDTH/8 - 1);
+  constant ADDR_SIZE : integer := clogb2((AXI_DATA_WIDTH/8) - 1);
 
   signal int_awvalid_reg, int_awvalid_next: std_logic;
   signal int_wvalid_reg, int_wvalid_next: std_logic;
@@ -71,47 +71,63 @@ architecture rtl of axis_ram_writer is
   
   signal int_full_wire, int_empty_wire, int_rden_wire: std_logic;
   signal int_wlast_wire, int_tready_wire: std_logic;
-  signal int_wdata_wire: std_logic_vector(71 downto 0);
+  signal int_wdata_wire: std_logic_vector(AXI_DATA_WIDTH-1 downto 0);
   
-  signal tmp_s1, tmp_s2: std_logic;
-  signal tmp_s3: std_logic_vector(71 downto 0);
+  signal tmp_s2: std_logic;
+  signal reset_shreg              : std_logic_vector(9 downto 0) := (others => '1');
+  signal reset                    : std_logic := '1';
 
 begin
 	
   int_tready_wire <= not(int_full_wire);
 	int_wlast_wire <= '1' when (int_addr_reg(3 downto 0) = "1111") else '0';
+
   int_rden_wire <= m_axi_wready and int_wvalid_reg;
-	tmp_s1 <= not(aresetn);
 	tmp_s2 <= int_tready_wire and s_axis_tvalid;
-	tmp_s3 <= (tmp_s3'length downto AXIS_TDATA_WIDTH => '0') & s_axis_tdata;
+
+  reset_generator_p: process(aclk)
+  begin
+    if (rising_edge(aclk)) then
+      reset_shreg <= reset_shreg(reset_shreg'left-1 downto 0) & '0';
+      reset       <= reset_shreg(reset_shreg'left);
+    end if;   
+  end process;
 
   FIFO36E1_inst: FIFO36E1 
-	generic map(
+  generic map(
     FIRST_WORD_FALL_THROUGH => TRUE,
-    ALMOST_EMPTY_OFFSET => X"1FFF",
+    ALMOST_EMPTY_OFFSET => X"01FB",
     DATA_WIDTH => 72,
     FIFO_MODE => "FIFO36_72"
   ) 
-	port map (
-    FULL => int_full_wire,
+  port map (
     ALMOSTEMPTY => int_empty_wire,
-    RST => tmp_s1,
-    WRCLK => aclk,
-    WREN => tmp_s2,
-    DI => tmp_s3,
+    ALMOSTFULL  => open,
+    EMPTY       => open,
+    FULL  => int_full_wire,
+    DOP   => open,
+    DO    => int_wdata_wire,
+    INJECTDBITERR => '0', 
+    INJECTSBITERR => '0',
     RDCLK => aclk,
-    RDEN => int_rden_wire,
-    DO => int_wdata_wire
+    RDEN  => int_rden_wire,
+    REGCE => '1',
+    RST   => reset,
+    RSTREG => '0',
+    WRCLK => aclk,
+    WREN  => tmp_s2,
+    DI    => s_axis_tdata,
+    DIP => X"00"
   );
 
-	process(aclk, aresetn)
+  process(aclk, aresetn)
   begin
   if (aresetn = '0') then
     int_awvalid_reg <= '0';
     int_wvalid_reg <= '0';
     int_addr_reg <= (others => '0');
     int_wid_reg <= (others => '0');
-        elsif (rising_edge(aclk)) then
+  elsif (rising_edge(aclk)) then
     int_awvalid_reg <= int_awvalid_next;
     int_wvalid_reg <= int_wvalid_next;
     int_addr_reg <= int_addr_next;
@@ -137,14 +153,14 @@ begin
   sts_data <= std_logic_vector(int_addr_reg);
 
   m_axi_awid <= std_logic_vector(int_wid_reg);
-  m_axi_awaddr <= std_logic_vector(unsigned(cfg_data) + (int_addr_reg & (AXI_ADDR_WIDTH-int_addr_reg'length downto 0 => '0')));
+  m_axi_awaddr <= std_logic_vector(unsigned(cfg_data) + (int_addr_reg & (ADDR_SIZE-1 downto 0 => '0')));
   m_axi_awlen <= std_logic_vector(to_unsigned(15, m_axi_awlen'length));
   m_axi_awsize <= std_logic_vector(to_unsigned(ADDR_SIZE, m_axi_awsize'length));
   m_axi_awburst <= "01";
   m_axi_awcache <= "0011";
   m_axi_awvalid <= int_awvalid_reg;
   m_axi_wid <= std_logic_vector(int_wid_reg);
-  m_axi_wdata <= int_wdata_wire(AXI_DATA_WIDTH-1 downto 0);
+  m_axi_wdata <= int_wdata_wire;
   m_axi_wstrb <= ((AXI_DATA_WIDTH/8-1) downto 0 => '1');
   m_axi_wlast <= int_wlast_wire;
   m_axi_wvalid <= int_wvalid_reg;

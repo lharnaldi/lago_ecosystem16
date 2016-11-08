@@ -25,7 +25,7 @@ port (
   s_axi_awvalid  : in std_logic;                                    -- AXI4-Lite slave: Write address valid
   s_axi_awready  : out std_logic;                                   -- AXI4-Lite slave: Write address ready
   s_axi_wdata    : in std_logic_vector(AXI_DATA_WIDTH-1 downto 0);  -- AXI4-Lite slave: Write data
-	s_axi_wstrb    : in std_logic_vector(AXI_DATA_WIDTH/8-1 downto 0);-- AXI4-Lite slave: Write strobe
+  s_axi_wstrb    : in std_logic_vector(AXI_DATA_WIDTH/8-1 downto 0);-- AXI4-Lite slave: Write strobe
   s_axi_wvalid   : in std_logic;                                    -- AXI4-Lite slave: Write data valid
   s_axi_wready   : out std_logic;                                   -- AXI4-Lite slave: Write data ready
   s_axi_bresp    : out std_logic_vector(1 downto 0);                -- AXI4-Lite slave: Write response
@@ -76,40 +76,43 @@ function sel(cond: boolean; if_true, if_false: integer) return integer is
   type int_data_mux_t is array (CFG_SIZE-1 downto 0) of std_logic_vector(AXI_DATA_WIDTH-1 downto 0);
   signal int_data_mux: int_data_mux_t;	
 	
-	signal int_data_wire   : std_logic_vector(CFG_DATA_WIDTH-1 downto 0);
+  signal int_data_wire   : std_logic_vector(CFG_DATA_WIDTH-1 downto 0);
   signal int_ce_wire     : std_logic_vector(CFG_SIZE-1 downto 0);
   signal int_wvalid_wire : std_logic;
-  signal tmp_s1, tmp_s2  : std_logic;
+  type tmp_s1_t is array (CFG_SIZE-1 downto 0) of std_logic_vector(AXI_DATA_WIDTH-1 downto 0);
+  signal tmp_s1  : tmp_s1_t;--std_logic_vector(AXI_DATA_WIDTH-1 downto 0);
+  signal reset_s : std_logic;
 
 begin
 
-	int_wvalid_wire <= s_axi_awvalid and s_axi_wvalid;
+  int_wvalid_wire <= s_axi_awvalid and s_axi_wvalid;
 
-	WORDS: for j in 0 to CFG_SIZE-1 generate 
+  WORDS: for j in 0 to CFG_SIZE-1 generate 
     int_data_mux(j) <= int_data_wire(j*AXI_DATA_WIDTH+AXI_DATA_WIDTH-1 downto j*AXI_DATA_WIDTH);
-		int_ce_wire(j)  <= '1' when (int_wvalid_wire = '1') and (unsigned(s_axi_awaddr(ADDR_LSB+CFG_WIDTH-1 downto ADDR_LSB)) = j) else '0';
-	  BITS: for k in 0 to AXI_DATA_WIDTH-1 generate
-	    tmp_s1 <= int_ce_wire(j) and s_axi_wstrb(k/8);
-	    tmp_s2 <= not(aresetn);
-	    FDRE_inst: FDRE 
-		   generic map( INIT => '0')
-		   port map (
-		     Q => int_data_wire(j*AXI_DATA_WIDTH + k),
-		     C => aclk,
-		     CE => tmp_s1,
-		     R => tmp_s2,
-		     D => s_axi_wdata(k)
-        );
+    int_ce_wire(j)  <= '1' when (int_wvalid_wire = '1') and (unsigned(s_axi_awaddr(ADDR_LSB+CFG_WIDTH-1 downto ADDR_LSB)) = j) else '0';
+    BITS: for k in 0 to AXI_DATA_WIDTH-1 generate
+      tmp_s1(j)(k) <= int_ce_wire(j) and s_axi_wstrb(k/8);
+      FDRE_inst: FDRE 
+       generic map( INIT => '0')
+       port map (
+         Q => int_data_wire(j*AXI_DATA_WIDTH + k),
+         C => aclk,
+         CE => tmp_s1(j)(k),
+         R => reset_s,
+         D => s_axi_wdata(k)
+       );
     end generate;
   end generate;
 
   process(aclk, aresetn)
   begin
     if(aresetn = '0') then
+      reset_s <= '1';
       int_bvalid_reg <= '0';
       int_rvalid_reg <= '0';
       int_rdata_reg <= (others => '0');
     elsif rising_edge(aclk) then
+      reset_s <= '0';
       int_bvalid_reg <= int_bvalid_next;
       int_rvalid_reg <= int_rvalid_next;
       int_rdata_reg <= int_rdata_next;

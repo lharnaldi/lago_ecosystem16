@@ -42,8 +42,10 @@ begin
 
   process(aclk)
   begin
+    if (rising_edge(aclk)) then
     int_data_reg(0) <= int_data_wire;
     int_data_reg(1) <= int_data_reg(0);
+    end if;
   end process;
 
   m_axis_tdata <= int_data_reg(1);

@@ -60,7 +60,8 @@ begin
   end process;
 
   --Next-State logic
-  process(int_case_reg)
+  process(int_case_reg, int_addr_reg, int_cntr_reg, int_enbl_reg
+          run_flag, s_axis_tvalid, pre_data, trig_flag, tot_data)
   begin
     int_addr_next <= int_addr_reg;
     int_cntr_next <= int_cntr_reg;

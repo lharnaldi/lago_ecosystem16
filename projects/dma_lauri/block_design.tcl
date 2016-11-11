@@ -66,21 +66,15 @@ cell xilinx.com:ip:axi_dma:7.1 axi_dma_0 {
   c_sg_include_stscntrl_strm 0 
   c_include_mm2s 1 
   c_include_s2mm 1
-} {}
+} {
+  M_AXIS_MM2S axi_dma_0/S_AXIS_S2MM
+}
 
 # Create xlconcat
 cell xilinx.com:ip:xlconcat:2.1 concat_0 {} {
   In0 axi_dma_0/mm2s_introut
   In1 axi_dma_0/s2mm_introut
   dout ps_0/IRQ_F2P
-}
-
-# Create data loopback fifo
-cell xilinx.com:ip:axis_data_fifo:1.1 data_fifo_0 {} {
-  M_AXIS axi_dma_0/S_AXIS_S2MM
-  S_AXIS axi_dma_0/M_AXIS_MM2S
-  s_axis_aclk ps_0/FCLK_CLK0
-  s_axis_aresetn rst_0/peripheral_aresetn
 }
 
 # Create all required interconnections
@@ -131,5 +125,10 @@ cell xilinx.com:ip:axis_clock_converter:1.1 fifo_0 {} {
 startgroup
 set_property -dict [list CONFIG.c_include_sg {0} CONFIG.c_sg_include_stscntrl_strm {0}] [get_bd_cells axi_dma_0]
 endgroup
+
+startgroup
+set_property -dict [list CONFIG.NUM_SI {2} CONFIG.NUM_MI {1}] [get_bd_cells axi_mem_intercon]
+endgroup
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Slave "/ps_0/S_AXI_HP0" Clk "Auto" }  [get_bd_intf_pins axi_dma_0/M_AXI_S2MM]
 
 assign_bd_address [get_bd_addr_segs ps_0/S_AXI_HP0/HP0_DDR_LOWOCM]

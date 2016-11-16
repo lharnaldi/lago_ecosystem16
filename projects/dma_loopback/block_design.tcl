@@ -89,8 +89,8 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
   Clk Auto
 } [get_bd_intf_pins axi_dma_0/S_AXI_LITE]
 
-set_property RANGE 64K [get_bd_addr_segs ps_0/Data/SEG_axi_dma_0_reg]
-set_property OFFSET 0x40400000 [get_bd_addr_segs ps_0/Data/SEG_axi_dma_0_reg]
+set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_axi_dma_0_reg]
+set_property OFFSET 0x40000000 [get_bd_addr_segs ps_0/Data/SEG_axi_dma_0_reg]
 
 # Create all required interconnections
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
@@ -98,7 +98,7 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
   Clk Auto
 } [get_bd_intf_pins ps_0/S_AXI_HP0]
 
-set_property RANGE 512M [get_bd_addr_segs axi_dma_0/Data_SG/SEG_ps_0_HP0_DDR_LOWOCM]
+set_property RANGE 2M [get_bd_addr_segs axi_dma_0/Data_SG/SEG_ps_0_HP0_DDR_LOWOCM]
 
 # Create all required interconnections
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
@@ -106,7 +106,7 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
   Clk Auto
 } [get_bd_intf_pins axi_dma_0/M_AXI_MM2S]
 
-set_property RANGE 512M [get_bd_addr_segs axi_dma_0/Data_MM2S/SEG_ps_0_HP0_DDR_LOWOCM]
+set_property RANGE 2M [get_bd_addr_segs axi_dma_0/Data_MM2S/SEG_ps_0_HP0_DDR_LOWOCM]
 
 # Create all required interconnections
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {

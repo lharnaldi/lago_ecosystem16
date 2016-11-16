@@ -3,6 +3,7 @@
  */
 
 #include <stdio.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <termios.h>
@@ -84,20 +85,74 @@ void dma_mm2s_status(unsigned int* dma_virtual_address) {
 
 void memdump(void* virtual_address, int byte_count) {
     char *p = virtual_address;
-    int offset;
-    for (offset = 0; offset < byte_count; offset++) {
-        printf("%02x", p[offset]);
-        if (offset % 4 == 3) { printf(" "); }
-    }
-    printf("\n");
-  for(i = 0; i < 1024 * 1024; ++i)
+    int offset, i;
+    int16_t value[2];
+//    for (offset = 0; offset < byte_count; offset++) {
+//        printf("%02x", p[offset]);
+//        if (offset % 4 == 3) { printf(" "); }
+//    }
+//    printf("\n");
+  for(i = 0; i < byte_count; ++i)
   {
-    value[0] = *((int16_t *)(ram + 4*i + 0));
-    value[1] = *((int16_t *)(ram + 4*i + 2));
+    value[0] = *((int16_t *)(p + 4*i + 0));
+    value[1] = *((int16_t *)(p + 4*i + 2));
     printf("%5d %5d\n", value[0], value[1]);
   }
 
 }
+
+/******************************************************************************************************
+* LINUX GPIO INITIALIZATION
+* This function performs two operations:
+* 1) Opens a device to memory window in Linux so a GPIO that exists at a physical address is mapped
+*    to a fixed logical address. This logical address is returned by the function.
+* 2) Initialize the GPIO for either input or output mode.
+*
+* INPUT PARAMETERS:
+* gpio_base_address - physical hardware base address of GPIO, you have to get this from XML file
+* direction - 32 bits indicating direction for each bit; 0 - output; 1 - input
+* first_call - boolean indicating that this is first call to function. The first time and only the first
+*              time should the Linux device memory mapping service be mounted. Call for subsequent
+*              gpio mapping this should be set to FALSE (0).
+*
+* RETURNS:
+* mapped_dev_base - memory pointer to the GPIO that was specified by the gpio_base_address
+*******************************************************************************************************/
+/*void *dma_initialize(int dma_base_address, int first_call) //,int direction)
+{
+        void *mapped_dev_base;
+        off_t dev_base = DMA_BASE_ADDRESS;//gpio_base_address;
+
+        // Linux service to directly access PL hardware as memory without using a device driver
+        // The memory mapping to device service should only be called once
+        if (first_call) {
+                memfd = open("/dev/mem", O_RDWR | O_SYNC);
+                if (memfd == -1) {
+                        printf("Can't open /dev/mem.\n");
+                        exit(0);
+                }
+                printf("/dev/mem opened.\n");
+        }
+
+        // Map one page of memory into user space such that the device is in that page, but it may not
+        // be at the start of the page.
+        mapped_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, memfd, dev_base & ~MAP_MASK);
+    if (mapped_base == (void *) -1) {
+        printf("Can't map the memory to user space for DMA access.\n");
+        exit(0);
+    }
+    printf("DMA memory mapped at address %p.\n", mapped_base);
+
+    // Get the address of the device in user space which will be an offset from the base
+    // that was mapped as memory is mapped at the start of a page
+    mapped_dev_base = mapped_base + (dev_base & MAP_MASK);
+
+    // Slight delay for Linux memory access problem
+    usleep(50);
+    // write to the direction GPIO direction register to set as all inputs or outputs
+    //*((volatile unsigned long *) (mapped_dev_base + GPIO_DIRECTION_OFFSET)) = direction;
+    return mapped_dev_base;
+}*/
 
 
 int main() {

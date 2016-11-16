@@ -81,6 +81,10 @@
 #include "xaxidma.h"
 #include "xparameters.h"
 #include "xdebug.h"
+#include "xil_cache.h"
+#include "xbasic_types.h"
+#include "xil_printf.h"
+
 
 #ifdef __aarch64__
 #include "xil_mmu.h"

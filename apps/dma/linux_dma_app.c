@@ -37,7 +37,7 @@
 #define AXIDMA_CR_OFFSET    	0x00000000  /**< Control register */
 #define AXIDMA_SR_OFFSET    	0x00000004  /**< Status register */
 #define AXIDMA_CDESC_OFFSET 	0x00000008  /**< Current descriptor pointer */
-#define AXIDMA_TDESC_OFFSET	  0x00000010  /**< Tail descriptor pointer */
+#define AXIDMA_TDESC_OFFSET	0x00000010  /**< Tail descriptor pointer */
 #define AXIDMA_SRCADDR_OFFSET 0x00000018  /**< Source address register */
 #define AXIDMA_DSTADDR_OFFSET 0x00000020  /**< Destination address register */
 #define AXIDMA_BTT_OFFSET     0x00000028  /**< Bytes to transfer */
@@ -55,8 +55,8 @@
  * @{
  */
 #define AXIDMA_XR_IRQ_IOC_MASK	  0x00001000 /**< Completion interrupt */
-#define AXIDMA_XR_IRQ_DELAY_MASK	0x00002000 /**< Delay interrupt */
-#define AXIDMA_XR_IRQ_ERROR_MASK	0x00004000 /**< Error interrupt */
+#define AXIDMA_XR_IRQ_DELAY_MASK  0x00002000 /**< Delay interrupt */
+#define AXIDMA_XR_IRQ_ERROR_MASK  0x00004000 /**< Error interrupt */
 #define AXIDMA_XR_IRQ_ALL_MASK	  0x00007000 /**< All interrupts */
 #define AXIDMA_XR_IRQ_SIMPLE_ALL_MASK	0x00005000 /**< All interrupts for
                                                         simple only mode */
@@ -78,17 +78,18 @@
 #define AXIDMA_SR_ERR_ALL_MASK      0x00000770  /**< All errors */
 /*@}*/
 
-#define MAP_SIZE 4096UL
-#define MAP_MASK (MAP_SIZE - 1)
+//This is to configure the axi-lite port
+#define CFG_MAP_SIZE 4096UL //4k
+#define CFG_MAP_MASK (CFG_MAP_SIZE - 1)
 
-#define DDR_MAP_SIZE 0x10000000
+#define DDR_MAP_SIZE 0x200000 //2MB  0x10000000
 #define DDR_MAP_MASK (DDR_MAP_SIZE - 1)
 
 #define DDR_WRITE_OFFSET 0x10000000
 
 
 
-#define BUFFER_BYTESIZE		262144	// Length of the buffers for DMA transfer
+#define BUFFER_BYTESIZE		32*1024 //16384 //0x4000	// Length of the buffers for DMA transfer
 
 int main()
 {
@@ -120,7 +121,7 @@ int main()
   			DestArray[Index] = 0;
   	}
   	/*======================================================================================
-  	STEP 2 : Map the kernel memory location starting from 0x20000000 to the User layer
+  	STEP 2 : Map the kernel memory location starting from 0x200000 0x20000000 to the User layer
   	========================================================================================*/
   	memfd_1 = open("/dev/mem", O_RDWR | O_SYNC);
     if (memfd_1 == -1)
@@ -156,7 +157,7 @@ int main()
     }
     close(memfd_1);
   	/*======================================================================================
-  	STEP 5 : Map the AXI CDMA Register memory to the User layer
+  	STEP 5 : Map the AXI DMA Register memory to the User layer
   			Do the Register Setting for DMA transfer
   	========================================================================================*/
     memfd = open("/dev/mem", O_RDWR | O_SYNC);
@@ -178,7 +179,7 @@ int main()
     // get the address of the device in user space which will be an offset from the base
     // that was mapped as memory is mapped at the start of a page
     mapped_dev_base = mapped_base + (dev_base & MAP_MASK);
-    //Reset CDMA
+    //Reset DMA
       do{
     	  	  ResetMask = (unsigned long )AXIDMA_CR_RESET_MASK;
  			*((volatile unsigned long *) (mapped_dev_base + AXIDMA_CR_OFFSET)) = (unsigned long)ResetMask;

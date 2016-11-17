@@ -93,7 +93,7 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
   Clk Auto
 } [get_bd_intf_pins ps_0/S_AXI_HP0]
 
-set_property RANGE 512M [get_bd_addr_segs axi_dma_0/Data_SG/SEG_ps_0_HP0_DDR_LOWOCM]
+set_property RANGE 2M [get_bd_addr_segs axi_dma_0/Data_SG/SEG_ps_0_HP0_DDR_LOWOCM]
 
 # Create all required interconnections
 #apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
@@ -109,7 +109,7 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
   Clk Auto
 } [get_bd_intf_pins axi_dma_0/M_AXI_S2MM]
 
-set_property RANGE 512M [get_bd_addr_segs axi_dma_0/Data_S2MM/SEG_ps_0_HP0_DDR_LOWOCM]
+set_property RANGE 2M [get_bd_addr_segs axi_dma_0/Data_S2MM/SEG_ps_0_HP0_DDR_LOWOCM]
 
 # Create xlconstant
 cell xilinx.com:ip:xlconstant:1.1 const_0
@@ -123,5 +123,14 @@ cell xilinx.com:ip:axis_clock_converter:1.1 fifo_0 {} {
   m_axis_aclk ps_0/FCLK_CLK0
   m_axis_aresetn rst_0/peripheral_aresetn
 }
+
+startgroup
+set_property -dict [list CONFIG.c_include_sg {0} CONFIG.c_sg_include_stscntrl_strm {0}] [get_bd_cells axi_dma_0]
+endgroup
+
+startgroup
+set_property -dict [list CONFIG.NUM_SI {1} CONFIG.NUM_MI {1}] [get_bd_cells axi_mem_intercon]
+endgroup
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Slave "/ps_0/S_AXI_HP0" Clk "Auto" }  [get_bd_intf_pins axi_dma_0/M_AXI_S2MM]
 
 assign_bd_address [get_bd_addr_segs ps_0/S_AXI_HP0/HP0_DDR_LOWOCM]

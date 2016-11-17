@@ -1,7 +1,7 @@
 ARCH := arm
 CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 KER_DIR := ../../../tmp/linux-xlnx-xilinx-v2016.2
-obj-m += axidma.o
+obj-m += memalloc.o
 all:
 	make ARCH=$(ARCH) -C $(KER_DIR) M=$(PWD) modules
 clean: 

@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 
@@ -29,15 +30,24 @@
 
 // This test was derived from devmem2.c.
 
-#define DMA_BASE_ADDRESS        0x40400000
-#define DDR_BASE_ADDRESS        0x20000000
+#define DMA_BASE_ADDR         0x40000000
+#define MM2S_CR_OFFSET        0x00000000
+#define MM2S_SR_OFFSET        0x00000004
+#define MM2S_SRC_ADDR         0x00000018
+#define MM2S_LENGTH           0x00000028
 
-#define DDR_BASE_WRITE_ADDRESS  0x30000000
+#define S2MM_CR_OFFSET        0x00000030
+#define S2MM_SR_OFFSET        0x00000034
+#define S2MM_DST_ADDR         0x00000048
+#define S2MM_LENGTH           0x00000058
 
-#define AXIDMA_CR_OFFSET    	0x00000000  /**< Control register */
-#define AXIDMA_SR_OFFSET    	0x00000004  /**< Status register */
-#define AXIDMA_CDESC_OFFSET 	0x00000008  /**< Current descriptor pointer */
-#define AXIDMA_TDESC_OFFSET	0x00000010  /**< Tail descriptor pointer */
+#define MEM_BASE_ADD          0x20000000
+#define MEM_BASE_WRITE_ADDR   0x30000000
+
+#define AXIDMA_CR_OFFSET      0x00000000  /**< Control register */
+#define AXIDMA_SR_OFFSET      0x00000004  /**< Status register */
+#define AXIDMA_CDESC_OFFSET   0x00000008  /**< Current descriptor pointer */
+#define AXIDMA_TDESC_OFFSET   0x00000010  /**< Tail descriptor pointer */
 #define AXIDMA_SRCADDR_OFFSET 0x00000018  /**< Source address register */
 #define AXIDMA_DSTADDR_OFFSET 0x00000020  /**< Destination address register */
 #define AXIDMA_BTT_OFFSET     0x00000028  /**< Bytes to transfer */
@@ -59,7 +69,7 @@
 #define AXIDMA_XR_IRQ_ERROR_MASK  0x00004000 /**< Error interrupt */
 #define AXIDMA_XR_IRQ_ALL_MASK	  0x00007000 /**< All interrupts */
 #define AXIDMA_XR_IRQ_SIMPLE_ALL_MASK	0x00005000 /**< All interrupts for
-                                                        simple only mode */
+																									 simple only mode */
 /*@}*/
 
 /** @name Bitmasks of AXIDMA_SR_OFFSET register
@@ -82,225 +92,211 @@
 #define CFG_MAP_SIZE 4096UL //4k
 #define CFG_MAP_MASK (CFG_MAP_SIZE - 1)
 
-#define DDR_MAP_SIZE 0x200000 //2MB  0x10000000
-#define DDR_MAP_MASK (DDR_MAP_SIZE - 1)
+#define MEM_BASE_ADDR 0x00000000 //2MB  0x10000000
+#define MEM_MAP_SIZE  0x00200000 //2MB  0x10000000
+#define MEM_MAP_MASK (MEM_MAP_SIZE - 1)
 
 #define DDR_WRITE_OFFSET 0x10000000
 
 
-
-#define BUFFER_BYTESIZE		32*1024 //16384 //0x4000	// Length of the buffers for DMA transfer
+#define BUFFER_BYTESIZE		32*1024 //32KB //0x4000	// Length of the buffers for DMA transfer
 
 int main()
 {
-	int memfd;
-    void *mapped_base, *mapped_dev_base;
-    off_t dev_base = DMA_BASE_ADDRESS;
+				int memfd;
+				void *cfg_mapped_base, *cfg_mapped_dev_base;
+				off_t cfg_dev_base = DMA_BASE_ADDR;
 
-    int memfd_1;
-    void *mapped_base_1, *mapped_dev_base_1;
-    off_t dev_base_1 = DDR_BASE_ADDRESS;
+				void *src_mapped_base, *src_mapped_dev_base;
+				off_t src_dev_base = MEM_BASE_ADDR;
 
-    int memfd_2;
-    void *mapped_base_2, *mapped_dev_base_2;
-    off_t dev_base_2 = DDR_BASE_WRITE_ADDRESS;
+				void *dst_mapped_base, *dst_mapped_dev_base;
+				off_t dst_dev_base = MEM_BASE_ADDR;
 
-    unsigned int TimeOut =5;
-    unsigned int ResetMask;
-    unsigned int RegValue;
-    unsigned int SrcArray[BUFFER_BYTESIZE ];
-    unsigned int DestArray[BUFFER_BYTESIZE ];
-    unsigned int Index;
-    /*======================================================================================
-     STEP 1 : Initialize the source buffer bytes with a pattern  and clear the Destination
-     	 	  location
- 	 ========================================================================================*/
-  	for (Index = 0; Index < (BUFFER_BYTESIZE/2); Index++)
-  	{
-  			SrcArray[Index] = 0x5A5A5A5A/*Index & 0xFF*/;
-  			DestArray[Index] = 0;
-  	}
-  	/*======================================================================================
-  	STEP 2 : Map the kernel memory location starting from 0x200000 0x20000000 to the User layer
-  	========================================================================================*/
-  	memfd_1 = open("/dev/mem", O_RDWR | O_SYNC);
-    if (memfd_1 == -1)
-    {
-    	printf("Can't open /dev/mem.\n");
-        exit(0);
-    }
-    printf("/dev/mem opened.\n");
-    // Map one page of memory into user space such that the device is in that page, but it may not
-    // be at the start of the page.
+				unsigned int TimeOut =5;
+				unsigned int ResetMask;
+				unsigned int RegValue;
+				unsigned int SrcArray[BUFFER_BYTESIZE ];
+				unsigned int DestArray[BUFFER_BYTESIZE ];
+				unsigned int Index;
+				/*======================================================================================
+					STEP 1 : Initialize the source buffer bytes with a pattern  and clear the Destination
+					location
+					=======================================================================================*/
+				for (Index = 0; Index < (BUFFER_BYTESIZE/2); Index++)
+				{
+								SrcArray[Index] = 0x5A5A5A5A/*Index & 0xFF*/;
+								DestArray[Index] = 0;
+				}
+				/*======================================================================================
+					STEP 2 : Map the kernel memory location starting from 0x200000 0x20000000 to the User layer
+					========================================================================================*/
+				memfd = open("/dev/mem", O_RDWR | O_SYNC);
+				if (memfd == -1)
+				{
+								printf("Can't open /dev/mem.\n");
+								exit(0);
+				}
+				printf("/dev/mem opened.\n");
+				// Map one page of memory into user space such that the device is in that page, but it may not
+				// be at the start of the page.
 
-    mapped_base_1 = mmap(0, DDR_MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, memfd_1, dev_base_1 & ~DDR_MAP_MASK);
-    if (mapped_base_1 == (void *) -1)
-    {
-    	printf("Can't map the memory to user space.\n");
-        exit(0);
-    }
-    printf("Memory mapped at address %p.\n", mapped_base_1);
-    // get the address of the device in user space which will be an offset from the base
-    // that was mapped as memory is mapped at the start of a page
-     mapped_dev_base_1 = mapped_base_1 + (dev_base_1 & DDR_MAP_MASK);
-     /*======================================================================================
-     STEP 3 : Copy the Data to the DDR Memory at location 0x20000000
-     ========================================================================================*/
-    memcpy(mapped_dev_base_1, SrcArray, (BUFFER_BYTESIZE));
-    /*======================================================================================
-     STEP 4 : Un-map the kernel memory from the User layer.
-    ========================================================================================*/
-    if (munmap(mapped_base_1, DDR_MAP_SIZE) == -1)
-    {
-    	printf("Can't unmap memory from user space.\n");
-    	exit(0);
-    }
-    close(memfd_1);
-  	/*======================================================================================
-  	STEP 5 : Map the AXI DMA Register memory to the User layer
-  			Do the Register Setting for DMA transfer
-  	========================================================================================*/
-    memfd = open("/dev/mem", O_RDWR | O_SYNC);
-    if (memfd == -1)
-    {
-    	printf("Can't open /dev/mem.\n");
-    	exit(0);
-    }
-      printf("/dev/mem opened.\n");
+				// Map one page of memory into user space such that the device is in that page, but it may not
+				// be at the start of the page.
+				cfg_mapped_base = mmap(0, CFG_MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, memfd, cfg_dev_base & ~CFG_MAP_MASK);
+				if (cfg_mapped_base == (void *) -1)
+				{
+								printf("Can't map the memory to user space.\n");
+								exit(0);
+				}
+				printf("Memory mapped at address %p.\n", cfg_mapped_base);
 
-    // Map one page of memory into user space such that the device is in that page, but it may not
-    // be at the start of the page.
-    mapped_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, memfd, dev_base & ~MAP_MASK);
-    if (mapped_base == (void *) -1)
-    {
-    	  printf("Can't map the memory to user space.\n");
-    	  exit(0);
-      }
-    // get the address of the device in user space which will be an offset from the base
-    // that was mapped as memory is mapped at the start of a page
-    mapped_dev_base = mapped_base + (dev_base & MAP_MASK);
-    //Reset DMA
-      do{
-    	  	  ResetMask = (unsigned long )AXIDMA_CR_RESET_MASK;
- 			*((volatile unsigned long *) (mapped_dev_base + AXIDMA_CR_OFFSET)) = (unsigned long)ResetMask;
-			/* If the reset bit is still high, then reset is not done	*/
-			ResetMask = *((volatile unsigned long *) (mapped_dev_base + AXIDMA_CR_OFFSET));
-			if(!(ResetMask & AXIDMA_CR_RESET_MASK))
-			{
-				break;
-			}
-			TimeOut -= 1;
-      }while (TimeOut);
-      	//enable Interrupt
-      RegValue = *((volatile unsigned long *) (mapped_dev_base + AXIDMA_CR_OFFSET));
-      RegValue = (unsigned long)(RegValue | AXIDMA_XR_IRQ_ALL_MASK );
-      *((volatile unsigned long *) (mapped_dev_base + AXIDMA_CR_OFFSET)) = (unsigned long)RegValue;
-      // Checking for the Bus Idle
-      RegValue = *((volatile unsigned long *) (mapped_dev_base + AXIDMA_SR_OFFSET));
-      if(!(RegValue & AXIDMA_SR_IDLE_MASK))
-      {
-    	  printf("BUS IS BUSY Error Condition \n\r");
-    	  return 1;
-      }
-      // Check the DMA Mode and switch it to simple mode
-      RegValue = *((volatile unsigned long *) (mapped_dev_base + AXIDMA_CR_OFFSET));
-      if((RegValue & AXIDMA_CR_SGMODE_MASK))
-      {
-    	  RegValue = (unsigned long)(RegValue & (~AXIDMA_CR_SGMODE_MASK));
-    	  printf("Reading \n \r");
-    	  *((volatile unsigned long *) (mapped_dev_base + AXIDMA_CR_OFFSET)) = (unsigned long)RegValue ;
+				// get the address of the device in user space which will be an offset from the base
+				// that was mapped as memory is mapped at the start of a page
+				cfg_mapped_dev_base = cfg_mapped_base + (cfg_dev_base & CFG_MAP_MASK);
 
-      }
-      //Set the Source Address
-      *((volatile unsigned long *) (mapped_dev_base + AXIDMA_SRCADDR_OFFSET)) = (unsigned long)DDR_BASE_ADDRESS;
-      //Set the Destination Address
-      *((volatile unsigned long *) (mapped_dev_base + AXIDMA_DSTADDR_OFFSET)) = (unsigned long)DDR_BASE_WRITE_ADDRESS;
-      RegValue = (unsigned long)(BUFFER_BYTESIZE);
-      // write Byte to Transfer
-      *((volatile unsigned long *) (mapped_dev_base + AXIDMA_BTT_OFFSET)) = (unsigned long)RegValue;
-    	/*======================================================================================
-    	STEP 6 : Wait for the DMA transfer Status
-    	========================================================================================*/
-      do
-      {
-    	 	  RegValue = *((volatile unsigned long *) (mapped_dev_base + AXIDMA_SR_OFFSET));
-      }while(!(RegValue & AXIDMA_XR_IRQ_ALL_MASK));
+				src_mapped_base = mmap(0, MEM_MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, memfd, src_dev_base & ~MEM_MAP_MASK);
+				if (src_mapped_base == (void *) -1)
+				{
+								printf("Can't map the memory to user space.\n");
+								exit(0);
+				}
+				printf("Memory mapped at address %p.\n", src_mapped_base);
+				// get the address of the device in user space which will be an offset from the base
+				// that was mapped as memory is mapped at the start of a page
+				src_mapped_dev_base = src_mapped_base + (src_dev_base & MEM_MAP_MASK);
 
-      if((RegValue & AXIDMA_XR_IRQ_IOC_MASK))
-      {
-    	  printf("Transfer Completed \n\r ");
-      }
-      if((RegValue & AXIDMA_XR_IRQ_DELAY_MASK))
-      {
-      	printf("IRQ Delay Interrupt\n\r ");
-      }
-      if((RegValue & AXIDMA_XR_IRQ_ERROR_MASK))
-      {
-      	printf(" Transfer Error Interrupt\n\r ");
-      }
+				// Map one page of memory into user space such that the device is in that page, but it may not
+				// be at the start of the page.
+				dst_mapped_base = mmap(0, MEM_MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, memfd, dst_dev_base & ~MEM_MAP_MASK);
+				if (dst_mapped_base == (void *) -1)
+				{
+								printf("Can't map the memory to user space.\n");
+								exit(0);
+				}
+				printf("Memory mapped at address %p.\n", dst_mapped_base);
+				// get the address of the device in user space which will be an offset from the base
+				// that was mapped as memory is mapped at the start of a page
+				dst_mapped_dev_base = dst_mapped_base + (dst_dev_base & MEM_MAP_MASK);
+				/*======================================================================================
+					STEP 3 : Copy the Data to the DDR Memory at location 0x20000000
+					========================================================================================*/
+				memcpy(src_mapped_dev_base, SrcArray, (BUFFER_BYTESIZE));
+				/*======================================================================================
+					STEP 5 : Map the AXI DMA Register memory to the User layer
+					Do the Register Setting for DMA transfer
+					========================================================================================*/
+				//Reset DMA
+				do{
+								ResetMask = (unsigned long )AXIDMA_CR_RESET_MASK;
+								*((volatile unsigned long *) (cfg_mapped_dev_base + AXIDMA_CR_OFFSET)) = (unsigned long)ResetMask;
+								/* If the reset bit is still high, then reset is not done	*/
+								ResetMask = *((volatile unsigned long *) (cfg_mapped_dev_base + AXIDMA_CR_OFFSET));
+								if(!(ResetMask & AXIDMA_CR_RESET_MASK))
+								{
+												break;
+								}
+								TimeOut -= 1;
+				}while (TimeOut);
+				//enable Interrupt
+				RegValue = *((volatile unsigned long *) (cfg_mapped_dev_base + AXIDMA_CR_OFFSET));
+				RegValue = (unsigned long)(RegValue | AXIDMA_XR_IRQ_ALL_MASK );
+				*((volatile unsigned long *) (cfg_mapped_dev_base + AXIDMA_CR_OFFSET)) = (unsigned long)RegValue;
+				// Checking for the Bus Idle
+				RegValue = *((volatile unsigned long *) (cfg_mapped_dev_base + AXIDMA_SR_OFFSET));
+				if(!(RegValue & AXIDMA_SR_IDLE_MASK))
+				{
+								printf("BUS IS BUSY Error Condition \n\r");
+								return 1;
+				}
+				// Check the DMA Mode and switch it to simple mode
+				RegValue = *((volatile unsigned long *) (cfg_mapped_dev_base + AXIDMA_CR_OFFSET));
+				if((RegValue & AXIDMA_CR_SGMODE_MASK))
+				{
+								RegValue = (unsigned long)(RegValue & (~AXIDMA_CR_SGMODE_MASK));
+								printf("Reading \n \r");
+								*((volatile unsigned long *) (cfg_mapped_dev_base + AXIDMA_CR_OFFSET)) = (unsigned long)RegValue ;
 
-      /*======================================================================================
-       STEP 7 : Un-map the AXI CDMA memory from the User layer.
-      ========================================================================================*/
-      if (munmap(mapped_base, MAP_SIZE) == -1)
-      {
-      		printf("Can't unmap memory from user space.\n");
-      		exit(0);
-      }
+				}
+				//Set the Source Address
+				*((volatile unsigned long *) (cfg_mapped_dev_base + AXIDMA_SRCADDR_OFFSET)) = (unsigned long)MM2S_SRC_ADDR;
+				//Set the Destination Address
+				*((volatile unsigned long *) (cfg_mapped_dev_base + AXIDMA_DSTADDR_OFFSET)) = (unsigned long)S2MM_DST_ADDR;
+				RegValue = (unsigned long)(BUFFER_BYTESIZE);
+				// write Byte to Transfer
+				*((volatile unsigned long *) (cfg_mapped_dev_base + AXIDMA_BTT_OFFSET)) = (unsigned long)RegValue;
+				/*======================================================================================
+					STEP 6 : Wait for the DMA transfer Status
+					========================================================================================*/
+				do
+				{
+								RegValue = *((volatile unsigned long *) (cfg_mapped_dev_base + AXIDMA_SR_OFFSET));
+				}while(!(RegValue & AXIDMA_XR_IRQ_ALL_MASK));
 
-      close(memfd);
-
-    /*======================================================================================
-    STEP 8 : Map the kernel memory location starting from 0x30000000 to the User layer
-    ========================================================================================*/
-      memfd_2 = open("/dev/mem", O_RDWR | O_SYNC);
-       if (memfd_2 == -1)
-       {
-    	   printf("Can't open /dev/mem.\n");
-           exit(0);
-       }
-       printf("/dev/mem opened.\n");
-       // Map one page of memory into user space such that the device is in that page, but it may not
-       // be at the start of the page.
-       mapped_base_2 = mmap(0, DDR_MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, memfd_2, dev_base_2 & ~DDR_MAP_MASK);
-       if (mapped_base_2 == (void *) -1)
-       {
-    	   printf("Can't map the memory to user space.\n");
-           exit(0);
-       }
-       printf("Memory mapped at address %p.\n", mapped_base_2);
-        // get the address of the device in user space which will be an offset from the base
-        // that was mapped as memory is mapped at the start of a page
-        mapped_dev_base_2 = mapped_base_2 + (dev_base_2 & DDR_MAP_MASK);
-
-        /*======================================================================================
-        STEP 9 : Copy the Data from DDR Memory location 0x20000000 to Destination Buffer
-        ========================================================================================*/
-        memcpy(DestArray, mapped_dev_base_2, (BUFFER_BYTESIZE ));
-        /*======================================================================================
-        STEP 10 : Un-map the Kernel memory from the User layer.
-        ========================================================================================*/
-        if (munmap(mapped_base_2, DDR_MAP_SIZE) == -1)
-        {
-        	printf("Can't unmap memory from user space.\n");
-            exit(0);
-        }
-
-       close(memfd_2);
+				if((RegValue & AXIDMA_XR_IRQ_IOC_MASK))
+				{
+								printf("Transfer Completed \n\r ");
+				}
+				if((RegValue & AXIDMA_XR_IRQ_DELAY_MASK))
+				{
+								printf("IRQ Delay Interrupt\n\r ");
+				}
+				if((RegValue & AXIDMA_XR_IRQ_ERROR_MASK))
+				{
+								printf(" Transfer Error Interrupt\n\r ");
+				}
 
 
-       /*======================================================================================
-        STEP 11 : Compare Source Buffer with Destination Buffer.
-       ========================================================================================*/
-       for (Index = 0; Index < (BUFFER_BYTESIZE/4); Index++)
-       {
-    	   if (SrcArray[Index] != DestArray[Index])
-    	   {
-    		   printf("Error in the Data comparison \n \r");
-    		   return 1;
-    	   }
-       }
-       printf("DATA Transfer is Successfull \n\r");
+				/*======================================================================================
+					STEP 9 : Copy the Data from DDR Memory location 0x20000000 to Destination Buffer
+					========================================================================================*/
+				memcpy(DestArray, dst_mapped_dev_base, (BUFFER_BYTESIZE ));
 
-    return 0;
+				/*======================================================================================
+					STEP 7 : Un-map the AXI CDMA memory from the User layer.
+					========================================================================================*/
+				if (munmap(cfg_mapped_base, CFG_MAP_SIZE) == -1)
+				{
+								printf("Can't unmap memory from user space.\n");
+								exit(0);
+				}
+
+
+				/*======================================================================================
+					STEP 4 : Un-map the kernel memory from the User layer.
+					========================================================================================*/
+				if (munmap(src_mapped_base, MEM_MAP_SIZE) == -1)
+				{
+								printf("Can't unmap memory from user space.\n");
+								exit(0);
+				}
+				/*======================================================================================
+					STEP 8 : Map the kernel memory location starting from 0x30000000 to the User layer
+					========================================================================================*/
+				/*======================================================================================
+					STEP 10 : Un-map the Kernel memory from the User layer.
+					========================================================================================*/
+				if (munmap(dst_mapped_base, MEM_MAP_SIZE) == -1)
+				{
+								printf("Can't unmap memory from user space.\n");
+								exit(0);
+				}
+
+				close(memfd);
+
+
+				/*======================================================================================
+					STEP 11 : Compare Source Buffer with Destination Buffer.
+					========================================================================================*/
+				for (Index = 0; Index < (BUFFER_BYTESIZE/4); Index++)
+				{
+								if (SrcArray[Index] != DestArray[Index])
+								{
+												printf("Error in the Data comparison \n \r");
+												return 1;
+								}
+				}
+				printf("DATA Transfer is Successfull \n\r");
+
+				return 0;
 }

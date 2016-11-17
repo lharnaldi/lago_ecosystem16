@@ -77,6 +77,7 @@
 /***************************** Include Files *********************************/
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h> //uint8_t, etc
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -85,10 +86,6 @@
 #include "xaxidma.h"
 #include "xparameters.h"
 #include "xdebug.h"
-
-#if defined(XPAR_UARTNS550_0_BASEADDR)
-#include "xuartns550_l.h"       /* to use uartns550 */
-#endif
 
 /******************** Constant Definitions **********************************/
 
@@ -115,22 +112,9 @@
 
 #define DMA_DEV_ID		0 //XPAR_AXIDMA_0_DEVICE_ID
 
-#ifdef XPAR_AXI_7SDDR_0_S_AXI_BASEADDR
-#define DDR_BASE_ADDR		XPAR_AXI_7SDDR_0_S_AXI_BASEADDR
-#elif XPAR_MIG7SERIES_0_BASEADDR
-#define DDR_BASE_ADDR	XPAR_MIG7SERIES_0_BASEADDR
-#elif XPAR_MIG_0_BASEADDR
-#define DDR_BASE_ADDR	XPAR_MIG_0_BASEADDR
-#elif XPAR_PSU_DDR_0_S_AXI_BASEADDR
-#define DDR_BASE_ADDR	XPAR_PSU_DDR_0_S_AXI_BASEADDR
-#endif
-
-#ifndef DDR_BASE_ADDR
-#warning CHECK FOR THE VALID DDR ADDRESS IN XPARAMETERS.H, \
-		 DEFAULT SET TO 0x01000000
 #define MEM_BASE_ADDR		0x01000000
 #else
-#define MEM_BASE_ADDR		(DDR_BASE_ADDR + 0x1000000)
+#define MEM_BASE_ADDR		(MEM_BASE_ADDR + 0x1000000)
 #endif
 
 #define TX_BUFFER_BASE		(MEM_BASE_ADDR + 0x00100000)
@@ -145,7 +129,7 @@
 
 /**************************** Type Definitions *******************************/
 //typedef int u32;                                      // add this compatibility for int's between Linux and Standalone
-//typedef int u16;                                      // add this compatibility for int's between Linux and Standalone
+//typedef int uint16_t;                                      // add this compatibility for int's between Linux and Standalone
 
 // Linux pointers to GPIO's in PL hardware
 void *mapped_led_dev_base;              // Address of LED GPIO
@@ -163,7 +147,7 @@ int memfd;                                              // device memory handle 
 //extern void printf(const char *format, ...);
 #endif
 
-int XAxiDma_SimplePollExample(u16 DeviceId);
+int XAxiDma_SimplePollExample(uint16_t DeviceId);
 static int CheckData(void);
 
 /************************** Variable Definitions *****************************/
@@ -225,18 +209,18 @@ int main()
 *
 *
 ******************************************************************************/
-int XAxiDma_SimplePollExample(u16 DeviceId)
+int XAxiDma_SimplePollExample(uint16_t DeviceId)
 {
 	XAxiDma_Config *CfgPtr;
 	int Status;
 	int Tries = NUMBER_OF_TRANSFERS;
 	int Index;
-	u8 *TxBufferPtr;
-	u8 *RxBufferPtr;
-	u8 Value;
+	uint8_t *TxBufferPtr;
+	uint8_t *RxBufferPtr;
+	uint8_t Value;
 
-	TxBufferPtr = (u8 *)TX_BUFFER_BASE ;
-	RxBufferPtr = (u8 *)RX_BUFFER_BASE;
+	TxBufferPtr = (uint8_t *)TX_BUFFER_BASE ;
+	RxBufferPtr = (uint8_t *)RX_BUFFER_BASE;
 
 	/* Initialize the XAxiDma device.
 	 */
@@ -328,11 +312,11 @@ int XAxiDma_SimplePollExample(u16 DeviceId)
 ******************************************************************************/
 static int CheckData(void)
 {
-	u8 *RxPacket;
+	uint8_t *RxPacket;
 	int Index = 0;
-	u8 Value;
+	uint8_t Value;
 
-	RxPacket = (u8 *) RX_BUFFER_BASE;
+	RxPacket = (uint8_t *) RX_BUFFER_BASE;
 	Value = TEST_START_VALUE;
 
 	for(Index = 0; Index < MAX_PKT_LEN; Index++) {

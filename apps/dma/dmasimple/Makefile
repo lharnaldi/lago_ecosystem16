@@ -1,6 +1,6 @@
 ARCH := arm
 KER_DIR := ../../../tmp/linux-xlnx-xilinx-v2016.2
-obj-m += axidma.o
+obj-m += zynq_dma.o
 all:
 	make ARCH=$(ARCH) -C $(KER_DIR) M=$(PWD) modules
 clean: 

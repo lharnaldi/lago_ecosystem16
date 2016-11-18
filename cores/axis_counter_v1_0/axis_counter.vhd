@@ -5,32 +5,32 @@ use ieee.numeric_std.all;
 
 entity axis_counter is
   generic (
-    AXIS_TDATA_WIDTH: integer := 32;
-    CNTR_WIDTH: integer := 32
+    AXIS_TDATA_WIDTH : integer := 32;
+    CNTR_WIDTH       : integer := 32
 );
 port (
   -- System signals
-  aclk : in std_logic;
-  aresetn : in std_logic;
+  aclk               : in std_logic;
+  aresetn            : in std_logic;
 
-  cfg_data : in std_logic_vector(CNTR_WIDTH-1 downto 0);
+  cfg_data           : in std_logic_vector(CNTR_WIDTH-1 downto 0);
 
   -- Master side
-  m_axis_tdata : out std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
-  m_axis_tvalid : out std_logic
+  m_axis_tdata       : out std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+  m_axis_tvalid      : out std_logic
 );
 end axis_counter;
 
 architecture rtl of axis_counter is
 
-  signal int_cntr_reg, int_cntr_next: unsigned(CNTR_WIDTH-1 downto 0);
-  signal int_enbl_reg, int_enbl_next: std_logic;
+  signal int_cntr_reg, int_cntr_next : unsigned(CNTR_WIDTH-1 downto 0);
+  signal int_enbl_reg, int_enbl_next : std_logic;
 
-  signal int_comp_wire: std_logic;
+  signal int_comp_wire               : std_logic;
 
 begin
 
-  process(aclk, aresetn)
+  process(aclk)
   begin
     if(aresetn = '0') then
       int_cntr_reg <= (others => '0');

@@ -35,18 +35,18 @@ architecture rtl of axis_rp_adc is
   signal int_dat_a_reg : std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
   signal int_dat_b_reg : std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
   signal int_clk       : std_logic;
-  signal dat_a_tmp, dat_b_tmp : signed(ADC_DATA_WIDTH-1 downto 0);
+  signal dat_a_tmp, dat_b_tmp : std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
 
 begin
   U1: IBUFGDS port map (I => adc_clk_p, IB => adc_clk_n, O => int_clk);
 
   process(int_clk)
   begin
-	if rising_edge(int_clk) then 
+  if rising_edge(int_clk) then 
     int_dat_a_reg <= adc_dat_a;
     int_dat_b_reg <= adc_dat_b;
   end if;
-	end process;
+  end process;
 
   adc_clk <= int_clk;
 
@@ -54,12 +54,13 @@ begin
 
   m_axis_tvalid <= '1';
 
-  dat_a_tmp <= signed(int_dat_a_reg(ADC_DATA_WIDTH-1) & not int_dat_a_reg(ADC_DATA_WIDTH-2 downto 0));
-  dat_b_tmp <= signed(int_dat_b_reg(ADC_DATA_WIDTH-1) & not int_dat_b_reg(ADC_DATA_WIDTH-2 downto 0));
+  --Format conversion
+  dat_a_tmp(ADC_DATA_WIDTH-1) <= int_dat_a_reg(ADC_DATA_WIDTH-1);
+  dat_a_tmp(ADC_DATA_WIDTH-2 downto 0) <=  not int_dat_a_reg(ADC_DATA_WIDTH-2 downto 0);
+  dat_b_tmp(ADC_DATA_WIDTH-1) <= int_dat_b_reg(ADC_DATA_WIDTH-1);
+  dat_b_tmp(ADC_DATA_WIDTH-2 downto 0) <=  not int_dat_b_reg(ADC_DATA_WIDTH-2 downto 0);
   
-  m_axis_tdata <= std_logic_vector(resize(dat_b_tmp, (m_axis_tdata'length/2)) & resize(dat_a_tmp, (m_axis_tdata'length/2)));
-
---  m_axis_tdata <= std_logic_vector(resize(int_dat_b_reg(ADC_DATA_WIDTH-1),(PADDING_WIDTH+1)) & not int_dat_b_reg(ADC_DATA_WIDTH-2 downto 0) &
---									resize(int_dat_a_reg(ADC_DATA_WIDTH-1),(PADDING_WIDTH+1)) & not int_dat_a_reg(ADC_DATA_WIDTH-2 downto 0));
+  --padding to m_axis_tdata size
+  m_axis_tdata <= ((PADDING_WIDTH-1) downto 0 => dat_b_tmp(ADC_DATA_WIDTH-1)) & dat_b_tmp & ((PADDING_WIDTH-1) downto 0 => dat_a_tmp(ADC_DATA_WIDTH-1)) & dat_a_tmp;
 
 end rtl;

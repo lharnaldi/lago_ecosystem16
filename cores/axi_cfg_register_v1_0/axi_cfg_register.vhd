@@ -45,7 +45,7 @@ architecture rtl of axi_cfg_register is
 
 function clogb2 (value: natural) return integer is
     variable temp    : integer := value;
-    variable ret_val : integer := 0; 
+    variable ret_val : integer := 1; 
   begin					
     while temp > 1 loop
       ret_val := ret_val + 1;

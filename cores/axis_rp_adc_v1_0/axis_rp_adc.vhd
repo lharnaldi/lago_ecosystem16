@@ -8,8 +8,8 @@ use unisim.vcomponents.all;
 
 entity axis_rp_adc is
   generic (
-  ADC_DATA_WIDTH : integer := 14;
-  AXIS_TDATA_WIDTH: integer := 32
+  ADC_DATA_WIDTH : natural := 14;
+  AXIS_TDATA_WIDTH: natural := 32
 );
 port (
  	-- System signals
@@ -30,7 +30,7 @@ end axis_rp_adc;
 
 architecture rtl of axis_rp_adc is
 
-  constant PADDING_WIDTH : integer := AXIS_TDATA_WIDTH/2 - ADC_DATA_WIDTH;
+  constant PADDING_WIDTH : natural := AXIS_TDATA_WIDTH/2 - ADC_DATA_WIDTH;
 
   signal int_dat_a_reg : std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
   signal int_dat_b_reg : std_logic_vector(ADC_DATA_WIDTH-1 downto 0);

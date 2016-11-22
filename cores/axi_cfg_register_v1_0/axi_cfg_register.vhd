@@ -8,9 +8,9 @@ use unisim.vcomponents.all;
 
 entity axi_cfg_register is
   generic (
-  CFG_DATA_WIDTH : integer := 1024;
-  AXI_DATA_WIDTH : integer := 32;
-  AXI_ADDR_WIDTH : integer := 32
+  CFG_DATA_WIDTH : natural := 1024;
+  AXI_DATA_WIDTH : natural := 32;
+  AXI_ADDR_WIDTH : natural := 32
 );
 port (
   -- System signals
@@ -43,9 +43,9 @@ end axi_cfg_register;
 
 architecture rtl of axi_cfg_register is
 
-function clogb2 (value: natural) return integer is
-    variable temp    : integer := value;
-    variable ret_val : integer := 1; 
+function clogb2 (value: natural) return natural is
+    variable temp    : natural := value;
+    variable ret_val : natural := 1; 
   begin					
     while temp > 1 loop
       ret_val := ret_val + 1;
@@ -55,7 +55,7 @@ function clogb2 (value: natural) return integer is
     return ret_val;
   end function;
 
-function sel(cond: boolean; if_true, if_false: integer) return integer is 
+function sel(cond: boolean; if_true, if_false: natural) return natural is 
     begin 
         if (cond = true) then 
             return(if_true); 
@@ -64,9 +64,9 @@ function sel(cond: boolean; if_true, if_false: integer) return integer is
         end if; 
     end function; 
 
-  constant ADDR_LSB : integer := clogb2(AXI_DATA_WIDTH/8 - 1);
-  constant CFG_SIZE : integer := CFG_DATA_WIDTH/AXI_DATA_WIDTH;
-  constant CFG_WIDTH : integer := sel((CFG_SIZE > 1), clogb2(CFG_SIZE-1), 1);
+  constant ADDR_LSB : natural := clogb2(AXI_DATA_WIDTH/8 - 1);
+  constant CFG_SIZE : natural := CFG_DATA_WIDTH/AXI_DATA_WIDTH;
+  constant CFG_WIDTH : natural := sel((CFG_SIZE > 1), clogb2(CFG_SIZE-1), 1);
 
   signal int_bvalid_reg, int_bvalid_next: std_logic;
 
@@ -130,13 +130,13 @@ begin
   int_rdata_next <= int_data_mux(to_integer(unsigned(s_axi_araddr(ADDR_LSB+CFG_WIDTH-1 downto ADDR_LSB)))) when (s_axi_arvalid = '1') else
                     int_rdata_reg;
 
-	cfg_data <= int_data_wire;
+  cfg_data <= int_data_wire;
   s_axi_bresp <= (others => '0');
   s_axi_rresp <= (others => '0');
 
-	s_axi_awready <= int_wvalid_wire;
-	s_axi_wready <= int_wvalid_wire;
-	s_axi_bvalid <= int_bvalid_reg;
+  s_axi_awready <= int_wvalid_wire;
+  s_axi_wready <= int_wvalid_wire;
+  s_axi_bvalid <= int_bvalid_reg;
   s_axi_arready <= '1';
   s_axi_rdata <= int_rdata_reg;
   s_axi_rvalid <= int_rvalid_reg;

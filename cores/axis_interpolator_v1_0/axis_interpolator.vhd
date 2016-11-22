@@ -5,8 +5,8 @@ use ieee.numeric_std.all;
 
 entity axis_interpolator is
   generic (
-    AXIS_TDATA_WIDTH : integer  := 32;
-    CNTR_WIDTH : integer  := 32
+    AXIS_TDATA_WIDTH : natural  := 32;
+    CNTR_WIDTH : natural  := 32
 );
 port (
   -- System signals

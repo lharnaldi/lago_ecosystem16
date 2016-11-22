@@ -5,25 +5,25 @@ use ieee.numeric_std.all;
 
 entity axis_decimator is
   generic (
-    AXIS_TDATA_WIDTH : integer  := 32;
-    CNTR_WIDTH : integer  := 32
+    AXIS_TDATA_WIDTH : natural  := 32;
+    CNTR_WIDTH       : natural  := 32
 );
 port (
   -- System signals
-  aclk : in std_logic;
-  aresetn : in std_logic;
+  aclk           : in std_logic;
+  aresetn        : in std_logic;
 
-  cfg_data : in std_logic_vector(CNTR_WIDTH-1 downto 0);
+  cfg_data       : in std_logic_vector(CNTR_WIDTH-1 downto 0);
 
   -- Slave side
-  s_axis_tready : out std_logic;
-  s_axis_tdata : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
-  s_axis_tvalid : in std_logic;
+  s_axis_tready  : out std_logic;
+  s_axis_tdata   : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+  s_axis_tvalid  : in std_logic;
 
   -- Master side
-  m_axis_tready : in std_logic;
-  m_axis_tdata : out std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
-  m_axis_tvalid : out std_logic
+  m_axis_tready  : in std_logic;
+  m_axis_tdata   : out std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+  m_axis_tvalid  : out std_logic
 );
 end axis_decimator;
 

@@ -86,6 +86,16 @@ int dma_s2mm_sync(unsigned int* dma_virtual_address) {
 
 void memdump(void* virtual_address, int byte_count) {
     char *p = virtual_address;
+    int offset;
+    for (offset = 0; offset < byte_count; offset++) {
+        printf("%02x", p[offset]);
+        if (offset % 4 == 3) { printf(" "); }
+    }
+    printf("\n");
+}
+
+/*void memdump(void* virtual_address, int byte_count) {
+    char *p = virtual_address;
     int offset, i;
     int16_t value[2];
 
@@ -96,14 +106,14 @@ void memdump(void* virtual_address, int byte_count) {
       printf("%5d %5d\n", value[0], value[1]);
     }
 
-}
+}*/
 
 
 int main() {
     int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
-    unsigned int* virtual_address = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, dh, 0x40000000); // Memory map AXI Lite register block
-    unsigned int* virtual_source_address  = mmap(NULL, 0x200000, PROT_READ | PROT_WRITE, MAP_SHARED, dh, 0x000e0000); // Memory map source address
-    unsigned int* virtual_destination_address = mmap(NULL, 0x200000, PROT_READ | PROT_WRITE, MAP_SHARED, dh, 0x000f000); // Memory map destination address
+    unsigned int* virtual_address = mmap(NULL, 16*sysconf(_SC_PAGESIZE), PROT_READ | PROT_WRITE, MAP_SHARED, dh, 0x40400000); // Memory map AXI Lite register block
+    unsigned int* virtual_source_address  = mmap(NULL, 16*sysconf(_SC_PAGESIZE), PROT_READ | PROT_WRITE, MAP_SHARED, dh, 0x0e000000); // Memory map source address
+    unsigned int* virtual_destination_address = mmap(NULL, 16*sysconf(_SC_PAGESIZE), PROT_READ | PROT_WRITE, MAP_SHARED, dh, 0x0f00000); // Memory map destination address
 
 //    virtual_source_address[0]= 0x11223344; // Write random stuff to source block
 //    memset(virtual_destination_address, 0, 32); // Clear destination block
@@ -124,11 +134,11 @@ int main() {
 //    dma_mm2s_status(virtual_address);
 
     printf("Writing destination address\n");
-    dma_set(virtual_address, S2MM_DST_ADDR, 0x000f0000); // Write destination address
+    dma_set(virtual_address, S2MM_DST_ADDR, 0x0f000000); // Write destination address
     dma_s2mm_status(virtual_address);
 
 //    printf("Writing source address...\n");
-//    dma_set(virtual_address, MM2S_SRC_ADDR, 0x000e0000); // Write source address
+//    dma_set(virtual_address, MM2S_SRC_ADDR, 0x0e000000); // Write source address
 //    dma_mm2s_status(virtual_address);
 
     printf("Starting S2MM channel with all interrupts masked...\n");
@@ -140,7 +150,7 @@ int main() {
     dma_mm2s_status(virtual_address);
 */
     printf("Writing S2MM transfer length...\n");
-    dma_set(virtual_address, S2MM_LENGTH, 16);
+    dma_set(virtual_address, S2MM_LENGTH, 4096);
     dma_s2mm_status(virtual_address);
 
 /*    printf("Writing MM2S transfer length...\n");
@@ -156,9 +166,9 @@ int main() {
 //    dma_s2mm_status(virtual_address);
 //    dma_mm2s_status(virtual_address);
 
-    printf("Destination memory block: "); memdump(virtual_destination_address, 16);
+    printf("Destination memory block: "); memdump(virtual_destination_address, 4096);
 
-    if (munmap(virtual_address, 0x200000) == -1)
+    if (munmap(virtual_address, 16*sysconf(_SC_PAGESIZE)) == -1)
         {
                 printf("Can't unmap memory from user space.\n");
                 exit(0);

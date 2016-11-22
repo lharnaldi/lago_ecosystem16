@@ -77,6 +77,28 @@ cell xilinx.com:ip:axi_dma:7.1 axi_dma_0 {
 #  dout ps_0/IRQ_F2P
 #}
 
+# Create xlconstant
+cell xilinx.com:ip:xlconstant:1.1 const_0
+
+# Create axis_clock_converter
+cell xilinx.com:ip:axis_clock_converter:1.1 fifo_0 {} {
+  S_AXIS adc_0/M_AXIS
+  s_axis_aclk adc_0/adc_clk
+  s_axis_aresetn const_0/dout
+  m_axis_aclk ps_0/FCLK_CLK0
+  m_axis_aresetn rst_0/peripheral_aresetn
+}
+
+# Create data FIFO
+cell xilinx.com:ip:axis_data_fifo:1.1 fifo_1 {
+  FIFO_DEPTH 4096
+  FIFO_MODE 2
+} {
+  S_AXIS fifo_0/M_AXIS
+  M_AXIS axi_dma_0/S_AXIS_S2MM
+  s_axis_aclk ps_0/FCLK_CLK0
+  s_axis_aresetn rst_0/peripheral_aresetn
+}
 
 # Create all required interconnections
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
@@ -84,8 +106,8 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
   Clk Auto
 } [get_bd_intf_pins axi_dma_0/S_AXI_LITE]
 
-set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_axi_dma_0_reg]
-set_property OFFSET 0x40000000 [get_bd_addr_segs ps_0/Data/SEG_axi_dma_0_reg]
+set_property RANGE 64K [get_bd_addr_segs ps_0/Data/SEG_axi_dma_0_reg]
+set_property OFFSET 0x40400000 [get_bd_addr_segs ps_0/Data/SEG_axi_dma_0_reg]
 
 # Create all required interconnections
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
@@ -93,7 +115,7 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
   Clk Auto
 } [get_bd_intf_pins ps_0/S_AXI_HP0]
 
-set_property RANGE 2M [get_bd_addr_segs axi_dma_0/Data_SG/SEG_ps_0_HP0_DDR_LOWOCM]
+set_property RANGE 512M [get_bd_addr_segs axi_dma_0/Data_SG/SEG_ps_0_HP0_DDR_LOWOCM]
 
 # Create all required interconnections
 #apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
@@ -109,20 +131,7 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
   Clk Auto
 } [get_bd_intf_pins axi_dma_0/M_AXI_S2MM]
 
-set_property RANGE 2M [get_bd_addr_segs axi_dma_0/Data_S2MM/SEG_ps_0_HP0_DDR_LOWOCM]
-
-# Create xlconstant
-cell xilinx.com:ip:xlconstant:1.1 const_0
-
-# Create axis_clock_converter
-cell xilinx.com:ip:axis_clock_converter:1.1 fifo_0 {} {
-  S_AXIS adc_0/M_AXIS
-  M_AXIS axi_dma_0/S_AXIS_S2MM
-  s_axis_aclk adc_0/adc_clk
-  s_axis_aresetn const_0/dout
-  m_axis_aclk ps_0/FCLK_CLK0
-  m_axis_aresetn rst_0/peripheral_aresetn
-}
+set_property RANGE 512M [get_bd_addr_segs axi_dma_0/Data_S2MM/SEG_ps_0_HP0_DDR_LOWOCM]
 
 startgroup
 set_property -dict [list CONFIG.c_include_sg {0} CONFIG.c_sg_include_stscntrl_strm {0}] [get_bd_cells axi_dma_0]

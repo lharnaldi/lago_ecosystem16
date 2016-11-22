@@ -5,8 +5,8 @@ use ieee.numeric_std.all;
 
 entity axis_counter is
   generic (
-    AXIS_TDATA_WIDTH : integer := 32;
-    CNTR_WIDTH       : integer := 32
+    AXIS_TDATA_WIDTH : natural := 32;
+    CNTR_WIDTH       : natural := 32
 );
 port (
   -- System signals
@@ -30,7 +30,7 @@ architecture rtl of axis_counter is
 
 begin
 
-  process(aclk)
+  process(aclk, aresetn)
   begin
     if(aresetn = '0') then
       int_cntr_reg <= (others => '0');
@@ -47,7 +47,10 @@ begin
                    '0' when (int_enbl_reg = '1') and (int_comp_wire = '0') else
                    int_enbl_reg;
 
+--  int_cntr_next <= int_cntr_reg + 1 when (int_enbl_reg = '1') and (int_comp_wire = '1') else
+--                   int_cntr_reg;
   int_cntr_next <= int_cntr_reg + 1 when (int_enbl_reg = '1') and (int_comp_wire = '1') else
+                   (others => '0') when (int_comp_wire = '0') else --reset
                    int_cntr_reg;
 
   m_axis_tdata <= std_logic_vector(resize(int_cntr_reg, m_axis_tdata'length));

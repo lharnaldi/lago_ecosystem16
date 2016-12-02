@@ -92,5 +92,5 @@ Test a Tcl module:
 ```
 $ make NAME=averager INSTRUMENT_PATH=fpga/modules test_module
 ```
--->
+--!>
 

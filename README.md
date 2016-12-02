@@ -2,9 +2,9 @@
 
 [![Circle CI](https://circleci.com/gh/Koheron/koheron-sdk.svg?style=shield)](https://circleci.com/gh/Koheron/koheron-sdk)
 
-## What is Koheron SDK ?
+## What is LAGO Ecosystem?
 
-Koheron SDK is a build system for quick prototyping of custom instruments on Zynq SoCs.
+Lago Ecosystem is a build system for quick prototyping and working with the Zynq SoCs.
 
 ## Quickstart with the [Red Pitaya](http://redpitaya.com)
 
@@ -17,33 +17,38 @@ Koheron SDK is a build system for quick prototyping of custom instruments on Zyn
 ```bash
 $ sudo apt-get install curl
 $ cd ~/Downloads
-$ curl https://raw.githubusercontent.com/Koheron/koheron-sdk/master/fpga/scripts/install_vivado.sh | sudo /bin/bash /dev/stdin
+$ curl https://raw.githubusercontent.com/lagoprojectrp/lago_ecosystem/master/scripts/install_vivado.sh | sudo /bin/bash /dev/stdin
 $ sudo ln -s make /usr/bin/gmake # tells Vivado to use make instead of gmake
 ```
 
 #### 1.3. Install requirements
 
 ```bash
-$ sudo apt-get install git curl zip python-virtualenv python-pip \
-    g++-arm-linux-gnueabihf lib32stdc++6 lib32z1 u-boot-tools \
-    libssl-dev bc device-tree-compiler qemu-user-static
-$ sudo apt-get install git
-$ git clone https://github.com/Koheron/koheron-sdk
-$ cd koheron-sdk
+$ sudo apt-get update
+
+$ sudo apt-get --no-install-recommends install \
+    build-essential git curl ca-certificates sudo \
+    libxrender1 libxtst6 libxi6 lib32ncurses5 \
+    crossbuild-essential-armhf \
+    bc u-boot-tools device-tree-compiler libncurses5-dev \
+    libssl-dev qemu-user-static binfmt-support \
+    dosfstools parted debootstrap
+
+$ git clone https://github.com/lagoprojectrp/lago_ecosystem
+$ cd lago_ecosystem
 $ sudo pip install -r requirements.txt
 ```
 
-### 2. Install Koheron Linux for Red Pitaya ([Download SD card image](https://github.com/Koheron/koheron-sdk/releases))
+### 2. Install Koheron Linux for Red Pitaya ([Download SD card image](https://github.com/lagoprojectrp/lago_ecosystem/releases))
 
 ### 3. Build and run the minimal instrument
 
 ```bash
 $ source settings.sh
-$ make NAME=led_blinker HOST=192.168.1.100 run
+$ make NAME=led_blinker
 ```
-where `HOST` is your Red Pitaya IP address.
 
-### 4. Ping the board and watch the LEDs blink
+<!### 4. Ping the board and watch the LEDs blink
 
 ```bash
 $ curl http://$(HOST)/api/board/ping
@@ -59,6 +64,7 @@ $ curl http://$(HOST)/api/board/ping
 * [`oscillo`](https://github.com/Koheron/koheron-sdk/tree/master/instruments/oscillo) : signal acquisition / generation with coherent averaging mode.
 * [`spectrum`](https://github.com/Koheron/koheron-sdk/tree/master/instruments/spectrum) : spectrum analyzer with peak-detection and averaging.
 
+!>
 ## How to
 
 Open Vivado and build the instrument block design:

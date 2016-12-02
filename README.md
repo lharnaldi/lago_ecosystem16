@@ -48,7 +48,7 @@ $ source settings.sh
 $ make NAME=led_blinker
 ```
 
-<!---### 4. Ping the board and watch the LEDs blink
+<!--### 4. Ping the board and watch the LEDs blink
 
 ```bash
 $ curl http://$(HOST)/api/board/ping
@@ -92,5 +92,5 @@ Test a Tcl module:
 ```
 $ make NAME=averager INSTRUMENT_PATH=fpga/modules test_module
 ```
---!>
+-->
 

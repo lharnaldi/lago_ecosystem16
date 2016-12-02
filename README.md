@@ -37,7 +37,7 @@ $ cd lago_ecosystem
 $ sudo pip install -r requirements.txt
 ```
 
-### 2. Install Koheron Linux for Red Pitaya ([Download SD card image](https://github.com/lagoprojectrp/lago_ecosystem/releases))
+### 2. Install LAGO Linux for Red Pitaya ([Download SD card image](https://github.com/lagoprojectrp/lago_ecosystem/releases))
 
 ### 3. Build and run the minimal instrument
 

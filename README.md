@@ -1,6 +1,6 @@
 # lago\_ecosystem
 
-[![Circle CI](https://circleci.com/gh/Koheron/koheron-sdk.svg?style=shield)](https://circleci.com/gh/Koheron/koheron-sdk)
+<!---[![Circle CI](https://circleci.com/gh/Koheron/koheron-sdk.svg?style=shield)](https://circleci.com/gh/Koheron/koheron-sdk)-->
 
 ## What is LAGO Ecosystem?
 

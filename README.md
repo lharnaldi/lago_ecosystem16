@@ -1,7 +1,5 @@
 # lago\_ecosystem
 
-<!---[![Circle CI](https://circleci.com/gh/Koheron/koheron-sdk.svg?style=shield)](https://circleci.com/gh/Koheron/koheron-sdk)-->
-
 ## What is LAGO Ecosystem?
 
 Lago Ecosystem is a build system for quick prototyping and working with the Zynq SoCs.
@@ -47,50 +45,4 @@ $ sudo pip install -r requirements.txt
 $ source settings.sh
 $ make NAME=led_blinker
 ```
-
-<!--- ### 4. Ping the board and watch the LEDs blink
-
-```bash
-$ curl http://$(HOST)/api/board/ping
-```
-
-## Examples of instruments
-
-* [`led_blinker`](https://github.com/Koheron/koheron-sdk/tree/master/instruments/led_blinker) : minimal instrument with LED control from Python.
-* [`adc_dac`](https://github.com/Koheron/koheron-sdk/tree/master/instruments/adc_dac) : instrument with minimal read/write capability on Red Pitaya ADCs and DACs.
-* [`pulse_generator`](https://github.com/Koheron/koheron-sdk/tree/master/instruments/pulse_generator) : pulse generation with synchronous acquisition.
-* [`laser_controller`](https://github.com/Koheron/koheron-sdk/tree/master/instruments/decimator) : laser current control using pulse-density modulation.
-* [`decimator`](https://github.com/Koheron/koheron-sdk/tree/master/instruments/decimator) : decimation using a compensated CIC filter.
-* [`oscillo`](https://github.com/Koheron/koheron-sdk/tree/master/instruments/oscillo) : signal acquisition / generation with coherent averaging mode.
-* [`spectrum`](https://github.com/Koheron/koheron-sdk/tree/master/instruments/spectrum) : spectrum analyzer with peak-detection and averaging.
-
-
-## How to
-
-Open Vivado and build the instrument block design:
-```
-$ make NAME=oscillo bd
-```
-
-Build the SD card image:
-```
-$ make NAME=led_blinker linux
-$ sudo bash os/scripts/image.sh led_blinker
-```
-
-Build the instrument (without running it):
-```
-$ make NAME=oscillo
-```
-
-Test a verilog core:
-```
-$ make CORE=comparator_v1_0 test_core
-```
-
-Test a Tcl module:
-```
-$ make NAME=averager INSTRUMENT_PATH=fpga/modules test_module
-```
--->
 

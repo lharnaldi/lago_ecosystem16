@@ -48,7 +48,7 @@ $ source settings.sh
 $ make NAME=led_blinker
 ```
 
-<!### 4. Ping the board and watch the LEDs blink
+<!---### 4. Ping the board and watch the LEDs blink
 
 ```bash
 $ curl http://$(HOST)/api/board/ping
@@ -64,7 +64,7 @@ $ curl http://$(HOST)/api/board/ping
 * [`oscillo`](https://github.com/Koheron/koheron-sdk/tree/master/instruments/oscillo) : signal acquisition / generation with coherent averaging mode.
 * [`spectrum`](https://github.com/Koheron/koheron-sdk/tree/master/instruments/spectrum) : spectrum analyzer with peak-detection and averaging.
 
-!>
+
 ## How to
 
 Open Vivado and build the instrument block design:
@@ -92,5 +92,5 @@ Test a Tcl module:
 ```
 $ make NAME=averager INSTRUMENT_PATH=fpga/modules test_module
 ```
-
+-->
 

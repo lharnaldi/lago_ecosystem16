@@ -104,7 +104,7 @@ begin
     end generate;
   end generate;
 
-  process(aclk, aresetn)
+  process(aclk)
   begin
     if rising_edge(aclk) then
     if(aresetn = '0') then

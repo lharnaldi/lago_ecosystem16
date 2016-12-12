@@ -41,18 +41,20 @@ begin
   int_comp_wire <= '1' when (int_cntr_reg < unsigned(cfg_data)) else '0';
   int_tvalid_wire <= int_tready_reg and s_axis_tvalid;
 
-  process(aclk, aresetn)
+  process(aclk)
   begin
+  if (rising_edge(aclk)) then
   if (aresetn = '0') then
     int_tdata_reg <= (others => '0');
     int_tvalid_reg <= '0';
     int_tready_reg <= '0';
     int_cntr_reg <= (others => '0');
-  elsif (rising_edge(aclk)) then
+  else
     int_tdata_reg <= int_tdata_next;
     int_tvalid_reg <= int_tvalid_next;
     int_tready_reg <= int_tready_next;
     int_cntr_reg <= int_cntr_next;
+  end if;
   end if;
   end process;
 

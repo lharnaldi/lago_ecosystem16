@@ -39,14 +39,16 @@ architecture rtl of axis_packetizer is
 
 begin
 
-  process(aclk, aresetn)
+  process(aclk)
   begin
+  if (rising_edge(aclk)) then
   if (aresetn = '0') then
     int_cntr_reg <= (others => '0');
     int_enbl_reg <= '0';
-  elsif (rising_edge(aclk)) then
+  else
     int_cntr_reg <= int_cntr_next;
     int_enbl_reg <= int_enbl_next;
+  end if;
   end if;
   end process;
 

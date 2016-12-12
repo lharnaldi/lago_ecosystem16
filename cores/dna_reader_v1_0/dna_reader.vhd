@@ -40,20 +40,22 @@ begin
       SHIFT => int_shift_reg
    );
 
-  process(aclk, aresetn)
+  process(aclk)
   begin
+    if rising_edge(aclk) then
     if(aresetn = '0') then
       int_enbl_reg <= '0';
       int_read_reg <= '0';
       int_shift_reg <= '0';
       int_cntr_reg <= (others => '0');
       int_data_reg <= (others => '0');
-    elsif rising_edge(aclk) then
+    else
       int_enbl_reg <= int_enbl_next;
       int_read_reg <= int_read_next;
       int_shift_reg <= int_shift_next;
       int_cntr_reg <= int_cntr_next;
       int_data_reg <= int_data_next;
+    end if;
     end if;
   end process;
 

@@ -79,14 +79,16 @@ begin
      int_data_mux(j) <= sts_data(j*AXI_DATA_WIDTH+AXI_DATA_WIDTH-1 downto j*AXI_DATA_WIDTH);
   end generate;
 
-  process(aclk, aresetn)
+  process(aclk)
   begin
+    if rising_edge(aclk) then
     if(aresetn = '0') then
       int_rvalid_reg <= '0';
       int_rdata_reg <= (others => '0');
-    elsif rising_edge(aclk) then
+    else
       int_rvalid_reg <= int_rvalid_next;
       int_rdata_reg <= int_rdata_next;
+    end if;
     end if;
   end process;
 

@@ -15,7 +15,7 @@ entity axis_lago_trigger is
   CLK_FREQ          : natural  := 125000000;
 
   -- numero de bits en los datos
-  ADCBITS           : natural := 10;    
+  ADCBITS           : natural := 14;    
   DATA_ARRAY_LENGTH : natural := 12;
   METADATA_ARRAY_LENGTH       : natural := 10;
   SUBTRIG_ARRAY_LENGTH   : natural := 3
@@ -26,8 +26,10 @@ port (
   aresetn            : in std_logic;
 
 --  pol_data           : in std_logic;
-  trig_lvl           : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
-  subtrig_lvl        : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+  trig_lvl_a         : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+  trig_lvl_b         : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+  subtrig_lvl_a      : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+  subtrig_lvl_b      : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
 --
 --  trg_flag           : out std_logic;
 
@@ -75,9 +77,18 @@ architecture rtl of axis_lago_trigger is
 
   --ADC related signals
   type  adc_data_array_t is array (DATA_ARRAY_LENGTH-1 downto 0) 
-  of std_logic_vector(14-1 downto 0);--FIXME:see how to add AXIS_TDATA_WIDTH here
+  of std_logic_vector(ADCBITS-1 downto 0);--FIXME:see how to add AXIS_TDATA_WIDTH here
   signal adc_dat_a_reg, adc_dat_a_next : adc_data_array_t;
   signal adc_dat_b_reg, adc_dat_b_next : adc_data_array_t;
+
+  type array_pps_t is array (METADATA_ARRAY_LENGTH-1 downto 0) 
+  of std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+  signal array_pps_reg, array_pps_next : array_pps_t;
+
+  type array_scalers_t is array (SUBTRIG_ARRAY_LENGTH-1 downto 0) 
+  of std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+  signal array_scalers_reg, array_scalers_next : array_scalers_t;
+
 
   --PPS related signals
   -- clock counter in a second
@@ -115,10 +126,10 @@ architecture rtl of axis_lago_trigger is
                       ST_ATT_PPS);
   signal state_reg, state_next: state_t;
 
---  signal wr_count_reg, wr_count_next : unsigned(7 downto 0);
---  signal data_to_fifo_reg, data_to_fifo_next : std_logic_vector(2**W-1 downto 0);
---  signal wr_fifo_en_reg, wr_fifo_en_next  : std_logic;
---  signal status : std_logic_vector(2 downto 0);
+  signal wr_count_reg, wr_count_next : unsigned(7 downto 0);
+  signal data_to_fifo_reg, data_to_fifo_next : std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+  signal wr_fifo_en_reg, wr_fifo_en_next  : std_logic;
+  signal status : std_logic_vector(2 downto 0);
 
 
 begin
@@ -130,16 +141,16 @@ begin
     if (rising_edge(aclk)) then
       if (aresetn = '0') then
         one_sec_cnt <= (others => '0');   
-        clk_cnt_pps_reg <= (others => '0');   
+        clk_cnt_pps <= (others => '0');   
       else
-        if (unsigned(one_sec_cnt_reg) = CLK_FREQ-1) then
+        if (unsigned(one_sec_cnt) = CLK_FREQ-1) then
           one_sec_cnt <= (others => '0');
         else
           one_sec_cnt <= std_logic_vector(unsigned(one_sec_cnt) + 1);
         end if;
        
         -- false PPS is UP for 200 ms
-        if (unsigned(one_sec_cnt)) < CLK_FREQ/5) then
+        if (unsigned(one_sec_cnt) < CLK_FREQ/5) then
           false_pps <= '1';
         else
           false_pps <= '0';
@@ -255,7 +266,7 @@ begin
       end if;
       end if;
       -- next state logic
-      if (i = (DATA_ARRAY_LENTGTH-1)) then
+      if (i = (DATA_ARRAY_LENGTH-1)) then
         adc_dat_a_next(i) <= s_axis_tdata(AXIS_TDATA_WIDTH/2 - 3 downto 0);--FIXME: see how to make more general this assignment
         adc_dat_b_next(i) <= s_axis_tdata(AXIS_TDATA_WIDTH - 3 downto AXIS_TDATA_WIDTH/2); --FIXME: same as above
       else
@@ -266,25 +277,7 @@ begin
   end process;
 
 -----------------------------------------------------------------------------------------------------
------------------------------------------------------------------------------------------------------
--- AXI-Stream
-  process(aclk)
-  begin
-  if rising_edge(aclk) then
-  if (aresetn = '0') then
-  
 
-  end process;
-  s_axis_tready     : out std_logic;
-  s_axis_tdata      : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
-  s_axis_tvalid     : in std_logic;
-
-  -- Master side
-  m_axis_tready     : out std_logic;
-  m_axis_tdata      : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
-  m_axis_tvalid     : in std_logic
-
------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------
   --trigger
   process(aclk)
@@ -313,7 +306,7 @@ begin
                 '0';
   tr_s <= '1' when  ((tr1_s = '1') or (tr2_s = '1')) else '0';
 
-  tr_status_next <=   "010" & tr2_s & tr1_s & std_logic_vector(cont_clk_entre_pps_reg(26 downto 0)) when (tr_s = '1') else
+  tr_status_next <=   "010" & tr2_s & tr1_s & std_logic_vector(clk_cnt_pps(26 downto 0)) when (tr_s = '1') else
                       tr_status_reg;
   cnt_status_next <=  "10" & std_logic_vector(trig_cnt_reg) when (tr_s = '1') else
                       cnt_status_reg;
@@ -331,14 +324,12 @@ begin
     if (aresetn = '0') then
       charge1_reg <= (others => '0');
       charge2_reg <= (others => '0');
-      charge3_reg <= (others => '0');
       array_scalers_reg(SUBTRIG_ARRAY_LENGTH-1) <= (others => '0');
       array_scalers_reg(SUBTRIG_ARRAY_LENGTH-2) <= (others => '0');
       array_scalers_reg(SUBTRIG_ARRAY_LENGTH-3) <= (others => '0');
     else
       charge1_reg <= charge1_next;
       charge2_reg <= charge2_next;
-      charge3_reg <= charge3_next;
       array_scalers_reg(SUBTRIG_ARRAY_LENGTH-1) <= array_scalers_reg(SUBTRIG_ARRAY_LENGTH-1);
       array_scalers_reg(SUBTRIG_ARRAY_LENGTH-2) <= array_scalers_reg(SUBTRIG_ARRAY_LENGTH-2);
       array_scalers_reg(SUBTRIG_ARRAY_LENGTH-3) <= array_scalers_reg(SUBTRIG_ARRAY_LENGTH-3);

@@ -45,12 +45,14 @@ signal int_tdata_reg, int_tdata_next : std_logic_vector(AXI_DATA_WIDTH-1 downto 
 
 begin
 
-  process(aclk, aresetn)
+  process(aclk)
   begin
+    if rising_edge(aclk) then 
     if (aresetn = '0') then
     	int_valid_reg <= '0';
-    elsif rising_edge(aclk) then 
+    else
     	int_valid_reg <= int_valid_next;
+    end if;
     end if;
   end process;
   

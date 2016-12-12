@@ -44,18 +44,20 @@ architecture rtl of axis_oscilloscope is
 
 begin
 
-  process(aclk, aresetn)
+  process(aclk)
   begin
+    if (rising_edge(aclk)) then
     if (aresetn = '0') then
       int_addr_reg <= (others => '0');
       int_cntr_reg <= (others => '0');
       int_case_reg <= (others => '0');
       int_enbl_reg <= '0';
-    elsif (rising_edge(aclk)) then
+    else
       int_addr_reg <= int_addr_next;
       int_cntr_reg <= int_cntr_next;
       int_case_reg <= int_case_next;
       int_enbl_reg <= int_enbl_next;
+    end if;
     end if;
   end process;
 

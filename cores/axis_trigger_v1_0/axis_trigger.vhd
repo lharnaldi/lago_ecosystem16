@@ -40,7 +40,7 @@ begin
     int_comp_wire <= '1' when unsigned(s_axis_tdata and msk_data) >= unsigned(lvl_data) else '0';
   end generate;
 
-  process(aclk, s_axis_tvalid)
+  process(aclk)
   begin
    if (rising_edge(aclk)) then
     if (s_axis_tvalid = '1') then

@@ -44,15 +44,17 @@ begin
   int_dat_a_wire <= s_axis_tdata(DAC_DATA_WIDTH-1 downto 0);
   int_dat_b_wire <= s_axis_tdata(AXIS_TDATA_WIDTH/2+DAC_DATA_WIDTH-1 downto AXIS_TDATA_WIDTH/2);
 
-  process(aclk, locked, s_axis_tvalid)
+  process(aclk)
   begin
+  if rising_edge(aclk) then
     if (locked = '0' or s_axis_tvalid = '0') then
     int_dat_a_reg <= (others => '0');
     int_dat_b_reg <= (others => '0');
-  elsif rising_edge(aclk) then
+  else
     int_dat_a_reg <= int_dat_a_wire(DAC_DATA_WIDTH-1) & not int_dat_a_wire(DAC_DATA_WIDTH-2 downto 0);
     int_dat_b_reg <= int_dat_b_wire(DAC_DATA_WIDTH-1) & not int_dat_b_wire(DAC_DATA_WIDTH-2 downto 0);
     int_rst_reg <= not locked or not s_axis_tvalid;
+  end if;
   end if;
   end process;
 

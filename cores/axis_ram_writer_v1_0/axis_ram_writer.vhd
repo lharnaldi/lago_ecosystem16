@@ -122,18 +122,20 @@ begin
     DIP         => X"00"
   );
 
-  process(aclk, aresetn)
+  process(aclk)
   begin
+  if (rising_edge(aclk)) then
   if (aresetn = '0') then
     int_awvalid_reg <= '0';
     int_wvalid_reg <= '0';
     int_addr_reg <= (others => '0');
     int_wid_reg <= (others => '0');
-  elsif (rising_edge(aclk)) then
+  else
     int_awvalid_reg <= int_awvalid_next;
     int_wvalid_reg <= int_wvalid_next;
     int_addr_reg <= int_addr_next;
     int_wid_reg <= int_wid_next;
+  end if;
   end if;
   end process;
 

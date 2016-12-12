@@ -128,14 +128,16 @@ begin
 --------------------------------------------------------------------------
   -- PPS falso
   -- registers
-  process(aclk, aresetn)
+  process(aclk)
   begin
+    if (rising_edge(aclk)) then
     if (aresetn = '0') then
       one_sec_cnt_reg <= (others => '0');   
       clk_cnt_pps_reg <= (others => '0');   
-    elsif (rising_edge(aclk)) then
+    else
       one_sec_cnt_reg <= one_sec_cnt_next;
       clk_cnt_pps_reg <= clk_cnt_pps_next;
+    end if;
     end if;
   end process;
   --next state logic
@@ -158,12 +160,14 @@ begin
 ---------------------------------------------------------------------------
   -- edge detector
   -- state register
-  process(aclk, aresetn)
+  process(aclk)
   begin
+    if (rising_edge(aclk)) then
     if (aresetn = '0') then
         pps_st_reg <= ZERO;
-    elsif (rising_edge(aclk)) then
+    else
         pps_st_reg <= pps_st_next;
+    end if;
     end if;
   end process;
 
@@ -196,13 +200,15 @@ begin
 -----------------------------------------------------------------------------
 
   -- data registers for a second
-  process(aclk, aresetn)
+  process(aclk)
   begin
     for i in L_ARRAY_PPS-1 downto 0 loop
+      if (rising_edge(aclk)) then
       if (reset = '1') then
         array_pps_reg(i) <= (others => '0');
-      elsif (clk_40mhz'event and clk_40mhz = '1') then
+      else
         array_pps_reg(i) <= array_pps_next(i);
+      end if;
       end if;
     end loop;
   end process;
@@ -222,15 +228,17 @@ begin
 
 ------------------------------------------------------------------------------------------------------
   --data acquisition for each channel
-  process(aclk, aresetn)
+  process(aclk)
   begin
     for i in (DATA_ARRAY_LENGTH-1) downto 0 loop
+      if (rising_edge(aclk)) then
       if (aresetn = '0') then
         adc_dat_a_reg(i) <= (others=>'0');
         adc_dat_b_reg(i) <= (others=>'0');
-      elsif (rising_edge(aclk)) then
+      else
         adc_dat_a_reg(i) <= adc_dat_a_next(i);
         adc_dat_b_reg(i) <= adc_dat_b_next(i);
+      end if;
       end if;
       -- next state logic
       if (i = (DATA_ARRAY_LENTGTH-1)) then
@@ -247,16 +255,18 @@ begin
 
 -----------------------------------------------------------------------------------------------------
   --trigger
-  process(aclk, aresetn)
+  process(aclk)
   begin
+    if (rising_edge(aclk)) then
     if (aresetn = '0') then
       tr_status_reg  <= (others => '0');
       cnt_status_reg <= (others => '0');
       trig_cnt_reg   <= (others => '0');
-    elsif (rising_edge(aclk)) then
+    else
       tr_status_reg  <= tr_status_next;
       cnt_status_reg <= cnt_status_next;
       trig_cnt_reg   <= trig_cnt_next;
+    end if;
     end if;
   end process;
   -- The trigger is at bin 4 because we loose a clock pulse in the state machine
@@ -283,8 +293,9 @@ begin
 
 ----------------------------------------------------------------------------------------------------------
   --sub-trigger: we test for a sub-trigger and we must not have a trigger in the next two clocks
-  process(aclk, aresetn)
+  process(aclk)
   begin
+    if (rising_edge(aclk)) then
     if (aresetn = '0') then
       charge1_reg <= (others => '0');
       charge2_reg <= (others => '0');
@@ -292,13 +303,14 @@ begin
       array_scalers_reg(L_ARRAY_SCALERS-1) <= (others => '0');
       array_scalers_reg(L_ARRAY_SCALERS-2) <= (others => '0');
       array_scalers_reg(L_ARRAY_SCALERS-3) <= (others => '0');
-    elsif (rising_edge(aclk)) then
+    else
       charge1_reg <= charge1_next;
       charge2_reg <= charge2_next;
       charge3_reg <= charge3_next;
       array_scalers_reg(L_ARRAY_SCALERS-1) <= array_scalers_reg(L_ARRAY_SCALERS-1);
       array_scalers_reg(L_ARRAY_SCALERS-2) <= array_scalers_reg(L_ARRAY_SCALERS-2);
       array_scalers_reg(L_ARRAY_SCALERS-3) <= array_scalers_reg(L_ARRAY_SCALERS-3);
+    end if;
     end if;
   end process;
   -- next state logic
@@ -339,18 +351,20 @@ begin
   --================================================================
   -- state and data registers
   --================================================================
-  process (aclk, aresetn)
+  process (aclk)
   begin
+    if (rising_edge(aclk)) then
     if (aresetn = '0') then
       state_reg      <= ST_IDLE;
       wr_fifo_en_reg <= '0';
       wr_count_reg   <= (others => '0');
       data_to_fifo_reg <= (others => '0');
-    elsif (rising_edge(aclk)) then
+    else
       state_reg      <= state_next;
       wr_fifo_en_reg <= wr_fifo_en_next;
       wr_count_reg   <= wr_count_next;
       data_to_fifo_reg <= data_to_fifo_next;
+    end if;
     end if;
   end process;
   --=================================================================

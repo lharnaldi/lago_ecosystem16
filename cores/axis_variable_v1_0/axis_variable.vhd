@@ -28,14 +28,16 @@ architecture rtl of axis_variable is
 
 begin
 
-  process(aclk, aresetn)
+  process(aclk)
   begin
+    if (rising_edge(aclk)) then
     if(aresetn = '0') then
       int_tdata_reg <= (others => '0');
       int_tvalid_reg <= '0';
-    elsif (rising_edge(aclk)) then
+    else
       int_tdata_reg <= cfg_data;
       int_tvalid_reg <= int_tvalid_next;
+    end if;
     end if;
   end process;
 

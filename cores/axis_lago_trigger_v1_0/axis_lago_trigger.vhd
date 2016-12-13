@@ -5,33 +5,30 @@ use ieee.numeric_std.all;
 
 entity axis_lago_trigger is
   generic (
-  AXIS_TDATA_WIDTH  : natural  := 32;
-  AXIS_TDATA_SIGNED : string   := "FALSE";
+  AXIS_TDATA_WIDTH      : natural := 32;
+  AXIS_TDATA_SIGNED     : string  := "FALSE";
   -- AXI LITE interface
-  C_S_AXI_DATA_WIDTH : natural  := 32;
-  C_S_AXI_ADDR_WIDTH : natural  := 32;
+  C_S_AXI_DATA_WIDTH    : natural := 32;
+  C_S_AXI_ADDR_WIDTH    : natural := 32;
 
   -- clock frequency
-  CLK_FREQ          : natural  := 125000000;
+  CLK_FREQ              : natural := 125000000;
 
   -- numero de bits en los datos
-  ADCBITS           : natural := 14;    
-  DATA_ARRAY_LENGTH : natural := 12;
-  METADATA_ARRAY_LENGTH       : natural := 10;
-  SUBTRIG_ARRAY_LENGTH   : natural := 3
+  ADCBITS               : natural := 14;    
+  DATA_ARRAY_LENGTH     : natural := 12;
+  METADATA_ARRAY_LENGTH : natural := 10;
+  SUBTRIG_ARRAY_LENGTH  : natural := 3
 );
 port (
   -- System signals
   aclk               : in std_logic;
   aresetn            : in std_logic;
 
---  pol_data           : in std_logic;
   trig_lvl_a         : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
   trig_lvl_b         : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
   subtrig_lvl_a      : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
   subtrig_lvl_b      : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
---
---  trg_flag           : out std_logic;
 
 --  pwr_enA            : out  std_logic;
 --  data_out           : out  std_logic_vector(2**W-1 downto 0);
@@ -59,7 +56,6 @@ port (
 --  num_vis_sat_port   : in   std_logic_vector(7 downto 0);
 --  num_track_sat_port : in   std_logic_vector(7 downto 0);
 --  rsf_port           : in   std_logic_vector(7 downto 0)
-
 
   -- Slave side
   s_axis_tready     : out std_logic;

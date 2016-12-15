@@ -5,20 +5,20 @@ use ieee.numeric_std.all;
 
 entity axis_lago_trigger is
   generic (
-  AXIS_TDATA_WIDTH  : natural  := 32;
-  AXIS_TDATA_SIGNED : string   := "FALSE";
+  AXIS_TDATA_WIDTH      : natural  := 32;
+  AXIS_TDATA_SIGNED     : string   := "FALSE";
   -- AXI LITE interface
-  C_S_AXI_DATA_WIDTH : natural  := 32;
-  C_S_AXI_ADDR_WIDTH : natural  := 32;
+  C_S_AXI_DATA_WIDTH    : natural  := 32;
+  C_S_AXI_ADDR_WIDTH    : natural  := 32;
 
   -- clock frequency
-  CLK_FREQ          : natural  := 125000000;
+  CLK_FREQ              : natural  := 125000000;
 
   -- numero de bits en los datos
-  ADCBITS           : natural := 14;    
-  DATA_ARRAY_LENGTH : natural := 12;
-  METADATA_ARRAY_LENGTH       : natural := 10;
-  SUBTRIG_ARRAY_LENGTH   : natural := 3
+  ADC_DATA_WIDTH               : natural := 14;    
+  DATA_ARRAY_LENGTH     : natural := 12;
+  METADATA_ARRAY_LENGTH : natural := 10;
+  SUBTRIG_ARRAY_LENGTH  : natural := 3
 );
 port (
   -- System signals
@@ -60,7 +60,6 @@ port (
 --  num_track_sat_port : in   std_logic_vector(7 downto 0);
 --  rsf_port           : in   std_logic_vector(7 downto 0)
 
-
   -- Slave side
   s_axis_tready     : out std_logic;
   s_axis_tdata      : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
@@ -75,9 +74,11 @@ end axis_lago_trigger;
 
 architecture rtl of axis_lago_trigger is
 
+  constant PADDING_WIDTH : natural := AXIS_TDATA_WIDTH/2 - ADC_DATA_WIDTH;
+
   --ADC related signals
   type  adc_data_array_t is array (DATA_ARRAY_LENGTH-1 downto 0) 
-  of std_logic_vector(ADCBITS-1 downto 0);--FIXME:see how to add AXIS_TDATA_WIDTH here
+  of std_logic_vector(ADC_DATA_WIDTH-1 downto 0);--FIXME:see how to add AXIS_TDATA_WIDTH here
   signal adc_dat_a_reg, adc_dat_a_next : adc_data_array_t;
   signal adc_dat_b_reg, adc_dat_b_next : adc_data_array_t;
 
@@ -114,8 +115,8 @@ architecture rtl of axis_lago_trigger is
   signal cont_bines_reg, cont_bines_next : unsigned(AXIS_TDATA_WIDTH-1 downto 0); 
 
   --Charge signals
-  signal charge1_reg, charge1_next       : unsigned(ADCBITS-1 downto 0);
-  signal charge2_reg, charge2_next       : unsigned(ADCBITS-1 downto 0);
+  signal charge1_reg, charge1_next       : unsigned(ADC_DATA_WIDTH-1 downto 0);
+  signal charge2_reg, charge2_next       : unsigned(ADC_DATA_WIDTH-1 downto 0);
 
   --FSM signals
   type state_t is (ST_IDLE,
@@ -130,6 +131,8 @@ architecture rtl of axis_lago_trigger is
   signal data_to_fifo_reg, data_to_fifo_next : std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
   signal wr_fifo_en_reg, wr_fifo_en_next  : std_logic;
   signal status : std_logic_vector(2 downto 0);
+
+  signal axis_tready : std_logic;
 
 
 begin
@@ -229,7 +232,7 @@ begin
   end process;
   --next state logic
 --  array_pps_next(METADATA_ARRAY_LENGTH-10)<= x"FFFFFFFF" when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
---  array_pps_next(METADATA_ARRAY_LENGTH-9)<= "11" & "000" & std_logic_vector(cont_clk_entre_pps_reg(26 downto 0)) when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
+--  array_pps_next(METADATA_ARRAY_LENGTH-9)<= "11" & "000" & std_logic_vector(clk_cnt_pps(26 downto 0)) when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
 --  array_pps_next(METADATA_ARRAY_LENGTH-8)<= "11" & "001" & "00000000000" & ptemperatura when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);
 --  array_pps_next(METADATA_ARRAY_LENGTH-7)<= "11" & "010" & "00000000000" & ppresion when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-7);
 --  array_pps_next(METADATA_ARRAY_LENGTH-6)<= "11" & "011" & "000" & phora & pminutos & psegundos when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-6);
@@ -240,13 +243,13 @@ begin
 --  array_pps_next(METADATA_ARRAY_LENGTH-1)<= "11" & "100" & "100" & num_track_sat_port & num_vis_sat_port & rsf_port when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
 
   array_pps_next(METADATA_ARRAY_LENGTH-10)<= (others => '1');
-  array_pps_next(METADATA_ARRAY_LENGTH-9)<= (others => '1');
+  array_pps_next(METADATA_ARRAY_LENGTH-9)<= (others => '0');
   array_pps_next(METADATA_ARRAY_LENGTH-8)<= (others => '1');
-  array_pps_next(METADATA_ARRAY_LENGTH-7)<= (others => '1');
+  array_pps_next(METADATA_ARRAY_LENGTH-7)<= (others => '0');
   array_pps_next(METADATA_ARRAY_LENGTH-6)<= (others => '1');
-  array_pps_next(METADATA_ARRAY_LENGTH-5)<= (others => '1');
+  array_pps_next(METADATA_ARRAY_LENGTH-5)<= (others => '0');
   array_pps_next(METADATA_ARRAY_LENGTH-4)<= (others => '1');
-  array_pps_next(METADATA_ARRAY_LENGTH-3)<= (others => '1');
+  array_pps_next(METADATA_ARRAY_LENGTH-3)<= (others => '0');
   array_pps_next(METADATA_ARRAY_LENGTH-2)<= (others => '1');
   array_pps_next(METADATA_ARRAY_LENGTH-1)<= (others => '1');
 ------------------------------------------------------------------------------------------------------
@@ -308,7 +311,7 @@ begin
 
   tr_status_next <=   "010" & tr2_s & tr1_s & std_logic_vector(clk_cnt_pps(26 downto 0)) when (tr_s = '1') else
                       tr_status_reg;
-  cnt_status_next <=  "10" & std_logic_vector(trig_cnt_reg) when (tr_s = '1') else
+  cnt_status_next <=  "10" & std_logic_vector(trig_cnt_reg(AXIS_TDATA_WIDTH-3 downto 0)) when (tr_s = '1') else
                       cnt_status_reg;
 
   trig_cnt_next <= trig_cnt_reg + 1 when (tr_s = '1') else
@@ -330,14 +333,14 @@ begin
     else
       charge1_reg <= charge1_next;
       charge2_reg <= charge2_next;
-      array_scalers_reg(SUBTRIG_ARRAY_LENGTH-1) <= array_scalers_reg(SUBTRIG_ARRAY_LENGTH-1);
-      array_scalers_reg(SUBTRIG_ARRAY_LENGTH-2) <= array_scalers_reg(SUBTRIG_ARRAY_LENGTH-2);
-      array_scalers_reg(SUBTRIG_ARRAY_LENGTH-3) <= array_scalers_reg(SUBTRIG_ARRAY_LENGTH-3);
+      array_scalers_reg(SUBTRIG_ARRAY_LENGTH-1) <= array_scalers_next(SUBTRIG_ARRAY_LENGTH-1);
+      array_scalers_reg(SUBTRIG_ARRAY_LENGTH-2) <= array_scalers_next(SUBTRIG_ARRAY_LENGTH-2);
+      array_scalers_reg(SUBTRIG_ARRAY_LENGTH-3) <= array_scalers_next(SUBTRIG_ARRAY_LENGTH-3);
     end if;
     end if;
   end process;
   -- next state logic
-  s_subtr1 <= '1' when unsigned(adc_dat_a_reg(2)) >= unsigned(subtrig_lvl_a) and
+  subtr1_s <= '1' when unsigned(adc_dat_a_reg(2)) >= unsigned(subtrig_lvl_a) and
                       unsigned(adc_dat_a_reg(1)) < unsigned(adc_dat_a_reg(2)) and
                       (unsigned(adc_dat_a_reg(3)) < unsigned(adc_dat_a_reg(2)) or
                       (unsigned(adc_dat_a_reg(3)) = unsigned(adc_dat_a_reg(2)) and
@@ -346,7 +349,7 @@ begin
                       unsigned(adc_dat_a_reg(3)) < unsigned(trig_lvl_a) and
                       unsigned(adc_dat_a_reg(4)) < unsigned(trig_lvl_a) else
                     '0';
-  s_subtr2 <= '1' when unsigned(adc_dat_b_reg(2)) >= unsigned(subtrig_lvl_b) and
+  subtr2_s <= '1' when unsigned(adc_dat_b_reg(2)) >= unsigned(subtrig_lvl_b) and
                       unsigned(adc_dat_b_reg(1)) < unsigned(adc_dat_b_reg(2)) and
                       (unsigned(adc_dat_b_reg(3)) < unsigned(adc_dat_b_reg(2)) or
                       (unsigned(adc_dat_b_reg(3)) = unsigned(adc_dat_b_reg(2)) and
@@ -355,16 +358,16 @@ begin
                       unsigned(adc_dat_b_reg(3)) < unsigned(trig_lvl_b) and
                       unsigned(adc_dat_b_reg(4)) < unsigned(trig_lvl_b) else
                     '0';
-  s_subtr <=  '1' when  ((s_subtr1 = '1') or (s_subtr2 = '1')) else '0';
+  subtr_s <=  '1' when  ((subtr1_s = '1') or (subtr2_s = '1')) else '0';
 
   charge1_next <= charge1_reg + adc_dat_a_reg'left - adc_dat_a_reg'right;
   charge2_next <= charge2_reg + adc_dat_b_reg'left - adc_dat_b_reg'right;
 
-  array_scalers_next(SUBTRIG_ARRAY_LENGTH-1) <= "01" & s_subtr3 & s_subtr2 & s_subtr1 & std_logic_vector(cont_clk_entre_pps_reg(26 downto 0)) when (s_subtr = '1') else
+  array_scalers_next(SUBTRIG_ARRAY_LENGTH-1) <= "010" & subtr2_s & subtr1_s & std_logic_vector(clk_cnt_pps(26 downto 0)) when (subtr_s = '1') else
                                               array_scalers_reg(SUBTRIG_ARRAY_LENGTH-1);
-  array_scalers_next(SUBTRIG_ARRAY_LENGTH-2) <= "00" & std_logic_vector(charge1_reg) & std_logic_vector(charge2_reg) & std_logic_vector(charge3_reg) when (s_subtr = '1') else
+  array_scalers_next(SUBTRIG_ARRAY_LENGTH-2) <= "0000" & std_logic_vector(charge1_reg) & std_logic_vector(charge2_reg) when (subtr_s = '1') else
                                               array_scalers_reg(SUBTRIG_ARRAY_LENGTH-2); --valores de carga por canal
-  array_scalers_next(SUBTRIG_ARRAY_LENGTH-3) <= "00" & adc_dat_a_reg(2) & adc_dat_b_reg(2) & muestras_adc3_reg(2) when (s_subtr = '1') else
+  array_scalers_next(SUBTRIG_ARRAY_LENGTH-3) <= "0000" & adc_dat_a_reg(2) & adc_dat_b_reg(2) when (subtr_s = '1') else
                                               array_scalers_reg(SUBTRIG_ARRAY_LENGTH-3); --se manda el maximo del pulso tambien
 
 ----------------------------------------------------------------------------------------------------------------
@@ -393,16 +396,16 @@ begin
   --=================================================================
   --next-state logic & data path functional units/routing
   --=================================================================
-  process(state_reg, status, wr_count_reg, pfifo_status)
+  process(state_reg, status, wr_count_reg)
   begin
     state_next <= state_reg;                -- default 
     wr_fifo_en_next <= '0';                 -- default disable fifo write
     wr_count_next <= (others => '0');
     data_to_fifo_next <= data_to_fifo_reg;  -- default 
-    axis_tready <= '0';
+    axis_tready <= '1';
     case state_reg is
       when ST_IDLE =>
-        if (s_axis_tvalid = '1') then     
+        if (s_axis_tvalid = '1' and m_axis_tready = '1') then     
           case status is
             when "001" | "011" | "101" | "111" => -- priority is for PPS data every second
               state_next <= ST_ATT_PPS;
@@ -419,24 +422,27 @@ begin
 
       --we send adc data because we have a trigger
       when ST_ATT_TR =>
+        axis_tready <= '0';
         wr_fifo_en_next <= '1';
         wr_count_next <= wr_count_reg + 1;
-        data_to_fifo_next <= "000" & adc_dat_a_reg(0) & adc_dat_b_reg(0);
+        data_to_fifo_next <= "0000" & adc_dat_b_reg(0) & adc_dat_a_reg(0);
         if (wr_count_reg = (DATA_ARRAY_LENGTH - 1)) then
+          axis_tready <= '0';
           state_next <= ST_SEND_TR_STATUS;
         else
           state_next <= ST_ATT_TR;
         end if;
 
       when ST_SEND_TR_STATUS =>
+        axis_tready <= '0';
         wr_fifo_en_next <= '1';
         data_to_fifo_next <= tr_status_reg;
         state_next <= ST_SEND_CNT_STATUS;
 
       when ST_SEND_CNT_STATUS =>
-        axis_tready <= '1';
+        axis_tready <= '0';
         wr_fifo_en_next <= '1';
-        data_to_fifo_next <= ctr_status_reg;
+        data_to_fifo_next <= cnt_status_reg;
         state_next <= ST_IDLE;
 
       when ST_ATT_SUBTR =>
@@ -444,18 +450,18 @@ begin
         wr_count_next <= wr_count_reg + 1;
         data_to_fifo_next <= array_scalers_reg(to_integer(wr_count_reg));
         if (wr_count_reg = (SUBTRIG_ARRAY_LENGTH - 1)) then
-          axis_tready <= '1';
           state_next <= ST_IDLE;
-        else
+        else 
+          axis_tready <= '0';
           state_next <= ST_ATT_SUBTR;
         end if;
 
       when ST_ATT_PPS =>
+        axis_tready <= '0';
         wr_fifo_en_next <= '1';
         wr_count_next <= wr_count_reg + 1;
         data_to_fifo_next <= array_pps_reg(to_integer(wr_count_reg));
         if (wr_count_reg = (METADATA_ARRAY_LENGTH - 1)) then
-          axis_tready <= '1';
           state_next <= ST_IDLE;
         else
           state_next <= ST_ATT_PPS;
@@ -463,7 +469,7 @@ begin
    end case;
   end process;
 
-  status <= s_tr & s_subtr & one_clk_pps;
+  status <= tr_s & subtr_s & one_clk_pps;
   s_axis_tready <= axis_tready;
   m_axis_tdata <= data_to_fifo_reg;
   m_axis_tvalid <= wr_fifo_en_reg;

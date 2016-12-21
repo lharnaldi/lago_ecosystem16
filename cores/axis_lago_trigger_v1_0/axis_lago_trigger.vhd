@@ -86,7 +86,8 @@ architecture rtl of axis_lago_trigger is
   signal one_sec_cnt: std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);      
   -- counter for clock pulses between PPS, it goes to zero at every PPS pulse 
   signal clk_cnt_pps : std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0); 
-  signal pps, false_pps : std_logic;
+  signal pps : std_logic;
+  signal false_pps : std_logic := '0';
 
   type pps_st_t is (ZERO, EDGE, ONE);
   signal pps_st_reg, pps_st_next: pps_st_t;
@@ -119,10 +120,10 @@ architecture rtl of axis_lago_trigger is
 
   signal wr_count_reg, wr_count_next : unsigned(7 downto 0);
   signal data_to_fifo_reg, data_to_fifo_next : std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
-  signal axis_tvalid, wr_fifo_en_next  : std_logic;
   signal status : std_logic_vector(2 downto 0);
 
-  signal axis_tready : std_logic;
+  signal axis_tready_reg, axis_tready_next : std_logic;
+  signal axis_tvalid_reg, axis_tvalid_next : std_logic;
 
   signal trig_lvl_a, trig_lvl_b       : std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
   signal subtrig_lvl_a, subtrig_lvl_b : std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
@@ -381,10 +382,14 @@ begin
       state_reg      <= ST_IDLE;
       wr_count_reg   <= (others => '0');
       data_to_fifo_reg <= (others => '0');
+      axis_tvalid_reg <= '0';
+      axis_tready_reg <= '0';
     else
       state_reg      <= state_next;
       wr_count_reg   <= wr_count_next;
       data_to_fifo_reg <= data_to_fifo_next;
+      axis_tvalid_reg <= axis_tvalid_next;
+      axis_tready_reg <= axis_tready_next;
     end if;
     end if;
   end process;
@@ -393,34 +398,35 @@ begin
   --=================================================================
   process(state_reg, status, wr_count_reg)
   begin
-    state_next        <= state_reg;                -- default 
-    axis_tvalid       <= '0';                 -- default disable fifo write
+    state_next        <= state_reg;         -- default 
     wr_count_next     <= wr_count_reg;
     data_to_fifo_next <= data_to_fifo_reg;  -- default 
-    axis_tready       <= '1';
+    axis_tvalid_next  <= axis_tvalid_reg;   -- default disable fifo write
+    axis_tready_next  <= axis_tready_reg;   --
     case state_reg is
       when ST_IDLE =>
-        if (s_axis_tvalid = '1') then     
           case status is
             when "001" | "011" | "101" | "111" => -- priority is for PPS data every second
+              data_to_fifo_next <= array_pps_reg(to_integer(wr_count_reg));
               state_next <= ST_ATT_PPS;
             when "100" | "110" =>
               state_next <= ST_ATT_TR;
             when "010" =>
+              data_to_fifo_next <= array_scalers_reg(to_integer(wr_count_reg));
               state_next <= ST_ATT_SUBTR;
             when others => --"000"
               state_next <= ST_IDLE;
           end case;
-        else
-          state_next <= ST_IDLE;
-        end if;
 
       --we send adc data because we have a trigger
       when ST_ATT_TR =>
-        axis_tready <= '0';
-        axis_tvalid <= '1';
-        if (wr_count_reg = (DATA_ARRAY_LENGTH - 1)) then
+        axis_tready_next <= '1';
+        axis_tvalid_next <= '1';
+        if (wr_count_reg = DATA_ARRAY_LENGTH) then
           wr_count_next     <= (others => '0');
+          axis_tready_next <= '0';
+          axis_tvalid_next <= '1';
+          data_to_fifo_next <= tr_status_reg;
           state_next <= ST_SEND_TR_STATUS;
         else
           if (m_axis_tready = '1') then
@@ -431,30 +437,33 @@ begin
         end if;
 
       when ST_SEND_TR_STATUS =>
-        axis_tready <= '0';
-        axis_tvalid <= '1';
+        axis_tready_next <= '0';
+        axis_tvalid_next <= '1';
         if (m_axis_tready = '1') then
-          data_to_fifo_next <= tr_status_reg;
+          data_to_fifo_next <= cnt_status_reg;
           state_next <= ST_SEND_CNT_STATUS;
         else
           state_next <= ST_SEND_TR_STATUS;
         end if;
 
       when ST_SEND_CNT_STATUS =>
-        axis_tready <= '0';
-        axis_tvalid <= '1';
+        axis_tready_next <= '0';
+        axis_tvalid_next <= '1';
         if (m_axis_tready = '1') then
-          data_to_fifo_next <= cnt_status_reg;
+          axis_tready_next <= '1';
+          axis_tvalid_next <= '0';
           state_next <= ST_IDLE;
         else
           state_next <= ST_SEND_CNT_STATUS;
         end if;
 
       when ST_ATT_SUBTR =>
-        axis_tready <= '0';
-        axis_tvalid <= '1';
-        if (wr_count_reg = (SUBTRIG_ARRAY_LENGTH - 1)) then
-          wr_count_next     <= (others => '0');
+        axis_tready_next <= '0';
+        axis_tvalid_next <= '1';
+        if (wr_count_reg = SUBTRIG_ARRAY_LENGTH) then
+          wr_count_next    <= (others => '0');
+          axis_tready_next <= '1';
+          axis_tvalid_next <= '0';
           state_next <= ST_IDLE;
         else 
           if (m_axis_tready = '1') then
@@ -465,10 +474,12 @@ begin
         end if;
 
       when ST_ATT_PPS =>
-        axis_tready <= '0';
-        axis_tvalid <= '1';
-        if (wr_count_reg = (METADATA_ARRAY_LENGTH - 1)) then
-          wr_count_next     <= (others => '0');
+        axis_tready_next <= '0';
+        axis_tvalid_next <= '1';
+        if (wr_count_reg = METADATA_ARRAY_LENGTH) then
+          wr_count_next     <= (others => '0'); 
+          axis_tready_next <= '1';
+          axis_tvalid_next <= '0';
           state_next <= ST_IDLE;
         else
           if (m_axis_tready = '1') then
@@ -481,9 +492,9 @@ begin
   end process;
 
   status <= tr_s & subtr_s & one_clk_pps;
-  s_axis_tready <= axis_tready;
+  s_axis_tready <= axis_tready_reg;
   m_axis_tdata <= data_to_fifo_reg;
-  m_axis_tvalid <= axis_tvalid;
+  m_axis_tvalid <= axis_tvalid_reg;
 
 end architecture rtl;
 

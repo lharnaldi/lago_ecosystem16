@@ -150,7 +150,7 @@ int main() {
     dma_mm2s_status(virtual_address);
 */
     printf("Writing S2MM transfer length...\n");
-    dma_set(virtual_address, S2MM_LENGTH, 4096);
+    dma_set(virtual_address, S2MM_LENGTH, 1024);
     dma_s2mm_status(virtual_address);
 
 /*    printf("Writing MM2S transfer length...\n");
@@ -166,7 +166,7 @@ int main() {
 //    dma_s2mm_status(virtual_address);
 //    dma_mm2s_status(virtual_address);
 
-    printf("Destination memory block: "); memdump(virtual_destination_address, 4096);
+    printf("Destination memory block: "); memdump(virtual_destination_address, 1024);
 
     if (munmap(virtual_address, 16*sysconf(_SC_PAGESIZE)) == -1)
         {

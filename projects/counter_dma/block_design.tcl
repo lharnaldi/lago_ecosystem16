@@ -102,6 +102,14 @@ cell xilinx.com:ip:xlconstant:1.1 const_2 {
  dout tlast_gen_0/pkt_length 
 }
 
+# Create xlconstant
+cell xilinx.com:ip:xlconstant:1.1 const_3 {
+ CONST_VAL 15
+ CONST_WIDTH 4
+} {
+ dout axi_dma_0/s_axis_s2mm_tkeep 
+}
+
 # Create all required interconnections
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
   Master /ps_0/M_AXI_GP0

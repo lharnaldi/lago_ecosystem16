@@ -6,7 +6,6 @@ set_property DISPLAY_NAME $display_name $core
 set_property DESCRIPTION $display_name $core
 
 core_parameter AXIS_TDATA_WIDTH {AXIS TDATA WIDTH} {Width of the S_AXIS data bus.}
-core_parameter CLK_FREQ {CLK_FREQ} {Clock frequency of the core.}
 core_parameter ADC_DATA_WIDTH {ADC_DATA_WIDTH} {Number of ADC data bits.}
 core_parameter DATA_ARRAY_LENGTH {DATA_ARRAY_LENGTH} {Length of the data array.}
 core_parameter METADATA_ARRAY_LENGTH {METADATA_ARRAY_LENGTH} {Length of the metadata array.}

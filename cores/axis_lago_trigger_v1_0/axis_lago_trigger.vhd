@@ -6,9 +6,6 @@ use ieee.numeric_std.all;
 entity axis_lago_trigger is
   generic (
   AXIS_TDATA_WIDTH      : natural  := 32;
-  -- clock frequency, it is necessary because we use it to calculate
-  -- the false pps signal time
-  CLK_FREQ              : natural  := 125000000;
   -- data arrays bit numbers
   ADC_DATA_WIDTH        : natural := 14;    
   DATA_ARRAY_LENGTH     : natural := 12;
@@ -23,8 +20,7 @@ port (
   trig_lvl_i         : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
   subtrig_lvl_i      : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
   pps_i              : in   std_logic;
-  gpsen_i            : in   std_logic;
-  false_pps_led_o    : out  std_logic;
+  clk_cnt_pps_i      : in std_logic_vector(27-1 downto 0);
 
 --  pwr_enA            : out  std_logic;
 --  data_out           : out  std_logic_vector(2**W-1 downto 0);
@@ -80,19 +76,6 @@ architecture rtl of axis_lago_trigger is
   of std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
   signal array_scalers_reg, array_scalers_next : array_scalers_t;
 
-
-  --PPS related signals
-  -- clock counter in a second
-  signal one_sec_cnt: std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);      
-  -- counter for clock pulses between PPS, it goes to zero at every PPS pulse 
-  signal clk_cnt_pps : std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0); 
-  signal pps : std_logic;
-  signal false_pps : std_logic := '0';
-
-  type pps_st_t is (ZERO, EDGE, ONE);
-  signal pps_st_reg, pps_st_next: pps_st_t;
-  signal one_clk_pps : std_logic;
-
   --Trigger related signals
   --Triggers
   signal tr1_s, tr2_s, tr_s              : std_logic; 
@@ -135,85 +118,6 @@ begin
 
   subtrig_lvl_a <= subtrig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0);
   subtrig_lvl_b <= subtrig_lvl_i(AXIS_TDATA_WIDTH-1 downto AXIS_TDATA_WIDTH/2);
---------------------------------------------------------------------------
-  -- false PPS
-  process(aclk)
-  begin
-    if (rising_edge(aclk)) then
-      if (aresetn = '0') then
-        one_sec_cnt <= (others => '0');   
-        clk_cnt_pps <= (others => '0');   
-      else
-        if (unsigned(one_sec_cnt) = CLK_FREQ-1) then
-          one_sec_cnt <= (others => '0');
-        else
-          one_sec_cnt <= std_logic_vector(unsigned(one_sec_cnt) + 1);
-        end if;
-       
-        -- false PPS is UP for 200 ms
-        if (unsigned(one_sec_cnt) < CLK_FREQ/5) then
-          false_pps <= '1';
-        else
-          false_pps <= '0';
-        end if;
-        
-        if (one_clk_pps = '1') then 
-          clk_cnt_pps <=  (others => '0');
-        else
-          clk_cnt_pps <= std_logic_vector(unsigned(clk_cnt_pps) + 1);
-        end if;
-
-      end if;
-    end if;
-  end process;
-
----------------------------------------------------------------------------
----------------------------------------------------------------------------
-  --PPS MUX 
-  pps <=  false_pps when (gpsen_i = '1') else pps_i;
-
-  false_pps_led_o <=  false_pps when (gpsen_i = '1') else '0';
----------------------------------------------------------------------------
----------------------------------------------------------------------------
-  -- edge detector
-  -- state register
-  process(aclk)
-  begin
-    if (rising_edge(aclk)) then
-    if (aresetn = '0') then
-        pps_st_reg <= ZERO;
-    else
-        pps_st_reg <= pps_st_next;
-    end if;
-    end if;
-  end process;
-
-  -- next-state/output logic
-  process(pps_st_reg, pps)
-  begin
-     pps_st_next <= pps_st_reg;
-     one_clk_pps <= '0';
-     case pps_st_reg is
-        when ZERO =>
-           if pps = '1' then
-              pps_st_next <= EDGE;
-           end if;
-        when EDGE =>
-           one_clk_pps <= '1';
-           if pps = '1' then
-              pps_st_next <= ONE;
-           else
-              pps_st_next <= ZERO;
-           end if;
-        when ONE =>
-           if pps = '0' then
-              pps_st_next <= ZERO;
-           end if;
-     end case;
-  end process;
------------------------------------------------------------------------------
-
------------------------------------------------------------------------------
 
   -- data registers for a second
   process(aclk)
@@ -229,27 +133,27 @@ begin
     end loop;
   end process;
   --next state logic
---  array_pps_next(METADATA_ARRAY_LENGTH-10)<= x"FFFFFFFF" when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
---  array_pps_next(METADATA_ARRAY_LENGTH-9)<= "11" & "000" & std_logic_vector(clk_cnt_pps(26 downto 0)) when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
---  array_pps_next(METADATA_ARRAY_LENGTH-8)<= "11" & "001" & "00000000000" & ptemperatura when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);
---  array_pps_next(METADATA_ARRAY_LENGTH-7)<= "11" & "010" & "00000000000" & ppresion when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-7);
---  array_pps_next(METADATA_ARRAY_LENGTH-6)<= "11" & "011" & "000" & phora & pminutos & psegundos when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-6);
---  array_pps_next(METADATA_ARRAY_LENGTH-5)<= "11" & "100" & "000" & latitude1_port & latitude2_port & latitude3_port when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
---  array_pps_next(METADATA_ARRAY_LENGTH-4)<= "11" & "100" & "001" & longitude1_port & longitude2_port & latitude4_port when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-4);
---  array_pps_next(METADATA_ARRAY_LENGTH-3)<= "11" & "100" & "010" & ellipsoid1_port & longitude3_port & longitude4_port when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-3);
---  array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" & ellipsoid2_port & ellipsoid3_port & ellipsoid4_port when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
---  array_pps_next(METADATA_ARRAY_LENGTH-1)<= "11" & "100" & "100" & num_track_sat_port & num_vis_sat_port & rsf_port when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
+--  array_pps_next(METADATA_ARRAY_LENGTH-10)<= x"FFFFFFFF" when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
+--  array_pps_next(METADATA_ARRAY_LENGTH-9)<= "11" & "000" & clk_cnt_pps_i when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
+--  array_pps_next(METADATA_ARRAY_LENGTH-8)<= "11" & "001" & "00000000000" & ptemperatura when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);
+--  array_pps_next(METADATA_ARRAY_LENGTH-7)<= "11" & "010" & "00000000000" & ppresion when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-7);
+--  array_pps_next(METADATA_ARRAY_LENGTH-6)<= "11" & "011" & "000" & phora & pminutos & psegundos when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-6);
+--  array_pps_next(METADATA_ARRAY_LENGTH-5)<= "11" & "100" & "000" & latitude1_port & latitude2_port & latitude3_port when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
+--  array_pps_next(METADATA_ARRAY_LENGTH-4)<= "11" & "100" & "001" & longitude1_port & longitude2_port & latitude4_port when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-4);
+--  array_pps_next(METADATA_ARRAY_LENGTH-3)<= "11" & "100" & "010" & ellipsoid1_port & longitude3_port & longitude4_port when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-3);
+--  array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" & ellipsoid2_port & ellipsoid3_port & ellipsoid4_port when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
+--  array_pps_next(METADATA_ARRAY_LENGTH-1)<= "11" & "100" & "100" & num_track_sat_port & num_vis_sat_port & rsf_port when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
 
-  array_pps_next(METADATA_ARRAY_LENGTH-10)<= x"FFFFFFFF" when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
-  array_pps_next(METADATA_ARRAY_LENGTH-9)<= "11" & "000" & std_logic_vector(clk_cnt_pps(26 downto 0)) when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
-  array_pps_next(METADATA_ARRAY_LENGTH-8)<= "11" & "001" & "00000000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);
-  array_pps_next(METADATA_ARRAY_LENGTH-7)<= "11" & "010" & "00000000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-7);
-  array_pps_next(METADATA_ARRAY_LENGTH-6)<= "11" & "011" & "00000000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-6);
-  array_pps_next(METADATA_ARRAY_LENGTH-5)<= "11" & "100" & "00000000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
-  array_pps_next(METADATA_ARRAY_LENGTH-4)<= "11" & "100" & "001" & "00000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-4);
-  array_pps_next(METADATA_ARRAY_LENGTH-3)<= "11" & "100" & "010" & "00000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-3);
-  array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" & "00000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
-  array_pps_next(METADATA_ARRAY_LENGTH-1)<= "11" & "100" & "100" & "00000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (one_clk_pps = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
+  array_pps_next(METADATA_ARRAY_LENGTH-10)<= x"FFFFFFFF" when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
+  array_pps_next(METADATA_ARRAY_LENGTH-9)<= "11" & "000" & clk_cnt_pps_i when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
+  array_pps_next(METADATA_ARRAY_LENGTH-8)<= "11" & "001" & "00000000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);
+  array_pps_next(METADATA_ARRAY_LENGTH-7)<= "11" & "010" & "00000000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-7);
+  array_pps_next(METADATA_ARRAY_LENGTH-6)<= "11" & "011" & "00000000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-6);
+  array_pps_next(METADATA_ARRAY_LENGTH-5)<= "11" & "100" & "00000000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
+  array_pps_next(METADATA_ARRAY_LENGTH-4)<= "11" & "100" & "001" & "00000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-4);
+  array_pps_next(METADATA_ARRAY_LENGTH-3)<= "11" & "100" & "010" & "00000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-3);
+  array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" & "00000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
+  array_pps_next(METADATA_ARRAY_LENGTH-1)<= "11" & "100" & "100" & "00000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
 ------------------------------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------------------------------
@@ -307,7 +211,7 @@ begin
                 '0';
   tr_s <= '1' when  ((tr1_s = '1') or (tr2_s = '1')) else '0';
 
-  tr_status_next <=   "010" & tr2_s & tr1_s & std_logic_vector(clk_cnt_pps(26 downto 0)) when (tr_s = '1') else
+  tr_status_next <=   "010" & tr2_s & tr1_s & clk_cnt_pps_i when (tr_s = '1') else
                       tr_status_reg;
   cnt_status_next <=  "10" & std_logic_vector(trig_cnt_reg(AXIS_TDATA_WIDTH-3 downto 0)) when (tr_s = '1') else
                       cnt_status_reg;
@@ -361,7 +265,7 @@ begin
   charge1_next <= charge1_reg + adc_dat_a_reg'left - adc_dat_a_reg'right;
   charge2_next <= charge2_reg + adc_dat_b_reg'left - adc_dat_b_reg'right;
 
-  array_scalers_next(SUBTRIG_ARRAY_LENGTH-1) <= "010" & subtr2_s & subtr1_s & std_logic_vector(clk_cnt_pps(26 downto 0)) when (subtr_s = '1') else
+  array_scalers_next(SUBTRIG_ARRAY_LENGTH-1) <= "010" & subtr2_s & subtr1_s & clk_cnt_pps_i when (subtr_s = '1') else
                                               array_scalers_reg(SUBTRIG_ARRAY_LENGTH-1);
   array_scalers_next(SUBTRIG_ARRAY_LENGTH-2) <= "0000" & std_logic_vector(charge1_reg) & std_logic_vector(charge2_reg) when (subtr_s = '1') else
                                               array_scalers_reg(SUBTRIG_ARRAY_LENGTH-2); --charge values per channel
@@ -431,7 +335,7 @@ begin
         else
           if (m_axis_tready = '1') then
             wr_count_next <= wr_count_reg + 1;
-            data_to_fifo_next <= "00" &  not adc_dat_b_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1 downto 0) & "00" & not adc_dat_a_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1 downto 0);
+            data_to_fifo_next <= "00" &  adc_dat_b_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1 downto 0) & "00" & adc_dat_a_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1 downto 0);
           end if;
           state_next <= ST_ATT_TR;
         end if;
@@ -491,7 +395,7 @@ begin
    end case;
   end process;
 
-  status <= tr_s & subtr_s & one_clk_pps;
+  status <= tr_s & subtr_s & pps_i;
   s_axis_tready <= axis_tready_reg;
   m_axis_tdata <= data_to_fifo_reg;
   m_axis_tvalid <= axis_tvalid_reg;

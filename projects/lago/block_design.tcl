@@ -56,12 +56,11 @@ cell xilinx.com:ip:xlslice:1.0 slice_0 {
   DIN_WIDTH 32 DIN_FROM 26 DIN_TO 26 DOUT_WIDTH 1
 } {
   Din cntr_0/Q
-  Dout led_o
 }
 
 # Create axi_cfg_register
 cell labdpr:user:axi_cfg_register:1.0 cfg_0 {
-  CFG_DATA_WIDTH 64
+  CFG_DATA_WIDTH 128
   AXI_ADDR_WIDTH 32
   AXI_DATA_WIDTH 32
 }
@@ -77,49 +76,51 @@ set_property OFFSET 0x40000000 [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
 
 # Create xlslice
 cell xilinx.com:ip:xlslice:1.0 slice_1 {
-  DIN_WIDTH 64 DIN_FROM 0 DIN_TO 0 DOUT_WIDTH 1
+  DIN_WIDTH 128 DIN_FROM 0 DIN_TO 0 DOUT_WIDTH 1
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice
 cell xilinx.com:ip:xlslice:1.0 slice_2 {
-  DIN_WIDTH 64 DIN_FROM 1 DIN_TO 1 DOUT_WIDTH 1
+  DIN_WIDTH 128 DIN_FROM 1 DIN_TO 1 DOUT_WIDTH 1
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice
 cell xilinx.com:ip:xlslice:1.0 slice_3 {
-  DIN_WIDTH 64 DIN_FROM 2 DIN_TO 2 DOUT_WIDTH 1
+  DIN_WIDTH 128 DIN_FROM 2 DIN_TO 2 DOUT_WIDTH 1
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice
-cell xilinx.com:ip:xlslice:1.0 slice_4 {
-  DIN_WIDTH 64 DIN_FROM 3 DIN_TO 3 DOUT_WIDTH 1
-} {
-  Din cfg_0/cfg_data
-}
+#cell xilinx.com:ip:xlslice:1.0 slice_4 {
+#  DIN_WIDTH 128 DIN_FROM 3 DIN_TO 3 DOUT_WIDTH 1
+#} {
+#  Din cfg_0/cfg_data
+#}
 
 # Create xlslice
 cell xilinx.com:ip:xlslice:1.0 slice_5 {
-  DIN_WIDTH 64 DIN_FROM 63 DIN_TO 32 DOUT_WIDTH 32
+  DIN_WIDTH 128 DIN_FROM 63 DIN_TO 32 DOUT_WIDTH 32
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice
+# for the trigger level
 cell xilinx.com:ip:xlslice:1.0 slice_6 {
-  DIN_WIDTH 64 DIN_FROM 63 DIN_TO 32 DOUT_WIDTH 32
+  DIN_WIDTH 128 DIN_FROM 95 DIN_TO 64 DOUT_WIDTH 32
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice
+# for the sub-trigger level
 cell xilinx.com:ip:xlslice:1.0 slice_7 {
-  DIN_WIDTH 64 DIN_FROM 63 DIN_TO 32 DOUT_WIDTH 32
+  DIN_WIDTH 128 DIN_FROM 127 DIN_TO 96 DOUT_WIDTH 32
 } {
   Din cfg_0/cfg_data
 }
@@ -136,33 +137,45 @@ cell xilinx.com:ip:xlconstant:1.1 const_1 {
 # Create xlconstant
 cell xilinx.com:ip:xlconstant:1.1 const_2 
 
+# Create xlconstant
+cell xilinx.com:ip:xlconstant:1.1 const_3 
+
+# Create proc_sys_reset
+cell xilinx.com:ip:proc_sys_reset:5.0 rst_1 {} {
+ slowest_sync_clk ps_0/FCLK_CLK0
+ ext_reset_in ps_0/FCLK_RESET0_N
+ aux_reset_in slice_1/Dout
+}
+
 # Create axis_clock_converter
 cell xilinx.com:ip:axis_clock_converter:1.1 fifo_0 {} {
-  S_AXIS adc_0/M_AXIS
   s_axis_aclk adc_0/adc_clk
   s_axis_aresetn const_0/dout
   m_axis_aclk ps_0/FCLK_CLK0
-  m_axis_aresetn slice_1/Dout
+  m_axis_aresetn rst_1/peripheral_aresetn
 }
 
-# Create axis_clock_converter
-cell xilinx.com:ip:axis_data_fifo:1.1 axis_data_fifo_0 {
-  FIFO_DEPTH 4096
-} {
-  S_AXIS fifo_0/M_AXIS
-  s_axis_aclk ps_0/FCLK_CLK0
-  s_axis_aresetn rst_0/peripheral_aresetn
+# Create pps generator
+cell labdpr:user:pps_gen:1.0 pps_gen_0 {} {
+  aclk adc_0/adc_clk
+  aresetn rst_1/peripheral_aresetn
+  gpsen_i const_3/dout
+  pps_i const_2/dout
+  false_pps_led_o led_o
 }
 
 # Create lago trigger
-cell labdpr:user:axis_lago_trigger:1.0 axis_lago_trigger_0 {} {
-  S_AXIS axis_data_fifo_0/M_AXIS
-  aclk ps_0/FCLK_CLK0
-  aresetn slice_1/Dout
+cell labdpr:user:axis_lago_trigger:1.0 axis_lago_trigger_0 {
+  CLK_FREQ 142857132
+} {
+  S_AXIS adc_0/M_AXIS
+  M_AXIS fifo_0/S_AXIS
+  aclk adc_0/adc_clk
+  aresetn rst_1/peripheral_aresetn
   trig_lvl_i slice_6/Dout
   subtrig_lvl_i slice_7/Dout
-  gpsen_i slice_4/Dout
-  pps_i const_2/dout
+  pps_i pps_gen_0/pps_o
+  clk_cnt_pps_i pps_gen_0/clk_cnt_pps_o
 }
 
 # Create axis_packetizer
@@ -171,7 +184,7 @@ cell labdpr:user:axis_packetizer:1.0 pktzr_0 {
   CNTR_WIDTH 32
   CONTINUOUS FALSE
 } {
-  S_AXIS axis_lago_trigger_0/M_AXIS
+  S_AXIS fifo_0/M_AXIS
   cfg_data slice_5/Dout
   aclk ps_0/FCLK_CLK0
   aresetn slice_2/Dout

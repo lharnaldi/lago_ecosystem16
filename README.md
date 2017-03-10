@@ -8,7 +8,7 @@ Lago Ecosystem is a build system for quick prototyping and working with the Zynq
 
 ### 1. Requirements for Ubuntu 16.04
 
-#### 1.1. Download [`Vivado HLx 2016.3: All OS Installer Single-File Download`](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/2016-3.html).
+#### 1.1. Download [`Vivado HLx 2016.4: All OS Installer Single-File Download`](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/2016-4.html).
 
 #### 1.2 Run
 

@@ -34,7 +34,6 @@ $ sudo apt-get --no-install-recommends install \
 
 $ git clone https://github.com/lagoprojectrp/lago_ecosystem
 $ cd lago_ecosystem
-$ sudo pip install -r requirements.txt
 ```
 
 ### 2. Install LAGO Linux for Red Pitaya ([Download SD card image](https://github.com/lagoprojectrp/lago_ecosystem/releases))

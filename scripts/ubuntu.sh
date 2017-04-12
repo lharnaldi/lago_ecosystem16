@@ -1,15 +1,15 @@
 device=$1
 
-boot_dir=/tmp/BOOT
-root_dir=/tmp/ROOT
+boot_dir=`mktemp -d /tmp/BOOT.XXXXXXXXXX`
+root_dir=`mktemp -d /tmp/ROOT.XXXXXXXXXX`
 
-root_tar=ubuntu-base-14.04.4-core-armhf.tar.gz
+root_tar=ubuntu-base-14.04.5-core-armhf.tar.gz
 root_url=http://cdimage.ubuntu.com/ubuntu-base/releases/14.04/release/$root_tar
 
 hostapd_url=https://www.dropbox.com/sh/5fy49wae6xwxa8a/AAAQHa5NkpLYFocaOrrnft-Pa/rtl8192cu/hostapd-armhf?dl=1
 
-passwd=changeme
-timezone=Europe/Brussels
+passwd=escondido
+timezone=America/Argentina/Mendoza
 
 # Create partitions
 
@@ -26,8 +26,6 @@ mkfs.vfat -v $boot_dev
 mkfs.ext4 -F -j $root_dev
 
 # Mount file systems
-
-mkdir -p $boot_dir $root_dir
 
 mount $boot_dev $boot_dir
 mount $root_dev $root_dir
@@ -264,3 +262,5 @@ rm $root_dir/usr/bin/qemu-arm-static
 umount $boot_dir $root_dir
 
 rmdir $boot_dir $root_dir
+
+zerofree $root_dev

@@ -3,9 +3,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library unisim;
-use unisim.vcomponents.all;
-
 entity axis_rp_adc is
   generic (
   ADC_DATA_WIDTH : natural := 14;
@@ -49,10 +46,10 @@ begin
   m_axis_tvalid <= '1';
 
   --Format conversion
-  dat_a_tmp(ADC_DATA_WIDTH-1) <= int_dat_a_reg(ADC_DATA_WIDTH-1);
-  dat_a_tmp(ADC_DATA_WIDTH-2 downto 0) <=  not int_dat_a_reg(ADC_DATA_WIDTH-2 downto 0);
-  dat_b_tmp(ADC_DATA_WIDTH-1) <= int_dat_b_reg(ADC_DATA_WIDTH-1);
-  dat_b_tmp(ADC_DATA_WIDTH-2 downto 0) <=  not int_dat_b_reg(ADC_DATA_WIDTH-2 downto 0);
+  dat_a_tmp(ADC_DATA_WIDTH-1) <= not int_dat_a_reg(ADC_DATA_WIDTH-1);
+  dat_a_tmp(ADC_DATA_WIDTH-2 downto 0) <=  int_dat_a_reg(ADC_DATA_WIDTH-2 downto 0);
+  dat_b_tmp(ADC_DATA_WIDTH-1) <= not int_dat_b_reg(ADC_DATA_WIDTH-1);
+  dat_b_tmp(ADC_DATA_WIDTH-2 downto 0) <=  int_dat_b_reg(ADC_DATA_WIDTH-2 downto 0);
   
   --padding to m_axis_tdata size
   m_axis_tdata <= ((PADDING_WIDTH-1) downto 0 => dat_b_tmp(ADC_DATA_WIDTH-1)) & dat_b_tmp & ((PADDING_WIDTH-1) downto 0 => dat_a_tmp(ADC_DATA_WIDTH-1)) & dat_a_tmp;

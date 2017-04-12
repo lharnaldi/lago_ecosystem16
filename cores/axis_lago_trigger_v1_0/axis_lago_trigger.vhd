@@ -16,12 +16,12 @@ port (
   -- System signals
   aclk               : in std_logic;
   aresetn            : in std_logic;
-
-  trig_lvl_i         : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
-  subtrig_lvl_i      : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+  trig_lvl_a_i       : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
+  trig_lvl_b_i       : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
+  subtrig_lvl_a_i    : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
+  subtrig_lvl_b_i    : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
   pps_i              : in   std_logic;
   clk_cnt_pps_i      : in std_logic_vector(27-1 downto 0);
-
 --  pwr_enA            : out  std_logic;
 --  data_out           : out  std_logic_vector(2**W-1 downto 0);
 --  pfifo_status       : in   std_logic_vector(2 downto 0);
@@ -110,14 +110,18 @@ architecture rtl of axis_lago_trigger is
 
   signal trig_lvl_a, trig_lvl_b       : std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
   signal subtrig_lvl_a, subtrig_lvl_b : std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
+  signal adc_dat_a, adc_dat_b         : std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
 
 begin
     
-  trig_lvl_a <= trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0);
-  trig_lvl_b <= trig_lvl_i(AXIS_TDATA_WIDTH-1 downto AXIS_TDATA_WIDTH/2);
+  trig_lvl_a <= ((PADDING_WIDTH-1) downto 0 => trig_lvl_a_i(ADC_DATA_WIDTH-1)) & trig_lvl_a_i(ADC_DATA_WIDTH-1 downto 0);
+  trig_lvl_b <= ((PADDING_WIDTH-1) downto 0 => trig_lvl_b_i(ADC_DATA_WIDTH-1)) & trig_lvl_b_i(ADC_DATA_WIDTH-1 downto 0);
 
-  subtrig_lvl_a <= subtrig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0);
-  subtrig_lvl_b <= subtrig_lvl_i(AXIS_TDATA_WIDTH-1 downto AXIS_TDATA_WIDTH/2);
+  subtrig_lvl_a <= ((PADDING_WIDTH-1) downto 0 => subtrig_lvl_a_i(ADC_DATA_WIDTH-1)) & subtrig_lvl_a_i(ADC_DATA_WIDTH-1 downto 0);
+  subtrig_lvl_b <= ((PADDING_WIDTH-1) downto 0 => subtrig_lvl_b_i(ADC_DATA_WIDTH-1)) & subtrig_lvl_b_i(ADC_DATA_WIDTH-1 downto 0);
+
+  adc_dat_a <= ((PADDING_WIDTH-1) downto 0 => s_axis_tdata(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1)) & s_axis_tdata(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1 downto 0);
+  adc_dat_b <= ((PADDING_WIDTH-1) downto 0 => s_axis_tdata(AXIS_TDATA_WIDTH-PADDING_WIDTH-1)) & s_axis_tdata(AXIS_TDATA_WIDTH-PADDING_WIDTH-1 downto AXIS_TDATA_WIDTH/2);
 
   -- data registers for a second
   process(aclk)
@@ -172,8 +176,8 @@ begin
       end if;
       -- next state logic
       if (i = (DATA_ARRAY_LENGTH-1)) then
-        adc_dat_a_next(i) <= s_axis_tdata(AXIS_TDATA_WIDTH/2 - 1 downto 0);
-        adc_dat_b_next(i) <= s_axis_tdata(AXIS_TDATA_WIDTH - 1 downto AXIS_TDATA_WIDTH/2); 
+        adc_dat_a_next(i) <= adc_dat_a;
+        adc_dat_b_next(i) <= adc_dat_b;
       else
         adc_dat_a_next(i) <= adc_dat_a_reg(i+1);
         adc_dat_b_next(i) <= adc_dat_b_reg(i+1);
@@ -199,16 +203,21 @@ begin
     end if;
     end if;
   end process;
-  -- The trigger is at bin 4 because we loose a clock pulse in the state machine
+  
+
+  -- The trigger is at  bin 4 because we loose a clock pulse in the state machine
   -- next state logic
-  tr1_s <=  '1' when ((signed(adc_dat_a_reg(3)) >= signed(trig_lvl_a)) and
-                      (signed(adc_dat_a_reg(2)) < signed(trig_lvl_a)) and
-                      (signed(adc_dat_a_reg(1)) < signed(trig_lvl_a))) else
-                '0';
-  tr2_s <=  '1' when ((signed(adc_dat_b_reg(3)) >= signed(trig_lvl_b)) and
-                      (signed(adc_dat_b_reg(2)) < signed(trig_lvl_b)) and
-                      (signed(adc_dat_b_reg(1)) < signed(trig_lvl_b))) else
-                '0';
+  tr1_s <=  '1' when ((adc_dat_a_reg(3)(adc_dat_a_reg(3)'left) = trig_lvl_a(trig_lvl_a'left)) and 
+                      (unsigned(adc_dat_a_reg(3)(AXIS_TDATA_WIDTH/2-2 downto 0)) >= unsigned(trig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (unsigned(adc_dat_a_reg(2)(AXIS_TDATA_WIDTH/2-2 downto 0)) < unsigned(trig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (unsigned(adc_dat_a_reg(1)(AXIS_TDATA_WIDTH/2-2 downto 0)) < unsigned(trig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0)))) else
+            '0';
+  tr2_s <=  '1' when ((adc_dat_b_reg(3)(adc_dat_b_reg(3)'left) = trig_lvl_b(trig_lvl_b'left)) and 
+                      (unsigned(adc_dat_b_reg(3)(AXIS_TDATA_WIDTH/2-2 downto 0)) >= unsigned(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (unsigned(adc_dat_b_reg(2)(AXIS_TDATA_WIDTH/2-2 downto 0)) < unsigned(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (unsigned(adc_dat_b_reg(1)(AXIS_TDATA_WIDTH/2-2 downto 0)) < unsigned(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0)))) else
+            '0';
+
   tr_s <= '1' when  ((tr1_s = '1') or (tr2_s = '1')) else '0';
 
   tr_status_next <=   "010" & tr2_s & tr1_s & clk_cnt_pps_i when (tr_s = '1') else
@@ -242,23 +251,27 @@ begin
     end if;
   end process;
   -- next state logic
-  subtr1_s <= '1' when signed(adc_dat_a_reg(2)) >= signed(subtrig_lvl_a) and
-                      signed(adc_dat_a_reg(1)) < signed(adc_dat_a_reg(2)) and
-                      (signed(adc_dat_a_reg(3)) < signed(adc_dat_a_reg(2)) or
-                      (signed(adc_dat_a_reg(3)) = signed(adc_dat_a_reg(2)) and
-                      signed(adc_dat_a_reg(4)) < signed(adc_dat_a_reg(2)))) and
-                      signed(adc_dat_a_reg(2)) < signed(trig_lvl_a) and
-                      signed(adc_dat_a_reg(3)) < signed(trig_lvl_a) and
-                      signed(adc_dat_a_reg(4)) < signed(trig_lvl_a) else
+  subtr1_s <= '1' when adc_dat_a_reg(2)(adc_dat_a_reg(2)'left) = subtrig_lvl_a(subtrig_lvl_a'left) and 
+                      unsigned(adc_dat_a_reg(2)(AXIS_TDATA_WIDTH/2-2 downto 0)) >= unsigned(subtrig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0)) and
+                      unsigned(adc_dat_a_reg(1)(AXIS_TDATA_WIDTH/2-2 downto 0)) < unsigned(adc_dat_a_reg(2)(AXIS_TDATA_WIDTH/2-2 downto 0)) and
+                      (unsigned(adc_dat_a_reg(3)(AXIS_TDATA_WIDTH/2-2 downto 0)) < unsigned(adc_dat_a_reg(2)(AXIS_TDATA_WIDTH/2-2 downto 0)) or
+                      (unsigned(adc_dat_a_reg(3)(AXIS_TDATA_WIDTH/2-2 downto 0)) = unsigned(adc_dat_a_reg(2)(AXIS_TDATA_WIDTH/2-2 downto 0)) and
+                      unsigned(adc_dat_a_reg(4)(AXIS_TDATA_WIDTH/2-2 downto 0)) < unsigned(adc_dat_a_reg(2)(AXIS_TDATA_WIDTH/2-2 downto 0)))) and
+                      (adc_dat_a_reg(2)(adc_dat_a_reg(2)'left) = trig_lvl_a(trig_lvl_a'left)) and 
+                      unsigned(adc_dat_a_reg(2)(AXIS_TDATA_WIDTH/2-2 downto 0)) < unsigned(trig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0)) and
+                      unsigned(adc_dat_a_reg(3)(AXIS_TDATA_WIDTH/2-2 downto 0)) < unsigned(trig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0)) and
+                      unsigned(adc_dat_a_reg(4)(AXIS_TDATA_WIDTH/2-2 downto 0)) < unsigned(trig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0)) else
                     '0';
-  subtr2_s <= '1' when signed(adc_dat_b_reg(2)) >= signed(subtrig_lvl_b) and
-                      signed(adc_dat_b_reg(1)) < signed(adc_dat_b_reg(2)) and
-                      (signed(adc_dat_b_reg(3)) < signed(adc_dat_b_reg(2)) or
-                      (signed(adc_dat_b_reg(3)) = signed(adc_dat_b_reg(2)) and
-                      signed(adc_dat_b_reg(4)) < signed(adc_dat_b_reg(2)))) and
-                      signed(adc_dat_b_reg(2)) < signed(trig_lvl_b) and
-                      signed(adc_dat_b_reg(3)) < signed(trig_lvl_b) and
-                      signed(adc_dat_b_reg(4)) < signed(trig_lvl_b) else
+  subtr2_s <= '1' when adc_dat_b_reg(2)(adc_dat_b_reg(2)'left) = subtrig_lvl_b(subtrig_lvl_b'left) and
+                      unsigned(adc_dat_b_reg(2)(AXIS_TDATA_WIDTH/2-2 downto 0)) >= unsigned(subtrig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0)) and
+                      unsigned(adc_dat_b_reg(1)(AXIS_TDATA_WIDTH/2-2 downto 0)) < unsigned(adc_dat_b_reg(2)(AXIS_TDATA_WIDTH/2-2 downto 0)) and
+                      (unsigned(adc_dat_b_reg(3)(AXIS_TDATA_WIDTH/2-2 downto 0)) < unsigned(adc_dat_b_reg(2)(AXIS_TDATA_WIDTH/2-2 downto 0)) or
+                      (unsigned(adc_dat_b_reg(3)(AXIS_TDATA_WIDTH/2-2 downto 0)) = unsigned(adc_dat_b_reg(2)(AXIS_TDATA_WIDTH/2-2 downto 0)) and
+                      unsigned(adc_dat_b_reg(4)(AXIS_TDATA_WIDTH/2-2 downto 0)) < unsigned(adc_dat_b_reg(2)(AXIS_TDATA_WIDTH/2-2 downto 0)))) and
+                      (adc_dat_b_reg(2)(adc_dat_b_reg(2)'left) = trig_lvl_b(trig_lvl_b'left)) and 
+                      unsigned(adc_dat_b_reg(2)(AXIS_TDATA_WIDTH/2-2 downto 0)) < unsigned(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0)) and
+                      unsigned(adc_dat_b_reg(3)(AXIS_TDATA_WIDTH/2-2 downto 0)) < unsigned(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0)) and
+                      unsigned(adc_dat_b_reg(4)(AXIS_TDATA_WIDTH/2-2 downto 0)) < unsigned(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0)) else
                     '0';
   subtr_s <=  '1' when  ((subtr1_s = '1') or (subtr2_s = '1')) else '0';
 
@@ -335,7 +348,7 @@ begin
         else
           if (m_axis_tready = '1') then
             wr_count_next <= wr_count_reg + 1;
-            data_to_fifo_next <= "00" &  adc_dat_b_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1 downto 0) & "00" & adc_dat_a_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1 downto 0);
+            data_to_fifo_next <= "00" & adc_dat_b_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1) & not(adc_dat_b_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-2 downto 0)) & "00" & adc_dat_a_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1) & not(adc_dat_a_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-2 downto 0));
           end if;
           state_next <= ST_ATT_TR;
         end if;

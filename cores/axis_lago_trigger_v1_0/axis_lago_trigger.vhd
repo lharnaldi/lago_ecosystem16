@@ -150,14 +150,14 @@ begin
 
   array_pps_next(METADATA_ARRAY_LENGTH-10)<= x"FFFFFFFF" when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
   array_pps_next(METADATA_ARRAY_LENGTH-9)<= "11" & "000" & clk_cnt_pps_i when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
-  array_pps_next(METADATA_ARRAY_LENGTH-8)<= "11" & "001" & "00000000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);
-  array_pps_next(METADATA_ARRAY_LENGTH-7)<= "11" & "010" & "00000000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-7);
-  array_pps_next(METADATA_ARRAY_LENGTH-6)<= "11" & "011" & "00000000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-6);
-  array_pps_next(METADATA_ARRAY_LENGTH-5)<= "11" & "100" & "00000000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
-  array_pps_next(METADATA_ARRAY_LENGTH-4)<= "11" & "100" & "001" & "00000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-4);
-  array_pps_next(METADATA_ARRAY_LENGTH-3)<= "11" & "100" & "010" & "00000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-3);
-  array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" & "00000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
-  array_pps_next(METADATA_ARRAY_LENGTH-1)<= "11" & "100" & "100" & "00000000" & trig_lvl_i(AXIS_TDATA_WIDTH/2-1 downto 0) when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
+  array_pps_next(METADATA_ARRAY_LENGTH-8)<= "11" & "001" & "00000000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);
+  array_pps_next(METADATA_ARRAY_LENGTH-7)<= "11" & "010" & "00000000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-7);
+  array_pps_next(METADATA_ARRAY_LENGTH-6)<= "11" & "011" & "00000000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-6);
+  array_pps_next(METADATA_ARRAY_LENGTH-5)<= "11" & "100" & "00000000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
+  array_pps_next(METADATA_ARRAY_LENGTH-4)<= "11" & "100" & "001" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-4);
+  array_pps_next(METADATA_ARRAY_LENGTH-3)<= "11" & "100" & "010" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-3);
+  array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
+  array_pps_next(METADATA_ARRAY_LENGTH-1)<= "11" & "100" & "100" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
 ------------------------------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------------------------------

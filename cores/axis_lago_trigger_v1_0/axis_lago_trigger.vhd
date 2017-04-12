@@ -348,7 +348,7 @@ begin
         else
           if (m_axis_tready = '1') then
             wr_count_next <= wr_count_reg + 1;
-            data_to_fifo_next <= "00" &  adc_dat_b_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1 downto 0) & "00" & adc_dat_a_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1 downto 0);
+            data_to_fifo_next <= "00" & adc_dat_b_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1) & not(adc_dat_b_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-2 downto 0)) & "00" & adc_dat_a_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1) & not(adc_dat_a_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-2 downto 0));
           end if;
           state_next <= ST_ATT_TR;
         end if;

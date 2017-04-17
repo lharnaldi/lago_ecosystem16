@@ -4,6 +4,9 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity pps_gen is
+generic (
+  CLK_FREQ : natural := 142857132
+);
 port (
   -- System signals
   aclk               : in std_logic;
@@ -20,7 +23,7 @@ end pps_gen;
 architecture rtl of pps_gen is
 
   -- here we use the ADC clock (125e6 MHz)
-  constant CLK_FREQ : natural := 125000000;
+  --constant CLK_FREQ : natural := 125000000;
 
   --PPS related signals
   -- clock counter in a second

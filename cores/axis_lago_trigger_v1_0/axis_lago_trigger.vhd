@@ -8,7 +8,7 @@ entity axis_lago_trigger is
   AXIS_TDATA_WIDTH      : natural  := 32;
   -- data arrays bit numbers
   ADC_DATA_WIDTH        : natural := 14;    
-  DATA_ARRAY_LENGTH     : natural := 12;
+  DATA_ARRAY_LENGTH     : natural := 20;
   METADATA_ARRAY_LENGTH : natural := 10;
   SUBTRIG_ARRAY_LENGTH  : natural := 3
 );
@@ -148,12 +148,12 @@ begin
 --  array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" & ellipsoid2_port & ellipsoid3_port & ellipsoid4_port when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
 --  array_pps_next(METADATA_ARRAY_LENGTH-1)<= "11" & "100" & "100" & num_track_sat_port & num_vis_sat_port & rsf_port when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
 
-  array_pps_next(METADATA_ARRAY_LENGTH-10)<= x"FFFFFFFF" when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
-  array_pps_next(METADATA_ARRAY_LENGTH-9)<= "11" & "000" & clk_cnt_pps_i when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
-  array_pps_next(METADATA_ARRAY_LENGTH-8)<= "11" & "001" & "00000000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);
-  array_pps_next(METADATA_ARRAY_LENGTH-7)<= "11" & "010" & "00000000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-7);
-  array_pps_next(METADATA_ARRAY_LENGTH-6)<= "11" & "011" & "00000000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-6);
-  array_pps_next(METADATA_ARRAY_LENGTH-5)<= "11" & "100" & "00000000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
+  array_pps_next(METADATA_ARRAY_LENGTH-10)<= x"FFFFFFFF"                                   when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
+  array_pps_next(METADATA_ARRAY_LENGTH-9)<= "11" & "000" & clk_cnt_pps_i                   when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
+  array_pps_next(METADATA_ARRAY_LENGTH-8)<= "11" & "001" & "00000000000" & trig_lvl_a      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);
+  array_pps_next(METADATA_ARRAY_LENGTH-7)<= "11" & "010" & "00000000000" & trig_lvl_a      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-7);
+  array_pps_next(METADATA_ARRAY_LENGTH-6)<= "11" & "011" & "00000000000" & trig_lvl_a      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-6);
+  array_pps_next(METADATA_ARRAY_LENGTH-5)<= "11" & "100" & "00000000000" & trig_lvl_a      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
   array_pps_next(METADATA_ARRAY_LENGTH-4)<= "11" & "100" & "001" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-4);
   array_pps_next(METADATA_ARRAY_LENGTH-3)<= "11" & "100" & "010" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-3);
   array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
@@ -316,40 +316,42 @@ begin
   process(state_reg, status, wr_count_reg)
   begin
     state_next        <= state_reg;         -- default 
-    wr_count_next     <= wr_count_reg;
+    wr_count_next     <= (others => '0'); -- wr_count_reg;
     data_to_fifo_next <= data_to_fifo_reg;  -- default 
-    axis_tvalid_next  <= axis_tvalid_reg;   -- default disable fifo write
-    axis_tready_next  <= axis_tready_reg;   --
+    axis_tvalid_next  <= '0';               -- default disable write
+    axis_tready_next  <= '1';               -- always ready
     case state_reg is
       when ST_IDLE =>
+        if (m_axis_tready = '1') then
           case status is
             when "001" | "011" | "101" | "111" => -- priority is for PPS data every second
-              data_to_fifo_next <= array_pps_reg(to_integer(wr_count_reg));
               state_next <= ST_ATT_PPS;
             when "100" | "110" =>
               state_next <= ST_ATT_TR;
             when "010" =>
-              data_to_fifo_next <= array_scalers_reg(to_integer(wr_count_reg));
               state_next <= ST_ATT_SUBTR;
             when others => --"000"
               state_next <= ST_IDLE;
           end case;
+        else
+          state_next <= ST_IDLE;
+        end if;
 
       --we send adc data because we have a trigger
       when ST_ATT_TR =>
-        axis_tready_next <= '1';
+        axis_tready_next <= '0';
         axis_tvalid_next <= '1';
-        if (wr_count_reg = DATA_ARRAY_LENGTH) then
-          wr_count_next     <= (others => '0');
-          axis_tready_next <= '0';
-          axis_tvalid_next <= '1';
-          data_to_fifo_next <= tr_status_reg;
-          state_next <= ST_SEND_TR_STATUS;
-        else
-          if (m_axis_tready = '1') then
-            wr_count_next <= wr_count_reg + 1;
-            data_to_fifo_next <= "00" & adc_dat_b_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1) & not(adc_dat_b_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-2 downto 0)) & "00" & adc_dat_a_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1) & not(adc_dat_a_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-2 downto 0));
+        if (m_axis_tready = '1') then
+          wr_count_next <= wr_count_reg + 1;
+          --data_to_fifo_next <= "00" & adc_dat_b_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1) & not(adc_dat_b_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-2 downto 0)) & "00" & adc_dat_a_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1) & not(adc_dat_a_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-2 downto 0));
+          data_to_fifo_next <= "00" & adc_dat_b_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1) & adc_dat_b_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-2 downto 0) & "00" & adc_dat_a_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-1) & adc_dat_a_reg(0)(AXIS_TDATA_WIDTH/2-PADDING_WIDTH-2 downto 0);
+          --data_to_fifo_next <= "00" & (29 downto 8 => '0') & std_logic_vector(wr_count_reg);
+          if (wr_count_reg = DATA_ARRAY_LENGTH-1) then
+            state_next <= ST_SEND_TR_STATUS;
+          else
+            state_next <= ST_ATT_TR;
           end if;
+        else
           state_next <= ST_ATT_TR;
         end if;
 
@@ -357,7 +359,8 @@ begin
         axis_tready_next <= '0';
         axis_tvalid_next <= '1';
         if (m_axis_tready = '1') then
-          data_to_fifo_next <= cnt_status_reg;
+          data_to_fifo_next <= tr_status_reg;
+          --data_to_fifo_next <= "01" & std_logic_vector(to_unsigned(33,30));
           state_next <= ST_SEND_CNT_STATUS;
         else
           state_next <= ST_SEND_TR_STATUS;
@@ -367,8 +370,8 @@ begin
         axis_tready_next <= '0';
         axis_tvalid_next <= '1';
         if (m_axis_tready = '1') then
-          axis_tready_next <= '1';
-          axis_tvalid_next <= '0';
+          data_to_fifo_next <= cnt_status_reg;
+          --data_to_fifo_next <= "10" & std_logic_vector(to_unsigned(55,30));
           state_next <= ST_IDLE;
         else
           state_next <= ST_SEND_CNT_STATUS;
@@ -377,32 +380,30 @@ begin
       when ST_ATT_SUBTR =>
         axis_tready_next <= '0';
         axis_tvalid_next <= '1';
-        if (wr_count_reg = SUBTRIG_ARRAY_LENGTH) then
-          wr_count_next    <= (others => '0');
-          axis_tready_next <= '1';
-          axis_tvalid_next <= '0';
-          state_next <= ST_IDLE;
-        else 
-          if (m_axis_tready = '1') then
-            wr_count_next <= wr_count_reg + 1;
-            data_to_fifo_next <= array_scalers_reg(to_integer(wr_count_reg));
+        if (m_axis_tready = '1') then
+          wr_count_next <= wr_count_reg + 1;
+          data_to_fifo_next <= array_scalers_reg(to_integer(wr_count_reg));
+          if (wr_count_reg = SUBTRIG_ARRAY_LENGTH-1) then
+            state_next <= ST_IDLE;
+          else 
+            state_next <= ST_ATT_SUBTR;
           end if;
+        else
           state_next <= ST_ATT_SUBTR;
         end if;
 
       when ST_ATT_PPS =>
         axis_tready_next <= '0';
         axis_tvalid_next <= '1';
-        if (wr_count_reg = METADATA_ARRAY_LENGTH) then
-          wr_count_next     <= (others => '0'); 
-          axis_tready_next <= '1';
-          axis_tvalid_next <= '0';
-          state_next <= ST_IDLE;
-        else
-          if (m_axis_tready = '1') then
-            wr_count_next <= wr_count_reg + 1;
-            data_to_fifo_next <= array_pps_reg(to_integer(wr_count_reg));
+        if (m_axis_tready = '1') then
+          wr_count_next <= wr_count_reg + 1;
+          data_to_fifo_next <= array_pps_reg(to_integer(wr_count_reg));
+          if (wr_count_reg = METADATA_ARRAY_LENGTH-1) then
+            state_next <= ST_IDLE;
+          else
+            state_next <= ST_ATT_PPS;
           end if;
+        else
           state_next <= ST_ATT_PPS;
         end if;
    end case;

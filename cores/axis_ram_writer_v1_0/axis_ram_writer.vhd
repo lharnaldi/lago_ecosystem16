@@ -24,22 +24,22 @@ entity axis_ram_writer is
   sts_data         : out std_logic_vector(ADDR_WIDTH-1 downto 0);
 
   -- Master side
-  m_axi_awid       : out std_logic_vector(AXI_ID_WIDTH-1 downto 0);    -- AXI master: Write address ID
-  m_axi_awaddr     : out std_logic_vector(AXI_ADDR_WIDTH-1 downto 0); -- AXI master: Write address
-  m_axi_awlen      : out std_logic_vector(3 downto 0);                -- AXI master: Write burst length
-  m_axi_awsize     : out std_logic_vector(2 downto 0);                -- AXI master: Write burst size
-  m_axi_awburst    : out std_logic_vector(1 downto 0);               -- AXI master: Write burst type
-  m_axi_awcache    : out std_logic_vector(3 downto 0);               -- AXI master: Write memory type
-  m_axi_awvalid    : out std_logic;                                  -- AXI master: Write address valid
-  m_axi_awready    : in std_logic;                                   -- AXI master: Write address ready
-  m_axi_wid        : out std_logic_vector(AXI_ID_WIDTH-1 downto 0);      -- AXI master: Write data ID
-  m_axi_wdata      : out std_logic_vector(AXI_DATA_WIDTH-1 downto 0);  -- AXI master: Write data
-  m_axi_wstrb      : out std_logic_vector(AXI_DATA_WIDTH/8-1 downto 0);-- AXI master: Write strobes
-  m_axi_wlast      : out std_logic;                                    -- AXI master: Write last
-  m_axi_wvalid     : out std_logic;                                   -- AXI master: Write valid
-  m_axi_wready     : in std_logic;                                    -- AXI master: Write ready
-  m_axi_bvalid     : in std_logic;                                    -- AXI master: Write response valid
-  m_axi_bready     : out std_logic;                                   -- AXI master: Write response ready
+  m_axi_awid       : out std_logic_vector(AXI_ID_WIDTH-1 downto 0);     -- AXI master: Write address ID
+  m_axi_awaddr     : out std_logic_vector(AXI_ADDR_WIDTH-1 downto 0);   -- AXI master: Write address
+  m_axi_awlen      : out std_logic_vector(3 downto 0);                  -- AXI master: Write burst length
+  m_axi_awsize     : out std_logic_vector(2 downto 0);                  -- AXI master: Write burst size
+  m_axi_awburst    : out std_logic_vector(1 downto 0);                  -- AXI master: Write burst type
+  m_axi_awcache    : out std_logic_vector(3 downto 0);                  -- AXI master: Write memory type
+  m_axi_awvalid    : out std_logic;                                     -- AXI master: Write address valid
+  m_axi_awready    : in std_logic;                                      -- AXI master: Write address ready
+  m_axi_wid        : out std_logic_vector(AXI_ID_WIDTH-1 downto 0);     -- AXI master: Write data ID
+  m_axi_wdata      : out std_logic_vector(AXI_DATA_WIDTH-1 downto 0);   -- AXI master: Write data
+  m_axi_wstrb      : out std_logic_vector(AXI_DATA_WIDTH/8-1 downto 0); -- AXI master: Write strobes
+  m_axi_wlast      : out std_logic;                                     -- AXI master: Write last
+  m_axi_wvalid     : out std_logic;                                     -- AXI master: Write valid
+  m_axi_wready     : in std_logic;                                      -- AXI master: Write ready
+  m_axi_bvalid     : in std_logic;                                      -- AXI master: Write response valid
+  m_axi_bready     : out std_logic;                                     -- AXI master: Write response ready
 
   -- Slave side
   s_axis_tready    : out std_logic;

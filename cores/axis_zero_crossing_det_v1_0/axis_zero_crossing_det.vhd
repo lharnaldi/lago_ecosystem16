@@ -21,7 +21,7 @@ end zero_cross_det;
 
 architecture rtl of zero_cross_det is
 
-signal sig_a_reg, sig_b_next: std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
+signal sig_a_reg, sig_a_next: std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
 signal sig_b_reg, sig_b_next: std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
 signal det_a_o_reg, det_a_o_next: std_logic;
 signal det_b_o_reg, det_b_o_next: std_logic;
@@ -35,7 +35,7 @@ begin
   process(aclk)
   begin
   if rising_edge(aclk) then
-    sig_a_reg <= sig_i_next;
+    sig_a_reg <= sig_a_next;
     det_a_o_reg <= det_a_o_next;
     hyst_a_low_reg <= hyst_a_low_next;
     hyst_a_high_reg <= hyst_a_high_next;
@@ -54,11 +54,11 @@ begin
                 '0' when (sig_a_reg(sig_a_reg'left) = '0' and sig_a_next(sig_a_next'left) = '1' and hyst_a_high_reg = '1') else
                 det_a_o_reg;
   
-  hyst_a_low_next  <= '1' when (signed(sig_a_next) > (to_signed(-HYST_CONST, ADC_DATA_WIDTH))) else 
+  hyst_a_low_next  <= '1' when (signed(sig_a_next) > (to_signed(-HYST_CONST, AXIS_TDATA_WIDTH/2))) else 
                     '0' when (sig_a_reg(sig_a_reg'left) = '1' and sig_a_next(sig_a_next'left) = '0' and hyst_a_low_reg = '1') else
                     hyst_a_low_reg;
   
-  hyst_a_high_next <= '1' when (signed(sig_a_next) > (to_signed(HYST_CONST, ADC_DATA_WIDTH))) else
+  hyst_a_high_next <= '1' when (signed(sig_a_next) > (to_signed(HYST_CONST, AXIS_TDATA_WIDTH/2))) else
                     '0' when (sig_a_reg(sig_a_reg'left) = '0' and sig_a_next(sig_a_next'left) = '1' and hyst_a_high_reg = '1') else
                     hyst_a_high_reg;
   
@@ -66,15 +66,15 @@ begin
   
   sig_b_next <= s_axis_tdata(AXIS_TDATA_WIDTH-1 downto AXIS_TDATA_WIDTH/2);
   
-  det_b_o_next <= '1' when (sig_b_reg(sig_i_reg'left) = '1' and sig_i_next(sig_i_next'left) = '0' and hyst_low_reg = '1') else
-                '0' when (sig_b_reg(sig_i_reg'left) = '0' and sig_i_next(sig_i_next'left) = '1' and hyst_high_reg = '1') else
+  det_b_o_next <= '1' when (sig_b_reg(sig_b_reg'left) = '1' and sig_b_next(sig_b_next'left) = '0' and hyst_b_low_reg = '1') else
+                '0' when (sig_b_reg(sig_b_reg'left) = '0' and sig_b_next(sig_b_next'left) = '1' and hyst_b_high_reg = '1') else
                 det_b_o_reg;
   
-  hyst_b_low_next  <= '1' when (signed(sig_b_next) > (to_signed(-HYST_CONST, ADC_DATA_WIDTH))) else 
+  hyst_b_low_next  <= '1' when (signed(sig_b_next) > (to_signed(-HYST_CONST, AXIS_TDATA_WIDTH/2))) else 
                     '0' when (sig_b_reg(sig_b_reg'left) = '1' and sig_b_next(sig_b_next'left) = '0' and hyst_b_low_reg = '1') else
                     hyst_b_low_reg;
   
-  hyst_b_high_next <= '1' when (signed(sig_b_next) > (to_signed(HYST_CONST, ADC_DATA_WIDTH))) else
+  hyst_b_high_next <= '1' when (signed(sig_b_next) > (to_signed(HYST_CONST, AXIS_TDATA_WIDTH/2))) else
                     '0' when (sig_b_reg(sig_b_reg'left) = '0' and sig_b_next(sig_b_next'left) = '1' and hyst_b_high_reg = '1') else
                     hyst_b_high_reg;
   
@@ -84,4 +84,3 @@ begin
   s_axis_tready <= '1';
 
 end rtl;
-

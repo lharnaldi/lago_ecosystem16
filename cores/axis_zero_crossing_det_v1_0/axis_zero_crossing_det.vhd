@@ -9,6 +9,7 @@ generic (
 );
 port (
   aclk    : in std_logic;
+  rst     : in std_logic;
 
   det_a_o : out std_logic;
   det_b_o : out std_logic;
@@ -35,15 +36,27 @@ begin
   process(aclk)
   begin
   if rising_edge(aclk) then
-    sig_a_reg <= sig_a_next;
-    det_a_o_reg <= det_a_o_next;
-    hyst_a_low_reg <= hyst_a_low_next;
-    hyst_a_high_reg <= hyst_a_high_next;
+    if rst = '0' then
+      sig_a_reg <= (others => '0');
+      det_a_o_reg <= '0';
+      hyst_a_low_reg <= '0';
+      hyst_a_high_reg <= '0';
 
-    sig_b_reg <= sig_b_next;
-    det_b_o_reg <= det_b_o_next;
-    hyst_b_low_reg <= hyst_b_low_next;
-    hyst_b_high_reg <= hyst_b_high_next;
+      sig_b_reg <= (others => '0');
+      det_b_o_reg <= '0';
+      hyst_b_low_reg <= '0';
+      hyst_b_high_reg <= '0';
+    else
+      sig_a_reg <= sig_a_next;
+      det_a_o_reg <= det_a_o_next;
+      hyst_a_low_reg <= hyst_a_low_next;
+      hyst_a_high_reg <= hyst_a_high_next;
+
+      sig_b_reg <= sig_b_next;
+      det_b_o_reg <= det_b_o_next;
+      hyst_b_low_reg <= hyst_b_low_next;
+      hyst_b_high_reg <= hyst_b_high_next;
+    end if;
   end if;
   end process;
 
@@ -54,7 +67,7 @@ begin
                 '0' when (sig_a_reg(sig_a_reg'left) = '0' and sig_a_next(sig_a_next'left) = '1' and hyst_a_high_reg = '1') else
                 det_a_o_reg;
   
-  hyst_a_low_next  <= '1' when (signed(sig_a_next) > (to_signed(-HYST_CONST, AXIS_TDATA_WIDTH/2))) else 
+  hyst_a_low_next  <= '1' when (signed(sig_a_next) < (to_signed(-HYST_CONST, AXIS_TDATA_WIDTH/2))) else 
                     '0' when (sig_a_reg(sig_a_reg'left) = '1' and sig_a_next(sig_a_next'left) = '0' and hyst_a_low_reg = '1') else
                     hyst_a_low_reg;
   
@@ -70,7 +83,7 @@ begin
                 '0' when (sig_b_reg(sig_b_reg'left) = '0' and sig_b_next(sig_b_next'left) = '1' and hyst_b_high_reg = '1') else
                 det_b_o_reg;
   
-  hyst_b_low_next  <= '1' when (signed(sig_b_next) > (to_signed(-HYST_CONST, AXIS_TDATA_WIDTH/2))) else 
+  hyst_b_low_next  <= '1' when (signed(sig_b_next) < (to_signed(-HYST_CONST, AXIS_TDATA_WIDTH/2))) else 
                     '0' when (sig_b_reg(sig_b_reg'left) = '1' and sig_b_next(sig_b_next'left) = '0' and hyst_b_low_reg = '1') else
                     hyst_b_low_reg;
   

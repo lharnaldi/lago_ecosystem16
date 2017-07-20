@@ -1,5 +1,13 @@
 source projects/cfg_test/block_design.tcl
 
+# Create axis_rp_adc
+cell labdpr:user:axis_rp_adc:1.0 adc_0 {} {
+  aclk pll_0/clk_out1
+  adc_dat_a adc_dat_a_i
+  adc_dat_b adc_dat_b_i
+  adc_csn adc_csn_o
+}
+
 # Create xlslice
 cell xilinx.com:ip:xlslice:1.0 slice_2 {
   DIN_WIDTH 1024 DIN_FROM 0 DIN_TO 0 DOUT_WIDTH 1

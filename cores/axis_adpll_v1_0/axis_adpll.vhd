@@ -17,12 +17,12 @@ port(
 --  phase_Q    : out std_logic_vector (14-1 downto 0);
   locked_o   : out std_logic;
   sin_o      : out std_logic_vector(14-1 downto 0);
-  cos_o      : out std_logic_vector(14-1 downto 0)
+  cos_o      : out std_logic_vector(14-1 downto 0);
 
   -- Master side
   m_axis_tdata       : out std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
   m_axis_tlast       : out std_logic;
-  m_axis_tvalid      : out std_logic
+  m_axis_tvalid      : out std_logic;
 
   -- Slave side
   s_axis_tready: out std_logic;
@@ -36,16 +36,8 @@ architecture rtl of adpll is
 --constant C_GAIN: std_logic_vector(32-1 downto 0):= std_logic_vector(to_unsigned(2097152, 32)); --"00000000001000000000000000000000"; 8192.00
 --constant I_GAIN: std_logic_vector(32-1 downto 0):=std_logic_vector(to_unsigned(32,32));
 
-component sincos_lut_14
-port (
-  clk_i  : in  std_logic;
-  addr_i : in  std_logic_vector(14-1 downto 0);
-  sin    : out std_logic_vector(14-1 downto 0);
-  cos    : out std_logic_vector(14-1 downto 0));
-end component;
-
 --input registers for loop filter parameters
-signal kp_reg, kp_next : std_logic_vector(32-1 downto 0)
+signal kp_reg, kp_next : std_logic_vector(32-1 downto 0);
 
 --PSD realted signals
 signal reset: std_logic := '0';
@@ -164,7 +156,7 @@ end process;
 
  lut_addr <= phase_acc_reg(50-1 downto 36);
  
- lut: sincos_lut_14 
+ lut: entity work.sincos_lut_14 
    port map( 
      clk_i   => clk_i,
      addr_i  => lut_addr,

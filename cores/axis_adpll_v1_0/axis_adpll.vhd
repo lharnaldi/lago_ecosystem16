@@ -8,21 +8,21 @@ generic (
   AXIS_TDATA_WIDTH: natural := 32
 );
 port(
-  aclk       : in std_logic;
-  aresetn    : in std_logic;
-  kp_i       : in std_logic_vector(32-1 downto 0); --proportional gain 
-  ki_i       : in std_logic_vector(32-1 downto 0); --integral gain
-  ref_i      : in std_logic; 
+  aclk         : in std_logic;
+  aresetn      : in std_logic;
+  kp_i         : in std_logic_vector(32-1 downto 0); --proportional gain 
+  ki_i         : in std_logic_vector(32-1 downto 0); --integral gain
+  ref_i        : in std_logic; 
 --  phase_I    : out std_logic_vector (14-1 downto 0);
 --  phase_Q    : out std_logic_vector (14-1 downto 0);
-  locked_o   : out std_logic;
-  sin_o      : out std_logic_vector(14-1 downto 0);
-  cos_o      : out std_logic_vector(14-1 downto 0);
+  locked_o     : out std_logic;
+  sin_o        : out std_logic_vector(14-1 downto 0);
+  cos_o        : out std_logic_vector(14-1 downto 0);
 
   -- Master side
-  m_axis_tdata       : out std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
-  m_axis_tlast       : out std_logic;
-  m_axis_tvalid      : out std_logic;
+  m_axis_tdata : out std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+  m_axis_tlast : out std_logic;
+  m_axis_tvalid: out std_logic;
 
   -- Slave side
   s_axis_tready: out std_logic;
@@ -54,16 +54,6 @@ signal dds_fbk                     : std_logic_vector(32-1 downto 0);
 signal phase_acc_reg, phase_acc_next: std_logic_vector(49 downto 0);
 signal phase_step: std_logic_vector(49 downto 0) := (others => '0');
 signal dds_sync  : std_logic;
-
---Locked indicator related signals
-signal ref_reg, ref_next: std_logic;
-signal ref_period_cntr_reg, ref_period_cntr_next : std_logic_vector(31 downto 0);
-signal ref_period_reg, ref_period_next : std_logic_vector(31 downto 0);
-signal ref_count_done_reg, ref_count_done_next: std_logic;
-signal dds_period_cntr_reg, dds_period_cntr_next : std_logic_vector(31 downto 0);
-signal dds_period_reg, dds_period_next : std_logic_vector(31 downto 0);
-signal dds_count_done_reg, dds_count_done_next: std_logic;
-signal dds_reg, dds_next: std_logic;
 
 signal lut_addr : std_logic_vector(14-1 downto 0);
 
@@ -165,59 +155,14 @@ end process;
    );
  
  --Locked state detector
- process(aclk)
-begin
-if rising_edge(aclk) then
-  if aresetn = '0' then
-    ref_reg <= '0';
-    dds_reg <= '0';
-    ref_period_reg <= (others=>'0');
-    dds_period_reg <= (others=>'0');
-    ref_count_done_reg <= '0';
-    dds_count_done_reg <= '0';
-    ref_period_cntr_reg <= (others=>'0');
-    dds_period_cntr_reg <= (others=>'0');
-  else
-    ref_reg <= ref_next;
-    dds_reg <= dds_next;
-    ref_period_reg <= ref_period_next;
-    dds_period_reg <= dds_period_next;
-    ref_count_done_reg <= ref_count_done_next;
-    dds_count_done_reg <= dds_count_done_next;
-    ref_period_cntr_reg <= ref_period_cntr_next;
-    dds_period_cntr_reg <= dds_period_cntr_next;
-  end if;
-end if;
-end process;
-
- --next state logic
- ref_next        <= ref_i;
-
- dds_next        <= dds_sync;
-
- ref_count_done_next  <= '1' when ((ref_next = '0') and (ref_reg = '1') and (ref_count_done_reg = '0')) else
-                         '0' when ((ref_next = '1') and (ref_reg = '0') and (ref_count_done_reg = '1')) else
-                         ref_count_done_reg;
-
- dds_count_done_next  <= '1' when ((dds_next = '0') and (dds_reg = '1') and (dds_count_done_reg = '0')) else
-                         '0' when ((dds_next = '1') and (dds_reg = '0') and (dds_count_done_reg = '1')) else
-                         dds_count_done_reg;
-
- ref_period_cntr_next <= (others => '0') when ((ref_next = '1') and (ref_reg = '0') and (ref_count_done_reg = '1')) else
-                         std_logic_vector(unsigned(ref_period_cntr_reg) + 1);
-
- dds_period_cntr_next <= (others => '0') when ((dds_next = '1') and (dds_reg = '0') and (dds_count_done_reg = '1')) else
-                    std_logic_vector(unsigned(dds_period_cntr_reg) + 1);
-
- ref_period_next <= ref_period_cntr_reg when ((ref_next = '0') and (ref_reg = '1') and (ref_count_done_reg = '0')) else
-                    ref_period_reg;
-
- dds_period_next <= dds_period_cntr_reg when ((dds_next = '0') and (dds_reg = '1') and (dds_count_done_reg = '0')) else
-                    dds_period_reg;
- --output
-                  --if dds period is within +/- 25% of ref period, turn on local lock signal. 3/4 < x > 5/4
- locked_o        <= '1' when ((unsigned(dds_period_reg) > (3*unsigned(ref_period_reg)/4)) and (unsigned(dds_period_reg) < (5*unsigned(ref_period_reg)/4))) else '0';
- 
+ lock_indicator: entity work.lock_det
+   port map(
+     aclk     => aclk,
+     aresetn  => aresetn,
+     ref_i    => ref_i,
+     dds_sync_i => dds_sync,
+     locked_o => locked_o
+);
 
 end rtl;
 

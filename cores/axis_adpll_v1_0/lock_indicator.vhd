@@ -72,11 +72,14 @@ end process;
                          std_logic_vector(unsigned(dds_period_cntr_reg) + 1);
 
  ref_period_next <= ref_period_cntr_reg when ((ref_next = '0') and (ref_reg = '1') and (ref_cntr_done_reg = '0')) else
+                    ref_period_reg;
+
+ dds_period_next <= dds_period_cntr_reg when ((dds_next = '0') and (dds_reg = '1') and (dds_cntr_done_reg = '0')) else
                     dds_period_reg;
+
  --output
                   --if dds period is within +/- 25% of ref period, turn on local lock signal. 3/4 < x > 5/4
  locked_o        <= '1' when ((unsigned(dds_period_reg) > (3*unsigned(ref_period_reg)/4)) and (unsigned(dds_period_reg) < (5*unsigned(ref_period_reg)/4))) else '0';
-
 
 end rtl;
 

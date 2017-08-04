@@ -36,6 +36,14 @@ cell xilinx.com:ip:xlconstant:1.1 const_5 {
   CONST_VAL 92387
 }
 
+# Create xlconstant filter time constant 
+# 2147376429 = 0.1111111111111100101110100101101
+# = 0.999949735 -> for fc=0.008e-3
+cell xilinx.com:ip:xlconstant:1.1 const_6 {
+  CONST_WIDTH 32
+  CONST_VAL 2147376429
+}
+
 # Create axi_cfg_register
 cell labdpr:user:axi_cfg_register:1.0 cfg_0 {
   CFG_DATA_WIDTH 64
@@ -93,30 +101,22 @@ cell labdpr:user:axis_adpll:1.0 adpll_0 {
  locked_o led_o
 }
 
-# Create axis_clock_converter
-cell xilinx.com:ip:axis_clock_converter:1.1 fifo_0 {} {
-  s_axis_aclk pll_0/clk_out1
-  s_axis_aresetn const_0/dout
-  m_axis_aclk ps_0/FCLK_CLK0
-  m_axis_aresetn slice_1/Dout
-}
-
+# Create axis_broadcaster
+#cell xilinx.com:ip:axis_broadcaster:1.1 bcast_0 {
+#  S_TDATA_NUM_BYTES.VALUE_SRC USER
+#  M_TDATA_NUM_BYTES.VALUE_SRC USER
+#  S_TDATA_NUM_BYTES 4
+#  M_TDATA_NUM_BYTES 2
+#  M00_TDATA_REMAP {tdata[13:0],2'b00}
+#  M01_TDATA_REMAP {tdata[29:16],2'b00}
+#} {
+#  S_AXIS fifo_0/M_AXIS
+#  aclk ps_0/FCLK_CLK0
+#  aresetn rst_0/peripheral_aresetn
+#}
+#
 # Create axis_broadcaster
 cell xilinx.com:ip:axis_broadcaster:1.1 bcast_0 {
-  S_TDATA_NUM_BYTES.VALUE_SRC USER
-  M_TDATA_NUM_BYTES.VALUE_SRC USER
-  S_TDATA_NUM_BYTES 4
-  M_TDATA_NUM_BYTES 2
-  M00_TDATA_REMAP {tdata[13:0],2'b00}
-  M01_TDATA_REMAP {tdata[29:16],2'b00}
-} {
-  S_AXIS fifo_0/M_AXIS
-  aclk ps_0/FCLK_CLK0
-  aresetn rst_0/peripheral_aresetn
-}
-
-# Create axis_broadcaster
-cell xilinx.com:ip:axis_broadcaster:1.1 bcast_1 {
   S_TDATA_NUM_BYTES.VALUE_SRC USER
   M_TDATA_NUM_BYTES.VALUE_SRC USER
   S_TDATA_NUM_BYTES 4
@@ -125,13 +125,12 @@ cell xilinx.com:ip:axis_broadcaster:1.1 bcast_1 {
   M01_TDATA_REMAP {tdata[31:0]}
 } {
   S_AXIS adc_0/M_AXIS
-  M00_AXIS fifo_0/S_AXIS
   aclk pll_0/clk_out1
   aresetn const_0/dout
 }
 
 # Create axis_broadcaster
-cell xilinx.com:ip:axis_broadcaster:1.1 bcast_2 {
+cell xilinx.com:ip:axis_broadcaster:1.1 bcast_1 {
   S_TDATA_NUM_BYTES.VALUE_SRC USER
   M_TDATA_NUM_BYTES.VALUE_SRC USER
   S_TDATA_NUM_BYTES 4
@@ -139,99 +138,9 @@ cell xilinx.com:ip:axis_broadcaster:1.1 bcast_2 {
   M00_TDATA_REMAP {tdata[15:0]}
   M01_TDATA_REMAP {tdata[15:0]}
 } {
-  S_AXIS bcast_1/M00_AXIS
-  M00_AXIS fifo_0/S_AXIS
+  S_AXIS bcast_0/M00_AXIS
   aclk pll_0/clk_out1
   aresetn const_0/dout
-}
-
-# Create axis_broadcaster
-cell xilinx.com:ip:axis_broadcaster:1.1 bcast_3 {
-  S_TDATA_NUM_BYTES.VALUE_SRC USER
-  M_TDATA_NUM_BYTES.VALUE_SRC USER
-  S_TDATA_NUM_BYTES 4
-  M_TDATA_NUM_BYTES 2
-  M00_TDATA_REMAP {tdata[31:16]}
-  M01_TDATA_REMAP {tdata[15:0]}
-} {
-  S_AXIS bcast_1/M00_AXIS
-  M00_AXIS fifo_0/S_AXIS
-  aclk pll_0/clk_out1
-  aresetn const_0/dout
-}
-
-# Create axis_subset_converter
-cell xilinx.com:ip:axis_subset_converter:1.1 asc_0{
-  M_TDATA_NUM_BYTES.VALUE_SRC USER
-  S_TDATA_NUM_BYTES.VALUE_SRC USER
-  S_TDATA_NUM_BYTES 2 
-  M_TDATA_NUM_BYTES 4 
-  TDATA_REMAP {16'b0000000000000000,tdata[15:0]}
-}{
-  S_AXIS bcast_2/M00_AXIS
-
-}
-
-# Create axis_subset_converter
-cell xilinx.com:ip:axis_subset_converter:1.1 asc_1{
-  M_TDATA_NUM_BYTES.VALUE_SRC USER
-  S_TDATA_NUM_BYTES.VALUE_SRC USER
-  S_TDATA_NUM_BYTES 2 
-  M_TDATA_NUM_BYTES 4 
-  TDATA_REMAP {16'b0000000000000000,tdata[15:0]}
-}{
-  S_AXIS bcast_2/M01_AXIS
-
-}
-
-# Create axis_subset_converter
-cell xilinx.com:ip:axis_subset_converter:1.1 asc_2{
-  M_TDATA_NUM_BYTES.VALUE_SRC USER
-  S_TDATA_NUM_BYTES.VALUE_SRC USER
-  S_TDATA_NUM_BYTES 2 
-  M_TDATA_NUM_BYTES 4 
-  TDATA_REMAP {16'b0000000000000000,tdata[15:0]}
-}{
-  S_AXIS bcast_2/M00_AXIS
-
-}
-
-# Create axis_subset_converter
-cell xilinx.com:ip:axis_subset_converter:1.1 asc_3{
-  M_TDATA_NUM_BYTES.VALUE_SRC USER
-  S_TDATA_NUM_BYTES.VALUE_SRC USER
-  S_TDATA_NUM_BYTES 2 
-  M_TDATA_NUM_BYTES 4 
-  TDATA_REMAP {16'b0000000000000000,tdata[15:0]}
-}{
-  S_AXIS bcast_2/M01_AXIS
-
-}
-
-# Create complex multiplier
-cell xilinx.com:ip:cmpy:6.0 cmpy_0{}{
-  S_AXIS_A asc_0/M_AXIS
-  S_AXIS_B asc_2/M_AXIS
-}
-
-# Create complex multiplier
-cell xilinx.com:ip:cmpy:6.0 cmpy_0{}{
-  S_AXIS_A asc_1/M_AXIS
-  S_AXIS_B asc_3/M_AXIS
-
-}
-
-# Create axis_rp_dac
-cell labdpr:user:axis_rp_dac:1.0 dac_0 {} {
-  aclk pll_0/clk_out1
-  ddr_clk pll_0/clk_out2
-  locked pll_0/locked
-  S_AXIS adpll_0/M_AXIS
-  dac_clk dac_clk_o
-  dac_rst dac_rst_o
-  dac_sel dac_sel_o
-  dac_wrt dac_wrt_o
-  dac_dat dac_dat_o
 }
 
 # Create zero_crossing_det
@@ -241,9 +150,202 @@ cell labdpr:user:axis_zero_crossing_det:1.0 zcd_0 {
 } {
   aclk pll_0/clk_out1
   aresetn const_0/dout 
-  S_AXIS bcast_1/M01_AXIS
+  S_AXIS bcast_0/M01_AXIS
   det_b_o adpll_0/ref_i 
 }
+
+# Create axis_subset_converter
+cell xilinx.com:ip:axis_subset_converter:1.1 asc_0 {
+  M_TDATA_NUM_BYTES.VALUE_SRC USER
+  S_TDATA_NUM_BYTES.VALUE_SRC USER
+  S_TDATA_NUM_BYTES 2 
+  M_TDATA_NUM_BYTES 4 
+  TDATA_REMAP {16'b0000000000000000,tdata[15:0]}
+} {
+  aclk pll_0/clk_out1
+  aresetn const_0/dout 
+  S_AXIS bcast_1/M00_AXIS
+}
+
+# Create axis_subset_converter
+cell xilinx.com:ip:axis_subset_converter:1.1 asc_1 {
+  M_TDATA_NUM_BYTES.VALUE_SRC USER
+  S_TDATA_NUM_BYTES.VALUE_SRC USER
+  S_TDATA_NUM_BYTES 2 
+  M_TDATA_NUM_BYTES 4 
+  TDATA_REMAP {16'b0000000000000000,tdata[15:0]}
+} {
+  aclk pll_0/clk_out1
+  aresetn const_0/dout 
+  S_AXIS bcast_1/M01_AXIS
+}
+
+# Create axis_broadcaster
+cell xilinx.com:ip:axis_broadcaster:1.1 bcast_2 {
+  S_TDATA_NUM_BYTES.VALUE_SRC USER
+  M_TDATA_NUM_BYTES.VALUE_SRC USER
+  S_TDATA_NUM_BYTES 4
+  M_TDATA_NUM_BYTES 2
+  M00_TDATA_REMAP {tdata[31:16]}
+  M01_TDATA_REMAP {tdata[15:0]}
+} {
+  S_AXIS adpll_0/M_AXIS
+  aclk pll_0/clk_out1
+  aresetn const_0/dout
+}
+
+# Create axis_subset_converter
+cell xilinx.com:ip:axis_subset_converter:1.1 asc_2 {
+  M_TDATA_NUM_BYTES.VALUE_SRC USER
+  S_TDATA_NUM_BYTES.VALUE_SRC USER
+  S_TDATA_NUM_BYTES 2 
+  M_TDATA_NUM_BYTES 4 
+  TDATA_REMAP {16'b0000000000000000,tdata[15:0]}
+} {
+  aclk pll_0/clk_out1
+  aresetn const_0/dout 
+  S_AXIS bcast_2/M00_AXIS
+}
+
+# Create axis_subset_converter
+cell xilinx.com:ip:axis_subset_converter:1.1 asc_3 { 
+  M_TDATA_NUM_BYTES.VALUE_SRC USER
+  S_TDATA_NUM_BYTES.VALUE_SRC USER
+  S_TDATA_NUM_BYTES 2 
+  M_TDATA_NUM_BYTES 4 
+  TDATA_REMAP {16'b0000000000000000,tdata[15:0]}
+} {
+  aclk pll_0/clk_out1
+  aresetn const_0/dout 
+  S_AXIS bcast_2/M01_AXIS
+}
+
+# Create complex multiplier
+cell xilinx.com:ip:cmpy:6.0 cmpy_0 {
+  OutputWidth 32
+} {
+  aclk pll_0/clk_out1
+  S_AXIS_A asc_0/M_AXIS
+  S_AXIS_B asc_2/M_AXIS
+}
+
+# Create complex multiplier
+cell xilinx.com:ip:cmpy:6.0 cmpy_1 {
+  OutputWidth 32
+} {
+  aclk pll_0/clk_out1
+  S_AXIS_A asc_1/M_AXIS
+  S_AXIS_B asc_3/M_AXIS
+
+}
+
+# Create axis_subset_converter
+cell xilinx.com:ip:axis_subset_converter:1.1 asc_4 {
+  M_TDATA_NUM_BYTES.VALUE_SRC USER
+  S_TDATA_NUM_BYTES.VALUE_SRC USER
+  S_TDATA_NUM_BYTES 8
+  M_TDATA_NUM_BYTES 4
+  TDATA_REMAP {tdata[31:0]}
+} {
+  aclk pll_0/clk_out1
+  aresetn const_0/dout 
+  S_AXIS cmpy_0/M_AXIS_DOUT
+}
+
+# Create axis_subset_converter
+cell xilinx.com:ip:axis_subset_converter:1.1 asc_5 {
+  M_TDATA_NUM_BYTES.VALUE_SRC USER
+  S_TDATA_NUM_BYTES.VALUE_SRC USER
+  S_TDATA_NUM_BYTES 8
+  M_TDATA_NUM_BYTES 4
+  TDATA_REMAP {tdata[31:0]}
+} {
+  aclk pll_0/clk_out1
+  aresetn const_0/dout 
+  S_AXIS cmpy_1/M_AXIS_DOUT
+}
+
+# Create axis_clock_converter
+cell xilinx.com:ip:axis_clock_converter:1.1 fifo_0 {
+  TDATA_NUM_BYTES.VALUE_SRC USER
+  TDATA_NUM_BYTES 4
+} {
+  s_axis_aclk pll_0/clk_out1
+  s_axis_aresetn const_0/dout
+  m_axis_aclk ps_0/FCLK_CLK0
+  m_axis_aresetn slice_1/Dout
+}
+
+# Create axis_clock_converter
+cell xilinx.com:ip:axis_clock_converter:1.1 fifo_1 {
+  TDATA_NUM_BYTES.VALUE_SRC USER
+  TDATA_NUM_BYTES 4
+} {
+  s_axis_aclk pll_0/clk_out1
+  s_axis_aresetn const_0/dout
+  m_axis_aclk ps_0/FCLK_CLK0
+  m_axis_aresetn slice_1/Dout
+}
+
+# Create axis_lpf
+cell labdpr:user:axis_lpf:1.0 lpf_0 {} {
+  aclk ps_0/FCLK_CLK0
+  aresetn const_0/dout
+  tc_i const_6/dout
+  S_AXIS fifo_0/M_AXIS
+}
+
+# Create axis_lpf
+cell labdpr:user:axis_lpf:1.0 lpf_1 {} {
+  aclk ps_0/FCLK_CLK0
+  aresetn const_0/dout
+  tc_i const_6/dout
+  S_AXIS fifo_1/M_AXIS
+}
+
+# Create status register
+cell labdpr:user:axi_sts_register:1.0 sts_0 {
+  STS_DATA_WIDTH 32
+} {
+  sts_data lpf_0/data_o
+}
+
+# Create status register
+cell labdpr:user:axi_sts_register:1.0 sts_1 {
+  STS_DATA_WIDTH 32
+} {
+  sts_data lpf_1/data_o
+}
+
+# Create axis_rp_dac
+#cell labdpr:user:axis_rp_dac:1.0 dac_0 {} {
+#  aclk pll_0/clk_out1
+#  ddr_clk pll_0/clk_out2
+#  locked pll_0/locked
+#  dac_clk dac_clk_o
+#  dac_rst dac_rst_o
+#  dac_sel dac_sel_o
+#  dac_wrt dac_wrt_o
+#  dac_dat dac_dat_o
+#}
+
+# Create all required interconnections
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
+  Master /ps_0/M_AXI_GP0
+  Clk Auto
+} [get_bd_intf_pins sts_0/S_AXI]
+
+set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_sts_0_reg0]
+set_property OFFSET 0x40001000 [get_bd_addr_segs ps_0/Data/SEG_sts_0_reg0]
+
+# Create all required interconnections
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
+  Master /ps_0/M_AXI_GP0
+  Clk Auto
+} [get_bd_intf_pins sts_1/S_AXI]
+
+set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_sts_1_reg0]
+set_property OFFSET 0x40002000 [get_bd_addr_segs ps_0/Data/SEG_sts_1_reg0]
 
 # Create all required interconnections
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
@@ -307,15 +409,15 @@ set_property OFFSET 0x40000000 [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
 #}
 
 # Create axis_combiner
-cell  xilinx.com:ip:axis_combiner:1.1 comb_0 {
-  TDATA_NUM_BYTES.VALUE_SRC USER
-  TDATA_NUM_BYTES 2
-} {
-  S00_AXIS bcast_0/M00_AXIS
-  S01_AXIS bcast_0/M01_AXIS
-  aclk ps_0/FCLK_CLK0
-  aresetn rst_0/peripheral_aresetn
-}
+#cell  xilinx.com:ip:axis_combiner:1.1 comb_0 {
+#  TDATA_NUM_BYTES.VALUE_SRC USER
+#  TDATA_NUM_BYTES 2
+#} {
+#  S00_AXIS bcast_0/M00_AXIS
+#  S01_AXIS bcast_0/M01_AXIS
+#  aclk ps_0/FCLK_CLK0
+#  aresetn rst_0/peripheral_aresetn
+#}
 
 # Create fir_compiler
 #cell xilinx.com:ip:fir_compiler:7.2 fir_0 {
@@ -340,37 +442,36 @@ cell  xilinx.com:ip:axis_combiner:1.1 comb_0 {
 #}
 
 # Create axis_packetizer
-cell labdpr:user:axis_packetizer:1.0 pktzr_0 {
-  AXIS_TDATA_WIDTH 32
-  CNTR_WIDTH 32
-  CONTINUOUS FALSE
-} {
-  S_AXIS comb_0/M_AXIS
-  cfg_data slice_4/Dout
-  aclk ps_0/FCLK_CLK0
-  aresetn slice_2/Dout
-}
-
-# Create axis_dwidth_converter
-cell xilinx.com:ip:axis_dwidth_converter:1.1 conv_0 {
-  S_TDATA_NUM_BYTES.VALUE_SRC USER
-  S_TDATA_NUM_BYTES 4
-  M_TDATA_NUM_BYTES 8
-} {
-  S_AXIS pktzr_0/M_AXIS
-  aclk ps_0/FCLK_CLK0
-  aresetn slice_3/Dout
-}
-
-# Create axis_ram_writer
-cell labdpr:user:axis_ram_writer:1.0 writer_0 {
-  ADDR_WIDTH 22
-} {
-  S_AXIS conv_0/M_AXIS
-  M_AXI ps_0/S_AXI_HP0
-  cfg_data const_1/dout
-  aclk ps_0/FCLK_CLK0
-  aresetn slice_3/Dout
-}
-
-assign_bd_address [get_bd_addr_segs ps_0/S_AXI_HP0/HP0_DDR_LOWOCM]
+#cell labdpr:user:axis_packetizer:1.0 pktzr_0 {
+#  AXIS_TDATA_WIDTH 32
+#  CNTR_WIDTH 32
+#  CONTINUOUS FALSE
+#} {
+#  cfg_data slice_4/Dout
+#  aclk ps_0/FCLK_CLK0
+#  aresetn slice_2/Dout
+#}
+#
+## Create axis_dwidth_converter
+#cell xilinx.com:ip:axis_dwidth_converter:1.1 conv_0 {
+#  S_TDATA_NUM_BYTES.VALUE_SRC USER
+#  S_TDATA_NUM_BYTES 4
+#  M_TDATA_NUM_BYTES 8
+#} {
+#  S_AXIS pktzr_0/M_AXIS
+#  aclk ps_0/FCLK_CLK0
+#  aresetn slice_3/Dout
+#}
+#
+## Create axis_ram_writer
+#cell labdpr:user:axis_ram_writer:1.0 writer_0 {
+#  ADDR_WIDTH 22
+#} {
+#  S_AXIS conv_0/M_AXIS
+#  M_AXI ps_0/S_AXI_HP0
+#  cfg_data const_1/dout
+#  aclk ps_0/FCLK_CLK0
+#  aresetn slice_3/Dout
+#}
+#
+#assign_bd_address [get_bd_addr_segs ps_0/S_AXI_HP0/HP0_DDR_LOWOCM]

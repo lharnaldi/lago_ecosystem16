@@ -1,4 +1,4 @@
-set display_name {AXI4-Stream tlast Generator}
+set display_name {AXI4-Stream Tlast Generator}
 
 set core [ipx::current_core]
 

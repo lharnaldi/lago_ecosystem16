@@ -14,4 +14,4 @@ set_property INTERFACE_MODE master $bus
 
 set bus [ipx::get_bus_interfaces aclk]
 set parameter [ipx::add_bus_parameter ASSOCIATED_BUSIF $bus]
-set_property VALUE S_AXIS $parameter
+set_property VALUE M_AXIS $parameter

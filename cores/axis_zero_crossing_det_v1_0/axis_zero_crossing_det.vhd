@@ -9,7 +9,7 @@ generic (
 );
 port (
   aclk    : in std_logic;
-  rst     : in std_logic;
+  aresetn : in std_logic;
 
   det_a_o : out std_logic;
   det_b_o : out std_logic;
@@ -36,7 +36,7 @@ begin
   process(aclk)
   begin
   if rising_edge(aclk) then
-    if rst = '0' then
+    if aresetn = '0' then
       sig_a_reg <= (others => '0');
       det_a_o_reg <= '0';
       hyst_a_low_reg <= '0';

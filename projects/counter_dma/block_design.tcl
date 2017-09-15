@@ -50,6 +50,7 @@ cell labdpr:user:axis_rp_adc:1.0 adc_0 {} {
 cell xilinx.com:ip:axi_dma:7.1 axi_dma_0 {
   c_sg_include_stscntrl_strm 0 
   c_include_sg 0
+  c_include_s2mm_dre 1
   c_include_mm2s 0 
   c_include_s2mm 1
 } {
@@ -64,7 +65,7 @@ cell labdpr:user:axis_counter:1.0 axis_counter_0 {} {
 
 # Create xlconstant
 cell xilinx.com:ip:xlconstant:1.1 const_1 {
- CONST_VAL 4096
+ CONST_VAL 32768
  CONST_WIDTH 32
 } {
  dout axis_counter_0/cfg_data 
@@ -85,7 +86,7 @@ cell xilinx.com:ip:axis_clock_converter:1.1 fifo_0 {} {
 # Create the tlast generator
 cell labdpr:user:axis_tlast_gen:1.0 tlast_gen_0 {
   AXIS_TDATA_WIDTH 32
-  PKT_CNTR_BITS 9
+  PKT_CNTR_BITS 14
 } {
   M_AXIS axi_dma_0/S_AXIS_S2MM
   S_AXIS axis_counter_0/M_AXIS
@@ -95,19 +96,19 @@ cell labdpr:user:axis_tlast_gen:1.0 tlast_gen_0 {
 
 # Create xlconstant
 cell xilinx.com:ip:xlconstant:1.1 const_2 {
- CONST_VAL 511
- CONST_WIDTH 9
+ CONST_VAL 16384
+ CONST_WIDTH 14
 } {
  dout tlast_gen_0/pkt_length 
 }
 
 # Create xlconstant
-cell xilinx.com:ip:xlconstant:1.1 const_3 {
- CONST_VAL 15
- CONST_WIDTH 4
-} {
- dout axi_dma_0/s_axis_s2mm_tkeep 
-}
+#cell xilinx.com:ip:xlconstant:1.1 const_3 {
+# CONST_VAL 15
+# CONST_WIDTH 4
+#} {
+# dout axi_dma_0/s_axis_s2mm_tkeep 
+#}
 
 # Create all required interconnections
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {

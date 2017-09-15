@@ -141,15 +141,15 @@ begin
 
   int_awvalid_next <= '1' when ((int_empty_wire = '0') and (int_awvalid_reg = '0') and (int_wvalid_reg = '0')) or 
                       ((m_axi_wready = '1') and (int_wlast_wire = '1') and (int_empty_wire = '0')) else 
-	              '0' when ((m_axi_awready = '1') and (int_awvalid_reg = '1')) else
-	              int_awvalid_reg;
+	                    '0' when ((m_axi_awready = '1') and (int_awvalid_reg = '1')) else
+	                    int_awvalid_reg;
 
   int_wvalid_next <= '1' when ((int_empty_wire = '0') and (int_awvalid_reg = '0') and (int_wvalid_reg = '0')) else 
                      '0' when (m_axi_wready = '1') and (int_wlast_wire = '1') and (int_empty_wire = '1') else
-		      int_wvalid_reg;
+		                 int_wvalid_reg;
 
   int_addr_next <= int_addr_reg + 1 when (int_rden_wire = '1') else
-	           int_addr_reg;
+	                 int_addr_reg;
 
   int_wid_next <= int_wid_reg + 1 when (m_axi_wready = '1') and (int_wlast_wire = '1') else
                   int_wid_reg;

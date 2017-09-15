@@ -60,7 +60,7 @@ begin
   begin
   int_cntr_next <= int_cntr_reg + 1 when (m_axis_tready = '1') and (int_tvalid_wire = '1') and (int_comp_wire = '1') else 
                    (others => '0') when (m_axis_tready = '1') and (int_tvalid_wire = '1') and (int_tlast_wire = '1') else 
-		   int_cntr_reg;
+		               int_cntr_reg;
 
   int_enbl_next <= '1' when (int_enbl_reg = '0') and (int_comp_wire = '1') else int_enbl_reg;
   end generate;
@@ -72,7 +72,7 @@ begin
 
   int_enbl_next <= '1' when (int_enbl_reg = '0') and (int_comp_wire = '1') else 
                    '0' when (m_axis_tready = '1') and (int_tvalid_wire = '1') and (int_tlast_wire = '1') else 
-		   int_enbl_reg;
+		               int_enbl_reg;
   end generate;
 
   s_axis_tready <= '1' when (int_enbl_reg = '1') and (m_axis_tready = '1') else '0';

@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
   // set number of samples
   *((uint32_t *)(cfg + 4)) = 1024 * 1024 - 1;
 
-  // enter normal mode
+  // enter normal mode for tlast_gen
   *((uint32_t *)(cfg + 0)) |= 2;
 
   // wait 1 second

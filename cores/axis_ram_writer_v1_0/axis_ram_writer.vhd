@@ -110,10 +110,10 @@ begin
     end if;
   end process;
 
-  rst_flg_next <= '1' when cntr_reg /= '0' else '0';
+  rst_flg_next <= '1' when unsigned(cntr_reg) /= 0 else '0';
   cntr_next <= std_logic_vector(unsigned(cntr_reg)-1) when rst_flg_reg = '1' else 
                (others => '0');
-  reset_s2 <= '1' when cntr_reg /= '0' else '0';
+  reset_s2 <= '1' when unsigned(cntr_reg) /= 0 else '0';
 
   reset <= reset_s or reset_s2;
 

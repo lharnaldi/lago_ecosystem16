@@ -74,8 +74,12 @@ architecture rtl of axis_ram_writer is
   
   signal tmp_s2                            : std_logic;
   signal reset_shreg                       : std_logic_vector(9 downto 0) := (others => '1');
+  signal reset_shreg2                      : std_logic_vector(9 downto 0) := (others => '1');
   signal reset_s                           : std_logic := '1';
+  signal reset_s2                          : std_logic := '0';
   signal reset                             : std_logic;
+  signal rst_flg_reg, rst_flg_next         : std_logic;
+  signal cntr_reg, cntr_next               : std_logic_vector(4-1 downto 0);
 
 begin
 	
@@ -85,15 +89,33 @@ begin
   int_rden_wire <= m_axi_wready and int_wvalid_reg;
   tmp_s2 <= int_tready_wire and s_axis_tvalid;
 
-  reset_generator_p: process(aclk)
+  startup_reset_gen_p: process(aclk)
   begin
     if (rising_edge(aclk)) then
       reset_shreg <= reset_shreg(reset_shreg'left-1 downto 0) & '0';
-      reset_s       <= reset_shreg(reset_shreg'left);
+      reset_s     <= reset_shreg(reset_shreg'left);
     end if;   
   end process;
+  
+  reset_gen_p: process(aclk)
+  begin
+    if (rising_edge(aclk)) then
+      if (aresetn = '0') then
+        rst_flg_reg <= '1';
+        cntr_reg <= std_logic_vector(to_unsigned(10,cntr_reg'length));
+      else
+        rst_flg_reg <= rst_flg_next;
+        cntr_reg <= cntr_next;
+      end if;
+    end if;
+  end process;
 
-  reset <= reset_s or not aresetn;
+  rst_flg_next <= '1' when cntr_reg /= '0' else '0';
+  cntr_next <= std_logic_vector(unsigned(cntr_reg)-1) when rst_flg_reg = '1' else 
+               (others => '0');
+  reset_s2 <= '1' when cntr_reg /= '0' else '0';
+
+  reset <= reset_s or reset_s2;
 
   FIFO36E1_inst: FIFO36E1 
   generic map(

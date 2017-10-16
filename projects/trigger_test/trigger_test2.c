@@ -26,14 +26,9 @@ int main()
     return 1;
   }
 
-  slcr = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0xF8000000);
   cfg = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0x40000000);
   sts = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0x40001000);
-  ram = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0x40002000);
-
-  /* set FPGA clock to 143 MHz */
-  slcr[2] = 0xDF0D;
-  slcr[92] = (slcr[92] & ~0x03F03F30) | 0x00100700;
+  ram = mmap(NULL, 1024*sysconf(_SC_PAGESIZE), PROT_READ|PROT_WRITE, MAP_SHARED,fd, 0x1E000000);
 
   signal(SIGINT, signal_handler);
 

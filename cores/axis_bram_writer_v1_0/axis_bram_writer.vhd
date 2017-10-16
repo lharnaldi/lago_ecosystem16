@@ -32,47 +32,35 @@ end axis_bram_writer;
 
 architecture rtl of axis_bram_writer is
   signal int_addr_reg, int_addr_next : std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
-  reg [BRAM_ADDR_WIDTH-1:0] int_addr_reg, int_addr_next;
-  reg int_enbl_reg, int_enbl_next;
+  signal int_addr_reg, int_addr_next : std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
+  signal int_enbl_reg, int_enbl_next : std_logic;
 
-  always @(posedge aclk)
+  process(aclk)
   begin
-    if(~aresetn)
-    begin
-      int_addr_reg <= {(BRAM_ADDR_WIDTH){1'b0}};
-      int_enbl_reg <= 1'b0;
-    end
-    else
-    begin
+    if (aresetn = '0') then
+      int_addr_reg <= (others => '0');
+      int_enbl_reg <= '0';
+    elsif rising_edge(aclk) then
       int_addr_reg <= int_addr_next;
       int_enbl_reg <= int_enbl_next;
-    end
-  end
+    end if;
+  end process;
 
-  always @*
-  begin
-    int_addr_next = int_addr_reg;
-    int_enbl_next = int_enbl_reg;
+  -- Next state logic
+  int_addr_next <= std_logic_vector(unsigned(int_addr_reg)+1) when (s_axis_tvalid = '1') and (int_enbl_reg = '1') else
+                   int_addr_reg;
 
-    if(~int_enbl_reg)
-    begin
-      int_enbl_next = 1'b1;
-    end
+  int_enbl_next <= '1' when int_enbl_reg = '0' else
+                   int_enbl_reg;
 
-    if(s_axis_tvalid & int_enbl_reg)
-    begin
-      int_addr_next = int_addr_reg + 1'b1;
-    end
-  end
+  sts_data <= int_addr_reg;
 
-  assign sts_data = int_addr_reg;
+  s_axis_tready = int_enbl_reg;
 
-  assign s_axis_tready = int_enbl_reg;
+  bram_porta_clk = aclk;
+  bram_porta_rst = not aresetn;
+  bram_porta_addr = int_addr_reg;
+  bram_porta_wrdata = s_axis_tdata;
+  bram_porta_we = ((BRAM_DATA_WIDTH/8-1) downto 0 => s_axis_tvalid & int_enbl_reg); --{(BRAM_DATA_WIDTH/8){s_axis_tvalid & int_enbl_reg}};
 
-  assign bram_porta_clk = aclk;
-  assign bram_porta_rst = ~aresetn;
-  assign bram_porta_addr = int_addr_reg;
-  assign bram_porta_wrdata = s_axis_tdata;
-  assign bram_porta_we = {(BRAM_DATA_WIDTH/8){s_axis_tvalid & int_enbl_reg}};
-
-endmodule
+end rtl;

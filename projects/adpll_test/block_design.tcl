@@ -1,4 +1,33 @@
-source projects/base_system/block_design.tcl
+# Create clk_wiz
+cell xilinx.com:ip:clk_wiz:5.3 pll_0 {
+  PRIMITIVE PLL
+  PRIM_IN_FREQ.VALUE_SRC USER
+  PRIM_IN_FREQ 125.0
+  PRIM_SOURCE Differential_clock_capable_pin
+  CLKOUT1_USED true
+  CLKOUT1_REQUESTED_OUT_FREQ 125.0
+  USE_RESET false
+} {
+  clk_in1_p adc_clk_p_i
+  clk_in1_n adc_clk_n_i
+}
+
+# Create processing_system7
+cell xilinx.com:ip:processing_system7:5.5 ps_0 {
+  PCW_IMPORT_BOARD_PRESET cfg/red_pitaya.xml
+  PCW_USE_S_AXI_HP0 1
+} {
+  M_AXI_GP0_ACLK pll_0/clk_out1
+  S_AXI_HP0_ACLK pll_0/clk_out1
+}
+
+# Create all required interconnections
+apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {
+  make_external {FIXED_IO, DDR}
+  Master Disable
+  Slave Disable
+} [get_bd_cells ps_0]
+
 
 # Create proc_sys_reset
 cell xilinx.com:ip:proc_sys_reset:5.0 rst_0
@@ -7,10 +36,10 @@ cell xilinx.com:ip:proc_sys_reset:5.0 rst_0
 cell xilinx.com:ip:xlconstant:1.1 const_0
 
 # Create xlconstant
-cell xilinx.com:ip:xlconstant:1.1 const_1 {
-  CONST_WIDTH 32
-  CONST_VAL 503316480
-}
+#cell xilinx.com:ip:xlconstant:1.1 const_1 {
+#  CONST_WIDTH 32
+#  CONST_VAL 503316480
+#}
 
 # Create xlconstant k_p constant
 cell xilinx.com:ip:xlconstant:1.1 const_2 {
@@ -59,25 +88,25 @@ cell xilinx.com:ip:xlslice:1.0 slice_1 {
 }
 
 # Create xlslice
-cell xilinx.com:ip:xlslice:1.0 slice_2 {
-  DIN_WIDTH 64 DIN_FROM 1 DIN_TO 1 DOUT_WIDTH 1
-} {
-  Din cfg_0/cfg_data
-}
-
-# Create xlslice
-cell xilinx.com:ip:xlslice:1.0 slice_3 {
-  DIN_WIDTH 64 DIN_FROM 2 DIN_TO 2 DOUT_WIDTH 1
-} {
-  Din cfg_0/cfg_data
-}
-
-# Create xlslice
-cell xilinx.com:ip:xlslice:1.0 slice_4 {
-  DIN_WIDTH 64 DIN_FROM 63 DIN_TO 32 DOUT_WIDTH 32
-} {
-  Din cfg_0/cfg_data
-}
+#cell xilinx.com:ip:xlslice:1.0 slice_2 {
+#  DIN_WIDTH 64 DIN_FROM 1 DIN_TO 1 DOUT_WIDTH 1
+#} {
+#  Din cfg_0/cfg_data
+#}
+#
+## Create xlslice
+#cell xilinx.com:ip:xlslice:1.0 slice_3 {
+#  DIN_WIDTH 64 DIN_FROM 2 DIN_TO 2 DOUT_WIDTH 1
+#} {
+#  Din cfg_0/cfg_data
+#}
+#
+## Create xlslice
+#cell xilinx.com:ip:xlslice:1.0 slice_4 {
+#  DIN_WIDTH 64 DIN_FROM 63 DIN_TO 32 DOUT_WIDTH 32
+#} {
+#  Din cfg_0/cfg_data
+#}
 
 # Create axis_rp_adc
 cell labdpr:user:axis_rp_adc:1.0 adc_0 {} {
@@ -266,56 +295,47 @@ cell xilinx.com:ip:axis_subset_converter:1.1 asc_5 {
 }
 
 # Create axis_clock_converter
-cell xilinx.com:ip:axis_clock_converter:1.1 fifo_0 {
-  TDATA_NUM_BYTES.VALUE_SRC USER
-  TDATA_NUM_BYTES 4
-} {
-  s_axis_aclk pll_0/clk_out1
-  s_axis_aresetn const_0/dout
-  m_axis_aclk ps_0/FCLK_CLK0
-  m_axis_aresetn slice_1/Dout
-}
+#cell xilinx.com:ip:axis_clock_converter:1.1 fifo_0 {
+#  TDATA_NUM_BYTES.VALUE_SRC USER
+#  TDATA_NUM_BYTES 4
+#} {
+#  s_axis_aclk pll_0/clk_out1
+#  s_axis_aresetn const_0/dout
+#  m_axis_aclk ps_0/FCLK_CLK0
+#  m_axis_aresetn slice_1/Dout
+#}
 
 # Create axis_clock_converter
-cell xilinx.com:ip:axis_clock_converter:1.1 fifo_1 {
-  TDATA_NUM_BYTES.VALUE_SRC USER
-  TDATA_NUM_BYTES 4
-} {
-  s_axis_aclk pll_0/clk_out1
-  s_axis_aresetn const_0/dout
-  m_axis_aclk ps_0/FCLK_CLK0
-  m_axis_aresetn slice_1/Dout
-}
+#cell xilinx.com:ip:axis_clock_converter:1.1 fifo_1 {
+#  TDATA_NUM_BYTES.VALUE_SRC USER
+#  TDATA_NUM_BYTES 4
+#} {
+#  s_axis_aclk pll_0/clk_out1
+#  s_axis_aresetn const_0/dout
+#  m_axis_aclk ps_0/FCLK_CLK0
+#  m_axis_aresetn slice_1/Dout
+#}
 
 # Create axis_lpf
 cell labdpr:user:axis_lpf:1.0 lpf_0 {} {
-  aclk ps_0/FCLK_CLK0
+  aclk pll_0/clk_out1
   aresetn const_0/dout
   tc_i const_6/dout
-  S_AXIS fifo_0/M_AXIS
 }
 
 # Create axis_lpf
 cell labdpr:user:axis_lpf:1.0 lpf_1 {} {
-  aclk ps_0/FCLK_CLK0
+  aclk pll_0/clk_out1
   aresetn const_0/dout
   tc_i const_6/dout
-  S_AXIS fifo_1/M_AXIS
 }
 
 # Create status register
-cell labdpr:user:axi_sts_register:1.0 sts_0 {
-  STS_DATA_WIDTH 32
-} {
-  sts_data lpf_0/data_o
-}
-
-# Create status register
-cell labdpr:user:axi_sts_register:1.0 sts_1 {
-  STS_DATA_WIDTH 32
-} {
-  sts_data lpf_1/data_o
-}
+#cell labdpr:user:axi_sts_register:1.0 sts_1 {
+#  STS_DATA_WIDTH 32
+#} {
+#  sts_data lpf_1/data_o
+#}
 
 # Create axis_rp_dac
 #cell labdpr:user:axis_rp_dac:1.0 dac_0 {} {
@@ -330,6 +350,67 @@ cell labdpr:user:axi_sts_register:1.0 sts_1 {
 #}
 
 # Create all required interconnections
+#apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
+#  Master /ps_0/M_AXI_GP0
+#  Clk Auto
+#} [get_bd_intf_pins sts_1/S_AXI]
+#
+#set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_sts_1_reg0]
+#set_property OFFSET 0x40002000 [get_bd_addr_segs ps_0/Data/SEG_sts_1_reg0]
+
+# Create all required interconnections
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
+  Master /ps_0/M_AXI_GP0
+  Clk Auto
+} [get_bd_intf_pins cfg_0/S_AXI]
+
+set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
+set_property OFFSET 0x40000000 [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
+
+# Create blk_mem_gen
+cell xilinx.com:ip:blk_mem_gen:8.3 bram_0 {
+  MEMORY_TYPE True_Dual_Port_RAM
+  USE_BRAM_BLOCK Stand_Alone
+  USE_BYTE_WRITE_ENABLE true
+  BYTE_SIZE 8
+  WRITE_WIDTH_A 32
+  WRITE_DEPTH_A 1024
+  WRITE_WIDTH_B 32
+  WRITE_DEPTH_B 1024
+  ENABLE_A Always_Enabled
+  ENABLE_B Always_Enabled
+  REGISTER_PORTB_OUTPUT_OF_MEMORY_PRIMITIVES false
+}
+
+# Create axis_bram_writer
+cell labdpr:user:axis_bram_writer:1.0 writer_0 {
+  AXIS_TDATA_WIDTH 32
+  BRAM_DATA_WIDTH 32
+  BRAM_ADDR_WIDTH 10
+} {
+  BRAM_PORTA bram_0/BRAM_PORTA
+  aclk pll_0/clk_out1
+  aresetn slice_1/Dout
+}
+
+# Create axi_bram_reader
+cell labdpr:user:axi_bram_reader:1.0 reader_0 {
+  AXIS_TDATA_WIDTH 32
+  AXI_ADDR_WIDTH 32
+  BRAM_DATA_WIDTH 32
+  BRAM_ADDR_WIDTH 10
+} {
+  BRAM_PORTA bram_0/BRAM_PORTB
+}
+
+# Create status register
+cell labdpr:user:axi_sts_register:1.0 sts_0 {
+  STS_DATA_WIDTH 32
+} {
+  sts_data writer_0/sts_data
+}
+
+# Create all required interconnections
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
   Master /ps_0/M_AXI_GP0
   Clk Auto
@@ -342,19 +423,11 @@ set_property OFFSET 0x40001000 [get_bd_addr_segs ps_0/Data/SEG_sts_0_reg0]
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
   Master /ps_0/M_AXI_GP0
   Clk Auto
-} [get_bd_intf_pins sts_1/S_AXI]
+} [get_bd_intf_pins reader_0/S_AXI]
 
-set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_sts_1_reg0]
-set_property OFFSET 0x40002000 [get_bd_addr_segs ps_0/Data/SEG_sts_1_reg0]
+set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_reader_0_reg0]
+set_property OFFSET 0x40002000 [get_bd_addr_segs ps_0/Data/SEG_reader_0_reg0]
 
-# Create all required interconnections
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
-  Master /ps_0/M_AXI_GP0
-  Clk Auto
-} [get_bd_intf_pins cfg_0/S_AXI]
-
-set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
-set_property OFFSET 0x40000000 [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
 
 # Create axis_broadcaster
 #cell xilinx.com:ip:axis_broadcaster:1.1 bcast_0 {

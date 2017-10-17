@@ -32,7 +32,6 @@ end axis_bram_writer;
 
 architecture rtl of axis_bram_writer is
   signal int_addr_reg, int_addr_next : std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
-  signal int_addr_reg, int_addr_next : std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
   signal int_enbl_reg, int_enbl_next : std_logic;
   signal s_aux1                      : std_logic;
 
@@ -60,9 +59,9 @@ begin
 
   sts_data <= int_addr_reg;
 
-  s_axis_tready = int_enbl_reg;
+  s_axis_tready <= int_enbl_reg;
 
-  s_aux1 <= s_axis_tvalid and int_enb_reg;
+  s_aux1 <= s_axis_tvalid and int_enbl_reg;
 
   bram_porta_clk <= aclk;
   bram_porta_rst <= not aresetn;

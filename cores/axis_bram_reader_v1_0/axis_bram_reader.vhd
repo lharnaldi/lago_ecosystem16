@@ -1,133 +1,112 @@
+library ieee;
 
-`timescale 1 ns / 1 ps
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
-module axis_bram_reader #
-(
-  parameter integer AXIS_TDATA_WIDTH = 32,
-  parameter integer BRAM_DATA_WIDTH = 32,
-  parameter integer BRAM_ADDR_WIDTH = 10,
-  parameter         CONTINUOUS = "FALSE"
-)
-(
-  // System signals
-  input  wire                        aclk,
-  input  wire                        aresetn,
+entity axis_bram_reader is
+  generic (
+  CONTINUOUS        : string  := "FALSE";
+  BRAM_ADDR_WIDTH   : natural := 10;
+  BRAM_DATA_WIDTH   : natural := 32;
+  AXIS_TDATA_WIDTH  : natural := 32
+  );
+  port (
+  -- System signals
+  aclk             : in std_logic;
+  aresetn          : in std_logic;
 
-  input  wire [BRAM_ADDR_WIDTH-1:0]  cfg_data,
-  output wire [BRAM_ADDR_WIDTH-1:0]  sts_data,
+  cfg_data         : in std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
+  sts_data         : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
 
-  // Master side
-  input  wire                        m_axis_tready,
-  output wire [AXIS_TDATA_WIDTH-1:0] m_axis_tdata,
-  output wire                        m_axis_tvalid,
-  output wire                        m_axis_tlast,
+  -- Master side
+  m_axis_tready    : in std_logic;
+  m_axis_tdata     : out std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+  m_axis_tvalid    : out std_logic;
+  m_axis_tlast     : out std_logic;
 
-  input  wire                        m_axis_config_tready,
-  output wire                        m_axis_config_tvalid,
+  m_axis_config_tready : in std_logic;
+  m_axis_config_tvalid : out std_logic;
 
-  // BRAM port
-  output wire                        bram_porta_clk,
-  output wire                        bram_porta_rst,
-  output wire [BRAM_ADDR_WIDTH-1:0]  bram_porta_addr,
-  input  wire [BRAM_DATA_WIDTH-1:0]  bram_porta_rddata
+  -- BRAM port
+  bram_porta_clk   : out std_logic;
+  bram_porta_rst   : out std_logic;
+  bram_porta_addr  : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
+  bram_porta_rddata: in std_logic_vector(BRAM_DATA_WIDTH-1 downto 0)
 );
+end axis_bram_reader;
 
-  reg [BRAM_ADDR_WIDTH-1:0] int_addr_reg, int_addr_next;
-  reg [BRAM_ADDR_WIDTH-1:0] int_data_reg;
-  reg int_enbl_reg, int_enbl_next;
-  reg int_conf_reg, int_conf_next;
+architecture rtl of axis_bram_reader is
 
-  wire [BRAM_ADDR_WIDTH-1:0] sum_cntr_wire;
-  wire int_comp_wire, int_tlast_wire;
+  signal int_addr_reg, 
+         int_addr_next,
+         sum_cntr_wire,
+         int_data_reg   : std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
+  signal int_comp_wire, 
+         int_tlast_wire,
+         int_enbl_reg, 
+         int_enbl_next,
+         int_conf_reg, 
+         int_conf_next  : std_logic;
 
-  always @(posedge aclk)
+begin
+  
+  process(aclk)
   begin
-    if(~aresetn)
-    begin
-      int_addr_reg <= {(BRAM_ADDR_WIDTH){1'b0}};
-      int_data_reg <= {(BRAM_ADDR_WIDTH){1'b0}};
-      int_enbl_reg <= 1'b0;
-      int_conf_reg <= 1'b0;
-    end
-    else
-    begin
-      int_addr_reg <= int_addr_next;
-      int_data_reg <= cfg_data;
-      int_enbl_reg <= int_enbl_next;
-      int_conf_reg <= int_conf_next;
-    end
-  end
+    if rising_edge(aclk) then
+      if aresetn = '0' then
+        int_addr_reg <= (others => '0');
+        int_data_reg <= (others => '0');
+        int_enbl_reg <= '0';
+        int_conf_reg <= '0';
+      else 
+        int_addr_reg <= int_addr_next;
+        int_data_reg <= cfg_data;
+        int_enbl_reg <= int_enbl_next;
+        int_conf_reg <= int_conf_next;
+      end if;
+   end if;
+  end process;
+ 
+  -- Next state logic
+  sum_cntr_wire <= std_logic_vector(unsigned(int_addr_reg) + 1);
+  int_comp_wire <= '1' when (unsigned(int_addr_reg) < unsigned(int_data_reg) else '0';
+  int_tlast_wire = not int_comp_wire;
 
-  assign sum_cntr_wire = int_addr_reg + 1'b1;
-  assign int_comp_wire = int_addr_reg < int_data_reg;
-  assign int_tlast_wire = ~int_comp_wire;
+  CONTINUOUS_G: if (CONTINUOUS = "TRUE") generate
+  begin
+    int_addr_next <= sum_cntr_wire when (m_axis_tready = '1' and int_enbl_reg = '1' and int_comp_wire = '1') else
+                     (others => '0') when (m_axis_tready = '1' and int_enbl_reg = '1' and int_tlast_wire = '1') else
+                     int_addr_reg;
 
-  generate
-    if(CONTINUOUS == "TRUE")
-    begin : CONTINUOUS
-      always @*
-      begin
-        int_addr_next = int_addr_reg;
-        int_enbl_next = int_enbl_reg;
+    int_enbl_next <= '1' when (int_enbl_reg = '0' and int_comp_wire = '1') else 
+                     int_enbl_reg;
+  end generate;
 
-        if(~int_enbl_reg & int_comp_wire)
-        begin
-          int_enbl_next = 1'b1;
-        end
+  STOP_G: if (CONTINUOUS = "FALSE") generate
+  begin
+    int_addr_next <= sum_cntr_wire when (m_axis_tready = '1' and int_enbl_reg = '1' and int_comp_wire = '1') else
+                     int_addr_reg;
 
-        if(m_axis_tready & int_enbl_reg & int_comp_wire)
-        begin
-          int_addr_next = sum_cntr_wire;
-        end
+    int_enbl_next <= '1' when (int_enbl_reg = '0' and int_comp_wire = '1') else
+                     '0' when (m_axis_tready = '1' and int_enbl_reg = '1' and int_tlast_wire = '1') else
+                     int_enbl_reg;
+    int_conf_next <= '1' when (m_axis_tready = '1' and int_enbl_reg = '1' and int_tlast_wire = '1') else
+                     '0' when (int_conf_reg = '1' and m_axis_config_tready = '1') else
+                     int_conf_reg;
+  end generate;
 
-        if(m_axis_tready & int_enbl_reg & int_tlast_wire)
-        begin
-          int_addr_next = {(BRAM_ADDR_WIDTH){1'b0}};
-        end
-      end
-    end
-    else
-    begin : STOP
-      always @*
-      begin
-        int_addr_next = int_addr_reg;
-        int_enbl_next = int_enbl_reg;
-        int_conf_next = int_conf_reg;
+  sts_data <= int_addr_reg;
 
-        if(~int_enbl_reg & int_comp_wire)
-        begin
-          int_enbl_next = 1'b1;
-        end
+  m_axis_tdata <= bram_porta_rddata;
+  m_axis_tvalid <= int_enbl_reg;
+  m_axis_tlast <= '1' when (int_enbl_reg = '1' and int_tlast_wire = '1') else
+                  '0';
 
-        if(m_axis_tready & int_enbl_reg & int_comp_wire)
-        begin
-          int_addr_next = sum_cntr_wire;
-        end
+  m_axis_config_tvalid <= int_conf_reg;
 
-        if(m_axis_tready & int_enbl_reg & int_tlast_wire)
-        begin
-          int_enbl_next = 1'b0;
-          int_conf_next = 1'b1;
-        end
-
-        if(int_conf_reg & m_axis_config_tready)
-        begin
-          int_conf_next = 1'b0;
-        end
-      end
-    end
-  endgenerate
-
-  assign sts_data = int_addr_reg;
-
-  assign m_axis_tdata = bram_porta_rddata;
-  assign m_axis_tvalid = int_enbl_reg;
-  assign m_axis_tlast = int_enbl_reg & int_tlast_wire;
-
-  assign m_axis_config_tvalid = int_conf_reg;
-
-  assign bram_porta_clk = aclk;
-  assign bram_porta_rst = ~aresetn;
-  assign bram_porta_addr = m_axis_tready & int_enbl_reg ? int_addr_next : int_addr_reg;
+  bram_porta_clk <= aclk;
+  bram_porta_rst <= not aresetn;
+  bram_porta_addr <= int_addr_next when (m_axis_tready = '1' and int_enbl_reg = '1') else 
+                     int_addr_reg;
 
 endmodule

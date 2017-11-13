@@ -6,7 +6,7 @@ use ieee.numeric_std.all;
 entity clk_gen is
 	port(
 	aclk   : in std_logic;
-    freq_i : in std_logic_vector(32-1 downto 0);
+  freq_i : in std_logic_vector(32-1 downto 0);
 	div_o  : out std_logic
 );
 end clk_gen;

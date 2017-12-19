@@ -16,8 +16,6 @@ apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {
   Slave Disable
 } [get_bd_cells ps_0]
 
-# PLL
-
 # Create clk_wiz
 cell xilinx.com:ip:clk_wiz:5.3 pll_0 {
   PRIMITIVE PLL
@@ -38,19 +36,11 @@ cell xilinx.com:ip:clk_wiz:5.3 pll_0 {
 # Create proc_sys_reset
 cell xilinx.com:ip:proc_sys_reset:5.0 rst_0
 
-# Create axis_rp_adc
-cell labdpr:user:axis_rp_adc:1.0 adc_0 {} {
-  aclk pll_0/clk_out1
-  adc_dat_a adc_dat_a_i
-  adc_dat_b adc_dat_b_i
-  adc_csn adc_csn_o
-}
-
 # Create DMA
 cell xilinx.com:ip:axi_dma:7.1 axi_dma_0 {
   c_sg_include_stscntrl_strm 0 
   c_include_sg 0
-  c_include_s2mm_dre 1
+  c_include_s2mm_dre 0
   c_include_mm2s 0 
   c_include_s2mm 1
 } {
@@ -64,23 +54,19 @@ cell labdpr:user:axis_counter:1.0 axis_counter_0 {} {
 } 
 
 # Create xlconstant
-cell xilinx.com:ip:xlconstant:1.1 const_1 {
- CONST_VAL 32768
- CONST_WIDTH 32
+cell xilinx.com:ip:xlconstant:1.1 const_0 {
+ CONST_VAL 15
+ CONST_WIDTH 4
 } {
- dout axis_counter_0/cfg_data 
+ dout axi_dma_0/s_axis_s2mm_tkeep 
 }
 
 # Create xlconstant
-cell xilinx.com:ip:xlconstant:1.1 const_0
-
-# Create axis_clock_converter
-cell xilinx.com:ip:axis_clock_converter:1.1 fifo_0 {} {
-  S_AXIS adc_0/M_AXIS
-  s_axis_aclk pll_0/clk_out1
-  s_axis_aresetn const_0/dout
-  m_axis_aclk ps_0/FCLK_CLK0
-  m_axis_aresetn rst_0/peripheral_aresetn
+cell xilinx.com:ip:xlconstant:1.1 const_1 {
+ CONST_VAL 16384
+ CONST_WIDTH 32
+} {
+ dout axis_counter_0/cfg_data 
 }
 
 # Create the tlast generator
@@ -116,7 +102,7 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
   Clk Auto
 } [get_bd_intf_pins axi_dma_0/S_AXI_LITE]
 
-set_property RANGE 64K [get_bd_addr_segs ps_0/Data/SEG_axi_dma_0_reg]
+set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_axi_dma_0_reg]
 set_property OFFSET 0x40400000 [get_bd_addr_segs ps_0/Data/SEG_axi_dma_0_reg]
 
 # Create all required interconnections

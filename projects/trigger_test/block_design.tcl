@@ -190,7 +190,7 @@ assign_bd_address [get_bd_addr_segs ps_0/S_AXI_HP0/HP0_DDR_LOWOCM]
 
 # Create axi_sts_register
 cell labdpr:user:axi_sts_register:1.0 sts_0 {
-  STS_DATA_WIDTH 22
+  STS_DATA_WIDTH 32
   AXI_ADDR_WIDTH 32
   AXI_DATA_WIDTH 32
 } {

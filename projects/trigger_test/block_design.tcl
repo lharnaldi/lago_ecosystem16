@@ -177,7 +177,7 @@ cell xilinx.com:ip:axis_dwidth_converter:1.1 conv_0 {
 
 # Create axis_ram_writer
 cell labdpr:user:axis_ram_writer:1.0 writer_0 {
-  ADDR_WIDTH 22
+  ADDR_WIDTH 20
 } {
   S_AXIS conv_0/M_AXIS
   M_AXI ps_0/S_AXI_HP0

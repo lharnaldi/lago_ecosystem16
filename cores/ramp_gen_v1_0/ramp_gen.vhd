@@ -5,25 +5,25 @@ use ieee.numeric_std.all;
 
 entity ramp_gen is
 	generic(
-	  COUNT_NBITS: integer := 18;     -- number of bits of the counter
-  	COUNT_MOD: integer := 200000;		-- mod-n
-		DATA_BITS: integer := 12);			-- number of bits for the data
+	  COUNT_NBITS : integer := 18;     -- number of bits of the counter
+  	COUNT_MOD   : integer := 200000;		-- mod-n
+		DATA_BITS   : integer := 12);			-- number of bits for the data
   port(
-    aclk       			: in    std_logic;
-		aresetn					: in 		std_logic;
-		data_i					: in 		std_logic_vector(DATA_BITS-1 downto 0);
-		data_o				: out 	std_logic_vector(DATA_BITS-1 downto 0);
-		pwm_o				: out		std_logic;
-		led_o		: out 	std_logic);
+    aclk    : in  std_logic;
+		aresetn	: in 	std_logic;
+		data_i	: in 	std_logic_vector(DATA_BITS-1 downto 0);
+		data_o	: out std_logic_vector(DATA_BITS-1 downto 0);
+		pwm_o		: out	std_logic;
+		led_o		: out std_logic);
 end ramp_gen;
 
 architecture rtl of ramp_gen is
-  signal cnt_reg, cnt_next	: unsigned(COUNT_NBITS-1 downto 0);
-  signal in_reg, in_next	: unsigned(DATA_BITS-1 downto 0);
-  signal r_reg, r_next	: unsigned(DATA_BITS-1 downto 0);
-  signal out_reg, out_next	: unsigned(DATA_BITS-1 downto 0);
-	signal buff_reg, buff_next			: std_logic;
-	signal max_tick			: std_logic;
+  signal cnt_reg, cnt_next	 : unsigned(COUNT_NBITS-1 downto 0);
+  signal in_reg, in_next	   : unsigned(DATA_BITS-1 downto 0);
+  signal r_reg, r_next	     : unsigned(DATA_BITS-1 downto 0);
+  signal out_reg, out_next	 : unsigned(DATA_BITS-1 downto 0);
+	signal buff_reg, buff_next : std_logic;
+	signal max_tick			       : std_logic;
 
 begin
 	-- Drive inputs
@@ -42,7 +42,7 @@ begin
       else
      	  cnt_reg 	<= cnt_next;
      	  r_reg 		<= r_next;
-     	  buff_reg 		<= buff_next;
+     	  buff_reg 	<= buff_next;
      	  in_reg 		<= in_next;
      	  out_reg 	<= out_next;
       end if;
@@ -75,7 +75,7 @@ begin
 	end process;
 	
 	--next-state logic for output
-	data_o	<= std_logic_vector(out_reg);
+	data_o <= std_logic_vector(out_reg);
 	led_o <= 	'0' when (out_reg = 0) else
 						'1';
 	pwm_o <= buff_reg;

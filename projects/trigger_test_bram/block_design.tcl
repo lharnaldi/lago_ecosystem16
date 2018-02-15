@@ -17,8 +17,8 @@ cell xilinx.com:ip:processing_system7:5.5 ps_0 {
   PCW_IMPORT_BOARD_PRESET cfg/red_pitaya.xml
   PCW_USE_S_AXI_HP0 1
 } {
-  M_AXI_GP0_ACLK ps_0/FCLK_CLK0
-  S_AXI_HP0_ACLK ps_0/FCLK_CLK0
+  M_AXI_GP0_ACLK pll_0/clk_out1
+  S_AXI_HP0_ACLK pll_0/clk_out1
 }
 
 # Create all required interconnections
@@ -35,34 +35,16 @@ cell labdpr:user:axi_cfg_register:1.0 cfg_0 {
   AXI_DATA_WIDTH 32
 }
 
-# Create xlslice for reset the fifos and the trigger modules
+# Create xlslice for reset fifo, pps_gen and trigger modules
 cell xilinx.com:ip:xlslice:1.0 slice_0 {
   DIN_WIDTH 128 DIN_FROM 0 DIN_TO 0 DOUT_WIDTH 1
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice for reset the pps_gen module
-cell xilinx.com:ip:xlslice:1.0 slice_1 {
-  DIN_WIDTH 128 DIN_FROM 1 DIN_TO 1 DOUT_WIDTH 1
-} {
-  Din cfg_0/cfg_data
-}
-
-# Create xlconstant
-cell xilinx.com:ip:xlconstant:1.1 const_0
-
 # Create proc_sys_reset
 cell xilinx.com:ip:proc_sys_reset:5.0 rst_0 {} {
-  slowest_sync_clk pll_0/clk_out1
-  ext_reset_in const_0/dout
-  dcm_locked pll_0/locked
-}
-
-# Create proc_sys_reset
-cell xilinx.com:ip:proc_sys_reset:5.0 rst_1 {} {
-  slowest_sync_clk ps_0/FCLK_CLK0
-  ext_reset_in ps_0/FCLK_RESET0_N
+  ext_reset_in slice_0/dout
 }
 
 # Create axis_red_pitaya_adc
@@ -74,12 +56,11 @@ cell labdpr:user:axis_rp_adc:1.0 adc_0 {} {
 }
 
 # Create axis_clock_converter
-cell xilinx.com:ip:axis_clock_converter:1.1 clk_conv_0 {} {
+cell xilinx.com:ip:axis_data_fifo:1.1 dfifo_0 {
+} {
   S_AXIS adc_0/M_AXIS
   s_axis_aclk pll_0/clk_out1
   s_axis_aresetn rst_0/peripheral_aresetn
-  m_axis_aclk ps_0/FCLK_CLK0
-  m_axis_aresetn slice_0/Dout
 }
 
 # Create xlslice for set the trigger_lvl_a
@@ -118,8 +99,8 @@ cell xilinx.com:ip:xlconstant:1.1 pps_in
 
 # Create pps generator
 cell labdpr:user:pps_gen:1.0 pps_gen_0 {} {
-  aclk ps_0/FCLK_CLK0
-  aresetn slice_1/Dout
+  aclk pll_0/clk_out1
+  aresetn rst_0/peripheral_aresetn
   gpsen_i pps_gen_en/dout
   pps_i pps_in/dout
   false_pps_led_o led_o
@@ -127,9 +108,9 @@ cell labdpr:user:pps_gen:1.0 pps_gen_0 {} {
 
 # Create lago trigger
 cell labdpr:user:axis_lago_trigger:1.0 axis_lago_trigger_0 {} {
-  S_AXIS clk_conv_0/M_AXIS
-  aclk ps_0/FCLK_CLK0
-  aresetn slice_0/Dout
+  S_AXIS dfifo_0/M_AXIS
+  aclk pll_0/clk_out1
+  aresetn rst_0/peripheral_aresetn
   trig_lvl_a_i trig_lvl_a/dout
   trig_lvl_b_i trig_lvl_b/dout
   subtrig_lvl_a_i subtrig_lvl_a/dout
@@ -146,15 +127,6 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
 
 set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
 set_property OFFSET 0x40000000 [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
-
-# Create axis_clock_converter
-cell xilinx.com:ip:axis_data_fifo:1.1 dfifo_0 {
-  FIFO_DEPTH 8192
-} {
-  S_AXIS axis_lago_trigger_0/M_AXIS
-  s_axis_aclk ps_0/FCLK_CLK0
-  s_axis_aresetn slice_0/Dout
-}
 
 # Create blk_mem_gen
 cell xilinx.com:ip:blk_mem_gen:8.3 bram_0 {
@@ -177,10 +149,10 @@ cell labdpr:user:axis_bram_writer:1.0 writer_0 {
   BRAM_DATA_WIDTH 32
   BRAM_ADDR_WIDTH 10
 } {
-  S_AXIS dfifo_0/M_AXIS
+  S_AXIS axis_lago_trigger_0/M_AXIS
   BRAM_PORTA bram_0/BRAM_PORTA
-  aclk ps_0/FCLK_CLK0
-  aresetn slice_0/Dout
+  aclk pll_0/clk_out1
+  aresetn rst_0/peripheral_aresetn
 }
 
 # Create axi_bram_reader

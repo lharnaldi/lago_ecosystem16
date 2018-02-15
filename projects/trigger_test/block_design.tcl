@@ -141,7 +141,9 @@ cell labdpr:user:pps_gen:1.0 pps_gen_0 {} {
 }
 
 # Create lago trigger
-cell labdpr:user:axis_lago_trigger:1.0 axis_lago_trigger_0 {} {
+cell labdpr:user:axis_lago_trigger:1.0 axis_lago_trigger_0 {
+  DATA_ARRAY_LENGTH 32
+} {
   S_AXIS fifo_0/M_AXIS
   aclk ps_0/FCLK_CLK0
   aresetn slice_1/Dout

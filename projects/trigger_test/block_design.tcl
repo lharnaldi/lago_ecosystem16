@@ -92,30 +92,6 @@ cell xilinx.com:ip:xlconstant:1.1 const_1 {
   CONST_VAL 503316480
 }
 
-## Create xlconstant for trigger lvl a
-#cell xilinx.com:ip:xlconstant:1.1 trig_lvl_a {
-#  CONST_WIDTH 16
-#  CONST_VAL 500
-#}
-#
-## Create xlconstant for trigger lvl b
-#cell xilinx.com:ip:xlconstant:1.1 trig_lvl_b {
-#  CONST_WIDTH 16
-#  CONST_VAL 8100
-#}
-#
-## Create xlconstant for subtrigger lvl a
-#cell xilinx.com:ip:xlconstant:1.1 subtrig_lvl_a {
-#  CONST_WIDTH 16
-#  CONST_VAL 8100
-#}
-#
-## Create xlconstant for subtrigger lvl b
-#cell xilinx.com:ip:xlconstant:1.1 subtrig_lvl_b {
-#  CONST_WIDTH 16
-#  CONST_VAL 8100
-#}
-#
 # Create xlconstant for gpsen_i
 cell xilinx.com:ip:xlconstant:1.1 pps_gen_en 
 

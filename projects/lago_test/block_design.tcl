@@ -13,7 +13,7 @@ cell labdpr:user:axis_rp_adc:1.0 adc_0 {} {
 
 # Create axi_cfg_register
 cell labdpr:user:axi_cfg_register:1.0 cfg_0 {
-  CFG_DATA_WIDTH 128
+  CFG_DATA_WIDTH 256
   AXI_ADDR_WIDTH 32
   AXI_DATA_WIDTH 32
 }
@@ -28,57 +28,57 @@ set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
 set_property OFFSET 0x40000000 [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
 
 # Create xlslice for reset fifo, pps_gen and trigger modules
-cell xilinx.com:ip:xlslice:1.0 slice_1 {
-  DIN_WIDTH 128 DIN_FROM 0 DIN_TO 0 DOUT_WIDTH 1
+cell xilinx.com:ip:xlslice:1.0 rst_1 {
+  DIN_WIDTH 256 DIN_FROM 0 DIN_TO 0 DOUT_WIDTH 1
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice for reset tlast_gen
 cell xilinx.com:ip:xlslice:1.0 slice_2 {
-  DIN_WIDTH 128 DIN_FROM 1 DIN_TO 1 DOUT_WIDTH 1
+  DIN_WIDTH 256 DIN_FROM 1 DIN_TO 1 DOUT_WIDTH 1
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice for reset conv_0 and writer_0
 cell xilinx.com:ip:xlslice:1.0 slice_3 {
-  DIN_WIDTH 128 DIN_FROM 2 DIN_TO 2 DOUT_WIDTH 1
+  DIN_WIDTH 256 DIN_FROM 2 DIN_TO 2 DOUT_WIDTH 1
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice for set the # of samples to get
 cell xilinx.com:ip:xlslice:1.0 slice_4 {
-  DIN_WIDTH 128 DIN_FROM 63 DIN_TO 32 DOUT_WIDTH 32
+  DIN_WIDTH 256 DIN_FROM 63 DIN_TO 32 DOUT_WIDTH 32
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice for set the trigger_lvl_a
 cell xilinx.com:ip:xlslice:1.0 trig_lvl_a {
-  DIN_WIDTH 128 DIN_FROM 79 DIN_TO 64 DOUT_WIDTH 16
+  DIN_WIDTH 256 DIN_FROM 79 DIN_TO 64 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice for set the trigger_lvl_b
 cell xilinx.com:ip:xlslice:1.0 trig_lvl_b {
-  DIN_WIDTH 128 DIN_FROM 95 DIN_TO 80 DOUT_WIDTH 16
+  DIN_WIDTH 256 DIN_FROM 95 DIN_TO 80 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice for set the subtrigger_lvl_a
 cell xilinx.com:ip:xlslice:1.0 subtrig_lvl_a {
-  DIN_WIDTH 128 DIN_FROM 111 DIN_TO 96 DOUT_WIDTH 16
+  DIN_WIDTH 256 DIN_FROM 111 DIN_TO 96 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice for set the subtrigger_lvl_b
 cell xilinx.com:ip:xlslice:1.0 subtrig_lvl_b {
-  DIN_WIDTH 128 DIN_FROM 127 DIN_TO 112 DOUT_WIDTH 16
+  DIN_WIDTH 256 DIN_FROM 127 DIN_TO 112 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
@@ -92,11 +92,19 @@ cell xilinx.com:ip:xlconstant:1.1 const_1 {
   CONST_VAL 503316480
 }
 
-# Create xlconstant for gpsen_i
-cell xilinx.com:ip:xlconstant:1.1 pps_gen_en 
+# Create xlslice for set the gpsen_i input
+cell xilinx.com:ip:xlslice:1.0 pps_en {
+  DIN_WIDTH 256 DIN_FROM 4 DIN_TO 4 DOUT_WIDTH 1
+} {
+  Din cfg_0/cfg_data
+}
 
-# Create xlconstant for pps_i
-cell xilinx.com:ip:xlconstant:1.1 pps_in 
+# Delete input/output port
+delete_bd_objs [get_bd_ports exp_p_tri_io]
+delete_bd_objs [get_bd_ports exp_n_tri_io]
+
+# Create input port
+create_bd_port -dir I -from 0 -to 0 exp_p_tri_io
 
 # Create axis_clock_converter
 cell xilinx.com:ip:axis_clock_converter:1.1 fifo_0 {} {
@@ -104,31 +112,38 @@ cell xilinx.com:ip:axis_clock_converter:1.1 fifo_0 {} {
   s_axis_aclk pll_0/clk_out1
   s_axis_aresetn const_0/dout
   m_axis_aclk ps_0/FCLK_CLK0
-  m_axis_aresetn slice_1/Dout
+  m_axis_aresetn rst_1/Dout
+}
+
+#Create concatenator
+cell xilinx.com:ip:xlconcat:2.1 xlconcat_0 {
+  NUM_PORTS 5
+} {
+  dout led_o
 }
 
 # Create pps generator
-cell labdpr:user:pps_gen:1.0 pps_gen_0 {} {
+cell labdpr:user:pps_gen:1.0 pps_0 {} {
   aclk ps_0/FCLK_CLK0
-  aresetn slice_1/Dout
-  gpsen_i pps_gen_en/dout
-  pps_i pps_in/dout
-  false_pps_led_o led_o
+  aresetn rst_1/Dout
+  gpsen_i pps_en/Dout
+  pps_i exp_p_tri_io
+  false_pps_led_o xlconcat_0/In0
 }
 
 # Create lago trigger
-cell labdpr:user:axis_lago_trigger:1.0 axis_lago_trigger_0 {
+cell labdpr:user:axis_lago_trigger:1.0 trigger_0 {
   DATA_ARRAY_LENGTH 32
 } {
   S_AXIS fifo_0/M_AXIS
   aclk ps_0/FCLK_CLK0
-  aresetn slice_1/Dout
+  aresetn rst_1/Dout
   trig_lvl_a_i trig_lvl_a/dout
   trig_lvl_b_i trig_lvl_b/dout
   subtrig_lvl_a_i subtrig_lvl_a/dout
   subtrig_lvl_b_i subtrig_lvl_b/dout
-  pps_i pps_gen_0/pps_o
-  clk_cnt_pps_i pps_gen_0/clk_cnt_pps_o
+  pps_i pps_0/pps_o
+  clk_cnt_pps_i pps_0/clk_cnt_pps_o
 }
 
 # Create the tlast generator
@@ -136,7 +151,7 @@ cell labdpr:user:axis_tlast_gen:1.0 tlast_gen_0 {
   AXIS_TDATA_WIDTH 32
   PKT_CNTR_BITS 32
 } {
-  S_AXIS axis_lago_trigger_0/M_AXIS
+  S_AXIS trigger_0/M_AXIS
   pkt_length slice_4/Dout
   aclk ps_0/FCLK_CLK0
   aresetn slice_2/Dout
@@ -185,93 +200,101 @@ set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_sts_0_reg0]
 set_property OFFSET 0x40001000 [get_bd_addr_segs ps_0/Data/SEG_sts_0_reg0]
 
 #Now all related to the DAC PWM
-# Create axi_cfg_register
 # Create xlslice
-cell xilinx.com:ip:xlslice:1.0 slice_5 {
-  DIN_WIDTH 160 DIN_FROM 0 DIN_TO 0 DOUT_WIDTH 1
+cell xilinx.com:ip:xlslice:1.0 rst_2 {
+  DIN_WIDTH 256 DIN_FROM 3 DIN_TO 3 DOUT_WIDTH 1
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice. 
 cell xilinx.com:ip:xlslice:1.0 slice_6 {
-  DIN_WIDTH 160 DIN_FROM 55 DIN_TO 32 DOUT_WIDTH 24
+  DIN_WIDTH 256 DIN_FROM 143 DIN_TO 128 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice.
 cell xilinx.com:ip:xlslice:1.0 slice_7 {
-  DIN_WIDTH 160 DIN_FROM 87 DIN_TO 64 DOUT_WIDTH 24
+  DIN_WIDTH 256 DIN_FROM 159 DIN_TO 144 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice.
 cell xilinx.com:ip:xlslice:1.0 slice_8 {
-  DIN_WIDTH 160 DIN_FROM 119 DIN_TO 96 DOUT_WIDTH 24
+  DIN_WIDTH 256 DIN_FROM 175 DIN_TO 160 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice. 
 cell xilinx.com:ip:xlslice:1.0 slice_9 {
-  DIN_WIDTH 160 DIN_FROM 151 DIN_TO 128 DOUT_WIDTH 24
+  DIN_WIDTH 256 DIN_FROM 191 DIN_TO 176 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
 #Create concatenator
-cell xilinx.com:ip:xlconcat:2.1 xlconcat_0 {
+cell xilinx.com:ip:xlconcat:2.1 xlconcat_1 {
   NUM_PORTS 4
 } {
   dout dac_pwm_o
 }
+
 #Create PWM generator
-cell labdpr:user:pwm_gen:1.0 pwm_gen_0 {
-  DATA_WIDTH 24
-  MAX_CNT 156
+cell labdpr:user:ramp_gen:1.0 gen_0 {
+  COUNT_NBITS 20
+  COUNT_MOD 5000
+  DATA_BITS 16
 } {
   aclk ps_0/FCLK_CLK0
-  aresetn slice_5/Dout
-  cfg_i slice_6/Dout
-  pwm_o xlconcat_0/In0
+  aresetn rst_2/Dout
+  data_i slice_6/Dout
+  pwm_o xlconcat_1/In0
+  led_o xlconcat_0/In1
 }
 
 #Create PWM generator
-cell labdpr:user:pwm_gen:1.0 pwm_gen_1 {
-  DATA_WIDTH 24
-  MAX_CNT 156
+cell labdpr:user:ramp_gen:1.0 gen_1 {
+  COUNT_NBITS 20
+  COUNT_MOD 5000
+  DATA_BITS 16
 } {
   aclk ps_0/FCLK_CLK0
-  aresetn slice_5/Dout
-  cfg_i slice_7/Dout
-  pwm_o xlconcat_0/In1
+  aresetn rst_2/Dout
+  data_i slice_7/Dout
+  pwm_o xlconcat_1/In1
+  led_o xlconcat_0/In2
 }
 
 #Create PWM generator
-cell labdpr:user:pwm_gen:1.0 pwm_gen_2 {
-  DATA_WIDTH 24
-  MAX_CNT 156
+cell labdpr:user:ramp_gen:1.0 gen_2 {
+  COUNT_NBITS 20
+  COUNT_MOD 5000
+  DATA_BITS 16
 } {
   aclk ps_0/FCLK_CLK0
-  aresetn slice_5/Dout
-  cfg_i slice_8/Dout
-  pwm_o xlconcat_0/In2
+  aresetn rst_2/Dout
+  data_i slice_8/Dout
+  pwm_o xlconcat_1/In2
+  led_o xlconcat_0/In3
 }
 
 #Create PWM generator
-cell labdpr:user:pwm_gen:1.0 pwm_gen_3 {
-  DATA_WIDTH 24
-  MAX_CNT 156
+cell labdpr:user:ramp_gen:1.0 gen_3 {
+  COUNT_NBITS 20
+  COUNT_MOD 5000
+  DATA_BITS 16
 } {
   aclk ps_0/FCLK_CLK0
-  aresetn slice_5/Dout
-  cfg_i slice_9/Dout
-  pwm_o xlconcat_0/In3
+  aresetn rst_2/Dout
+  data_i slice_9/Dout
+  pwm_o xlconcat_1/In3
+  led_o xlconcat_0/In4
 }
 
-group_bd_cells Analog_Output [get_bd_cells slice_8] [get_bd_cells slice_9] [get_bd_cells pwm_gen_0] [get_bd_cells pwm_gen_1] [get_bd_cells pwm_gen_2] [get_bd_cells pwm_gen_3] [get_bd_cells slice_5] [get_bd_cells slice_6] [get_bd_cells slice_7] [get_bd_cells xlconcat_0]
+group_bd_cells Analog_Output [get_bd_cells slice_8] [get_bd_cells slice_9] [get_bd_cells gen_0] [get_bd_cells gen_1] [get_bd_cells gen_2] [get_bd_cells gen_3] [get_bd_cells rst_2] [get_bd_cells slice_6] [get_bd_cells slice_7] [get_bd_cells xlconcat_1]
 
 #XADC related
 # Create xadc

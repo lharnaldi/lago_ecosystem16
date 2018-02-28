@@ -117,7 +117,7 @@ cell xilinx.com:ip:axis_clock_converter:1.1 fifo_0 {} {
 
 #Create concatenator
 cell xilinx.com:ip:xlconcat:2.1 xlconcat_0 {
-  NUM_PORTS 5
+  NUM_PORTS 6
 } {
   dout led_o
 }
@@ -128,7 +128,8 @@ cell labdpr:user:pps_gen:1.0 pps_0 {} {
   aresetn rst_1/Dout
   gpsen_i pps_en/Dout
   pps_i exp_p_tri_io
-  false_pps_led_o xlconcat_0/In0
+  pps_gps_o xlconcat_0/In0
+  false_pps_led_o xlconcat_0/In1
 }
 
 # Create lago trigger
@@ -252,7 +253,7 @@ cell labdpr:user:ramp_gen:1.0 gen_0 {
   aresetn rst_2/Dout
   data_i slice_6/Dout
   pwm_o xlconcat_1/In0
-  led_o xlconcat_0/In1
+  led_o xlconcat_0/In2
 }
 
 #Create PWM generator
@@ -265,7 +266,7 @@ cell labdpr:user:ramp_gen:1.0 gen_1 {
   aresetn rst_2/Dout
   data_i slice_7/Dout
   pwm_o xlconcat_1/In1
-  led_o xlconcat_0/In2
+  led_o xlconcat_0/In3
 }
 
 #Create PWM generator
@@ -278,7 +279,7 @@ cell labdpr:user:ramp_gen:1.0 gen_2 {
   aresetn rst_2/Dout
   data_i slice_8/Dout
   pwm_o xlconcat_1/In2
-  led_o xlconcat_0/In3
+  led_o xlconcat_0/In4
 }
 
 #Create PWM generator
@@ -291,7 +292,7 @@ cell labdpr:user:ramp_gen:1.0 gen_3 {
   aresetn rst_2/Dout
   data_i slice_9/Dout
   pwm_o xlconcat_1/In3
-  led_o xlconcat_0/In4
+  led_o xlconcat_0/In5
 }
 
 group_bd_cells Analog_Output [get_bd_cells slice_8] [get_bd_cells slice_9] [get_bd_cells gen_0] [get_bd_cells gen_1] [get_bd_cells gen_2] [get_bd_cells gen_3] [get_bd_cells rst_2] [get_bd_cells slice_6] [get_bd_cells slice_7] [get_bd_cells xlconcat_1]

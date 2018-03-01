@@ -84,7 +84,7 @@ if {[llength $files] > 0} {
   add_files -norecurse $files
 }
 
-set files [glob -nocomplain cfg/*.xdc]
+set files [glob -nocomplain cfg/*.xdc projects/$project_name/*.xdc]
 if {[llength $files] > 0} {
   add_files -norecurse -fileset constrs_1 $files
 }

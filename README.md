@@ -36,7 +36,7 @@ $ git clone https://github.com/lagoprojectrp/lago_ecosystem
 $ cd lago_ecosystem
 ```
 
-### 2. Install LAGO Linux for Red Pitaya ([Download SD card image](https://github.com/lagoprojectrp/lago_ecosystem/releases))
+### 2. Install LAGO Linux for Red Pitaya ([Download SD card image](https://github.com/lharnaldi/lago_ecosystem/releases))
 
 ### 3. Build and run the minimal instrument
 

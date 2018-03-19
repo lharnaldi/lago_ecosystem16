@@ -1,4 +1,4 @@
-CC=gcc
+CC=g++
 FLAGS=-Wall -O3
 
 ####

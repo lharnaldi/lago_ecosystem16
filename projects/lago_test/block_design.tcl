@@ -133,7 +133,7 @@ cell labdpr:user:pps_gen:1.0 pps_0 {} {
 }
 
 # Create lago trigger
-cell labdpr:user:axis_lago_trigger:1.0 trigger_0 {
+cell labdpr:user:axis_lago_trigger:1.1 trigger_0 {
   DATA_ARRAY_LENGTH 32
 } {
   S_AXIS fifo_0/M_AXIS
@@ -294,6 +294,8 @@ cell labdpr:user:ramp_gen:1.0 gen_3 {
   pwm_o xlconcat_1/In3
   led_o xlconcat_0/In5
 }
+
+group_bd_cells Fast_ADC [get_bd_cells tlast_gen_0] [get_bd_cells rst_1] [get_bd_cells subtrig_lvl_a] [get_bd_cells subtrig_lvl_b] [get_bd_cells pps_0] [get_bd_cells pll_0] [get_bd_cells pps_en] [get_bd_cells conv_0] [get_bd_cells slice_2] [get_bd_cells trig_lvl_a] [get_bd_cells const_0] [get_bd_cells const_1] [get_bd_cells trig_lvl_b] [get_bd_cells fifo_0] [get_bd_cells slice_3] [get_bd_cells writer_0] [get_bd_cells slice_4] [get_bd_cells trigger_0] [get_bd_cells adc_0]
 
 group_bd_cells Analog_Output [get_bd_cells slice_8] [get_bd_cells slice_9] [get_bd_cells gen_0] [get_bd_cells gen_1] [get_bd_cells gen_2] [get_bd_cells gen_3] [get_bd_cells rst_2] [get_bd_cells slice_6] [get_bd_cells slice_7] [get_bd_cells xlconcat_1]
 

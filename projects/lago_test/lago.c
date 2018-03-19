@@ -17,6 +17,8 @@
 #include "defs.h"
 #include "extras.h"
 
+using namespace std;
+
 /* ------------------------------------------------------------ */
 /*  Global Variables          */
 /* ------------------------------------------------------------ */
@@ -107,7 +109,7 @@ void signal_handler(int sig) {
   interrupted = 1;
 }
 
-int initialize_mem() {
+int init_mem() {
   char *name = "/dev/mem";
   int mfd;
 
@@ -190,7 +192,7 @@ int main(int argc, char *argv[]) {
   for (int i=0; i<MTD_BL; i++)
     mtd_bl[i]=mtd_bl2[i]=0;
 
-  if(initialize_mem() != 0) {
+  if(init_mem() != 0) {
     perror("Error mapping memory\n");
     return 1;
   }

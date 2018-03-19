@@ -1,17 +1,3 @@
-/**
- * $Id: $
- *
- * @brief UART communication module.
- *
- * @Author L. Horacio Arnaldi <lharnaldi@gmail.com>
- *
- * (c) LabDPR  http://labdpr.cab.cnea.gov.ar
- *
- * This part of code is written in C programming language.
- * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
- * for more details on the language used herein.
- */
-
 #ifndef _UART_RP_H_
 #define _UART_RP_H_
 

@@ -1,16 +1,3 @@
-/*
- * @brief This is a simple application for testing UART communication with a GPS
- * connected to a RedPitaya
- *
- * @Author L. Horacio Arnaldi <lharnaldi@gmail.com>
- *
- * (c) LabDPR  http://labdpr.cab.cnea.gov.ar
- *
- * This part of code is written in C programming language.
- * Please visit http://en.wikipedia.org/wiki/C_(programming_language)
- * for more details on the language used herein.
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>

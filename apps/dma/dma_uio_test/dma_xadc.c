@@ -137,7 +137,7 @@ void initialize_axi_dma(void){
 								FATAL();
 				}
 
-				virt_addr = *(unsgned long *)map_base + (sample_addr & MAP_MASK);
+				virt_addr = *(unsigned long *)map_base + (sample_addr & MAP_MASK);
 				*((unsigned long *) virt_addr) |= 0x10001;
 				read_result = *((unsigned long *) virt_addr);
 				printf("MM2S_DMACR set to: %lx\n",read_result);

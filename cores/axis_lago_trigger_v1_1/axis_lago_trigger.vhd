@@ -20,31 +20,15 @@ port (
   trig_lvl_b_i       : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
   subtrig_lvl_a_i    : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
   subtrig_lvl_b_i    : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
-  pps_i              : in   std_logic;
+  pps_i              : in std_logic;
   clk_cnt_pps_i      : in std_logic_vector(27-1 downto 0);
---  pwr_enA            : out  std_logic;
---  data_out           : out  std_logic_vector(2**W-1 downto 0);
---  pfifo_status       : in   std_logic_vector(2 downto 0);
---  ptemperatura       : in   std_logic_vector(15 downto 0);
---  ppresion           : in   std_logic_vector(15 downto 0);
---  phora              : in   std_logic_vector(7 downto 0);
---  pminutos           : in   std_logic_vector(7 downto 0);
---  psegundos          : in   std_logic_vector(7 downto 0);
---  latitude1_port     : in   std_logic_vector(7 downto 0);
---  latitude2_port     : in   std_logic_vector(7 downto 0);
---  latitude3_port     : in   std_logic_vector(7 downto 0);
---  latitude4_port     : in   std_logic_vector(7 downto 0);
---  longitude1_port    : in   std_logic_vector(7 downto 0);
---  longitude2_port    : in   std_logic_vector(7 downto 0);
---  longitude3_port    : in   std_logic_vector(7 downto 0);
---  longitude4_port    : in   std_logic_vector(7 downto 0);
---  ellipsoid1_port    : in   std_logic_vector(7 downto 0);
---  ellipsoid2_port    : in   std_logic_vector(7 downto 0);
---  ellipsoid3_port    : in   std_logic_vector(7 downto 0);
---  ellipsoid4_port    : in   std_logic_vector(7 downto 0);
---  num_vis_sat_port   : in   std_logic_vector(7 downto 0);
---  num_track_sat_port : in   std_logic_vector(7 downto 0);
---  rsf_port           : in   std_logic_vector(7 downto 0)
+  temp_i             : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
+  pressure_i         : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
+  time_i             : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
+  latitude_i         : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
+  longitude_i        : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
+  altitude_i         : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
+  satellites_i       : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
 
   -- Slave side
   s_axis_tready     : out std_logic;
@@ -148,16 +132,27 @@ begin
 --  array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" & ellipsoid2_port & ellipsoid3_port & ellipsoid4_port when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
 --  array_pps_next(METADATA_ARRAY_LENGTH-1)<= "11" & "100" & "100" & num_track_sat_port & num_vis_sat_port & rsf_port when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
 
-  array_pps_next(METADATA_ARRAY_LENGTH-10)<= x"FFFFFFFF"                                   when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
-  array_pps_next(METADATA_ARRAY_LENGTH-9)<= "11" & "000" & clk_cnt_pps_i                   when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
-  array_pps_next(METADATA_ARRAY_LENGTH-8)<= "11" & "001" & "00000000000" & trig_lvl_a      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);
-  array_pps_next(METADATA_ARRAY_LENGTH-7)<= "11" & "010" & "00000000000" & trig_lvl_a      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-7);
-  array_pps_next(METADATA_ARRAY_LENGTH-6)<= "11" & "011" & "00000000000" & trig_lvl_a      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-6);
-  array_pps_next(METADATA_ARRAY_LENGTH-5)<= "11" & "100" & "00000000000" & trig_lvl_a      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
-  array_pps_next(METADATA_ARRAY_LENGTH-4)<= "11" & "100" & "001" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-4);
-  array_pps_next(METADATA_ARRAY_LENGTH-3)<= "11" & "100" & "010" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-3);
-  array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
-  array_pps_next(METADATA_ARRAY_LENGTH-1)<= "11" & "100" & "100" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
+  array_pps_next(METADATA_ARRAY_LENGTH-10)<= x"FFFFFFFF"                                     when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
+  array_pps_next(METADATA_ARRAY_LENGTH-9)<= "11" & "000" & clk_cnt_pps_i                     when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
+  array_pps_next(METADATA_ARRAY_LENGTH-8)<= "11" & "001" & "00000000000" & temp_i            when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);
+  array_pps_next(METADATA_ARRAY_LENGTH-7)<= "11" & "010" & "00000000000" & pressure_i        when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-7);
+  array_pps_next(METADATA_ARRAY_LENGTH-6)<= "11" & "011" & "00000000000" & time_i            when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-6);
+  array_pps_next(METADATA_ARRAY_LENGTH-5)<= "11" & "100" & "00000000000" & latitude_i        when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
+  array_pps_next(METADATA_ARRAY_LENGTH-4)<= "11" & "100" & "001" & "00000000" & longitude_i  when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-4);
+  array_pps_next(METADATA_ARRAY_LENGTH-3)<= "11" & "100" & "010" & "00000000" & altitude_i   when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-3);
+  array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" & "00000000" & altitude_i   when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
+  array_pps_next(METADATA_ARRAY_LENGTH-1)<= "11" & "100" & "100" & "00000000" & satellites_i when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
+
+--  array_pps_next(METADATA_ARRAY_LENGTH-10)<= x"FFFFFFFF"                                   when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
+--  array_pps_next(METADATA_ARRAY_LENGTH-9)<= "11" & "000" & clk_cnt_pps_i                   when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
+--  array_pps_next(METADATA_ARRAY_LENGTH-8)<= "11" & "001" & "00000000000" & trig_lvl_a      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);
+--  array_pps_next(METADATA_ARRAY_LENGTH-7)<= "11" & "010" & "00000000000" & trig_lvl_a      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-7);
+--  array_pps_next(METADATA_ARRAY_LENGTH-6)<= "11" & "011" & "00000000000" & trig_lvl_a      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-6);
+--  array_pps_next(METADATA_ARRAY_LENGTH-5)<= "11" & "100" & "00000000000" & trig_lvl_a      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
+--  array_pps_next(METADATA_ARRAY_LENGTH-4)<= "11" & "100" & "001" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-4);
+--  array_pps_next(METADATA_ARRAY_LENGTH-3)<= "11" & "100" & "010" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-3);
+--  array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
+--  array_pps_next(METADATA_ARRAY_LENGTH-1)<= "11" & "100" & "100" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
 ------------------------------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------------------------------

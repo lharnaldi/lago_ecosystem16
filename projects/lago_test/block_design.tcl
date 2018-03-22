@@ -1,5 +1,8 @@
 source projects/base_system/block_design.tcl
 
+#Enable interrupts
+set_property -dict [list CONFIG.PCW_USE_FABRIC_INTERRUPT {1} CONFIG.PCW_IRQ_F2P_INTR {1}] [get_bd_cells ps_0]
+
 # Create proc_sys_reset
 cell xilinx.com:ip:proc_sys_reset:5.0 rst_0
 
@@ -10,6 +13,13 @@ cell labdpr:user:axis_rp_adc:1.0 adc_0 {} {
   adc_dat_b adc_dat_b_i
   adc_csn adc_csn_o
 }
+
+# Delete input/output port
+delete_bd_objs [get_bd_ports exp_p_tri_io]
+delete_bd_objs [get_bd_ports exp_n_tri_io]
+
+# Create input port
+create_bd_port -dir I -from 0 -to 0 exp_p_tri_io
 
 # Create axi_cfg_register
 cell labdpr:user:axi_cfg_register:1.0 cfg_0 {
@@ -25,7 +35,7 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
 } [get_bd_intf_pins cfg_0/S_AXI]
 
 set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
-set_property OFFSET 0x40000000 [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
+set_property OFFSET 0x40001000 [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
 
 # Create xlslice for reset fifo, pps_gen and trigger modules
 cell xilinx.com:ip:xlslice:1.0 rst_1 {
@@ -99,13 +109,6 @@ cell xilinx.com:ip:xlslice:1.0 pps_en {
   Din cfg_0/cfg_data
 }
 
-# Delete input/output port
-delete_bd_objs [get_bd_ports exp_p_tri_io]
-delete_bd_objs [get_bd_ports exp_n_tri_io]
-
-# Create input port
-create_bd_port -dir I -from 0 -to 0 exp_p_tri_io
-
 # Create axis_clock_converter
 cell xilinx.com:ip:axis_clock_converter:1.1 fifo_0 {} {
   S_AXIS adc_0/M_AXIS
@@ -146,6 +149,28 @@ cell labdpr:user:axis_lago_trigger:1.1 trigger_0 {
   pps_i pps_0/pps_o
   clk_cnt_pps_i pps_0/clk_cnt_pps_o
 }
+
+# Create GPIO core
+cell xilinx.com:ip:axi_gpio:2.0 axi_gpio_0 {
+  C_GPIO_WIDTH 1
+  C_IS_DUAL 0
+  C_ALL_INPUTS 1
+  C_INTERRUPT_PRESENT 1
+} {
+  s_axi_aclk ps_0/FCLK_CLK0
+  s_axi_aresetn rst_0/peripheral_aresetn
+  ip2intc_irpt ps_0/IRQ_F2P
+  gpio_io_i pps_0/pps_o
+}
+
+# Create all required interconnections
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
+  Master /ps_0/M_AXI_GP0
+  Clk Auto
+} [get_bd_intf_pins axi_gpio_0/S_AXI]
+
+set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_axi_gpio_0_reg]
+set_property OFFSET 0x40000000 [get_bd_addr_segs ps_0/Data/SEG_axi_gpio_0_reg]
 
 # Create the tlast generator
 cell labdpr:user:axis_tlast_gen:1.0 tlast_gen_0 {
@@ -198,7 +223,7 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
 } [get_bd_intf_pins sts_0/S_AXI]
 
 set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_sts_0_reg0]
-set_property OFFSET 0x40001000 [get_bd_addr_segs ps_0/Data/SEG_sts_0_reg0]
+set_property OFFSET 0x40002000 [get_bd_addr_segs ps_0/Data/SEG_sts_0_reg0]
 
 #Now all related to the DAC PWM
 # Create xlslice
@@ -295,7 +320,7 @@ cell labdpr:user:ramp_gen:1.0 gen_3 {
   led_o xlconcat_0/In5
 }
 
-group_bd_cells Fast_ADC [get_bd_cells tlast_gen_0] [get_bd_cells rst_1] [get_bd_cells subtrig_lvl_a] [get_bd_cells subtrig_lvl_b] [get_bd_cells pps_0] [get_bd_cells pll_0] [get_bd_cells pps_en] [get_bd_cells conv_0] [get_bd_cells slice_2] [get_bd_cells trig_lvl_a] [get_bd_cells const_0] [get_bd_cells const_1] [get_bd_cells trig_lvl_b] [get_bd_cells fifo_0] [get_bd_cells slice_3] [get_bd_cells writer_0] [get_bd_cells slice_4] [get_bd_cells trigger_0] [get_bd_cells adc_0]
+group_bd_cells Fast_ADC [get_bd_cells tlast_gen_0] [get_bd_cells rst_1] [get_bd_cells subtrig_lvl_a] [get_bd_cells subtrig_lvl_b] [get_bd_cells pps_0] [get_bd_cells pll_0] [get_bd_cells pps_en] [get_bd_cells conv_0] [get_bd_cells slice_2] [get_bd_cells trig_lvl_a] [get_bd_cells const_0] [get_bd_cells const_1] [get_bd_cells trig_lvl_b] [get_bd_cells fifo_0] [get_bd_cells slice_3] [get_bd_cells writer_0] [get_bd_cells slice_4] [get_bd_cells trigger_0] [get_bd_cells adc_0] [get_bd_cells axi_gpio_0]
 
 group_bd_cells Analog_Output [get_bd_cells slice_8] [get_bd_cells slice_9] [get_bd_cells gen_0] [get_bd_cells gen_1] [get_bd_cells gen_2] [get_bd_cells gen_3] [get_bd_cells rst_2] [get_bd_cells slice_6] [get_bd_cells slice_7] [get_bd_cells xlconcat_1]
 

@@ -23,7 +23,7 @@ create_bd_port -dir I -from 0 -to 0 exp_p_tri_io
 
 # Create axi_cfg_register
 cell labdpr:user:axi_cfg_register:1.0 cfg_0 {
-  CFG_DATA_WIDTH 256
+  CFG_DATA_WIDTH 1024
   AXI_ADDR_WIDTH 32
   AXI_DATA_WIDTH 32
 }
@@ -37,58 +37,107 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
 set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
 set_property OFFSET 0x40001000 [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
 
-# Create xlslice for reset fifo, pps_gen and trigger modules
+# Create xlslice for reset fifo, pps_gen and trigger modules. off=0
 cell xilinx.com:ip:xlslice:1.0 rst_1 {
-  DIN_WIDTH 256 DIN_FROM 0 DIN_TO 0 DOUT_WIDTH 1
+  DIN_WIDTH 1024 DIN_FROM 0 DIN_TO 0 DOUT_WIDTH 1
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice for reset tlast_gen
+# Create xlslice for reset tlast_gen. off=0
 cell xilinx.com:ip:xlslice:1.0 slice_2 {
-  DIN_WIDTH 256 DIN_FROM 1 DIN_TO 1 DOUT_WIDTH 1
+  DIN_WIDTH 1024 DIN_FROM 1 DIN_TO 1 DOUT_WIDTH 1
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice for reset conv_0 and writer_0
+# Create xlslice for reset conv_0 and writer_0. off=0
 cell xilinx.com:ip:xlslice:1.0 slice_3 {
-  DIN_WIDTH 256 DIN_FROM 2 DIN_TO 2 DOUT_WIDTH 1
+  DIN_WIDTH 1024 DIN_FROM 2 DIN_TO 2 DOUT_WIDTH 1
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice for set the # of samples to get
+# Create xlslice for set the # of samples to get. off=1
 cell xilinx.com:ip:xlslice:1.0 slice_4 {
-  DIN_WIDTH 256 DIN_FROM 63 DIN_TO 32 DOUT_WIDTH 32
+  DIN_WIDTH 1024 DIN_FROM 63 DIN_TO 32 DOUT_WIDTH 32
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice for set the trigger_lvl_a
+# Create xlslice for set the trigger_lvl_a. off=2
 cell xilinx.com:ip:xlslice:1.0 trig_lvl_a {
-  DIN_WIDTH 256 DIN_FROM 79 DIN_TO 64 DOUT_WIDTH 16
+  DIN_WIDTH 1024 DIN_FROM 95 DIN_TO 64 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice for set the trigger_lvl_b
+# Create xlslice for set the trigger_lvl_b. off=3
 cell xilinx.com:ip:xlslice:1.0 trig_lvl_b {
-  DIN_WIDTH 256 DIN_FROM 95 DIN_TO 80 DOUT_WIDTH 16
+  DIN_WIDTH 1024 DIN_FROM 127 DIN_TO 96 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice for set the subtrigger_lvl_a
+# Create xlslice for set the subtrigger_lvl_a. off=4
 cell xilinx.com:ip:xlslice:1.0 subtrig_lvl_a {
-  DIN_WIDTH 256 DIN_FROM 111 DIN_TO 96 DOUT_WIDTH 16
+  DIN_WIDTH 1024 DIN_FROM 159 DIN_TO 128 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice for set the subtrigger_lvl_b
+# Create xlslice for set the subtrigger_lvl_b. off=5
 cell xilinx.com:ip:xlslice:1.0 subtrig_lvl_b {
-  DIN_WIDTH 256 DIN_FROM 127 DIN_TO 112 DOUT_WIDTH 16
+  DIN_WIDTH 1024 DIN_FROM 191 DIN_TO 160 DOUT_WIDTH 16
+} {
+  Din cfg_0/cfg_data
+}
+
+# Create xlslice for the temperature data. off=6
+cell xilinx.com:ip:xlslice:1.0 reg_temp {
+  DIN_WIDTH 1024 DIN_FROM 223 DIN_TO 192 DOUT_WIDTH 24
+} {
+  Din cfg_0/cfg_data
+}
+
+# Create xlslice for the pressure data. off=7
+cell xilinx.com:ip:xlslice:1.0 reg_pressure {
+  DIN_WIDTH 1024 DIN_FROM 255 DIN_TO 224 DOUT_WIDTH 24
+} {
+  Din cfg_0/cfg_data
+}
+
+# Create xlslice for the time data. off=8
+cell xilinx.com:ip:xlslice:1.0 reg_time {
+  DIN_WIDTH 1024 DIN_FROM 287 DIN_TO 256 DOUT_WIDTH 24
+} {
+  Din cfg_0/cfg_data
+}
+
+# Create xlslice for the latitude data. off=9
+cell xilinx.com:ip:xlslice:1.0 reg_latitude {
+  DIN_WIDTH 1024 DIN_FROM 319 DIN_TO 288 DOUT_WIDTH 24
+} {
+  Din cfg_0/cfg_data
+}
+
+# Create xlslice for the longitude data. off=10
+cell xilinx.com:ip:xlslice:1.0 reg_longitude {
+  DIN_WIDTH 1024 DIN_FROM 351 DIN_TO 320 DOUT_WIDTH 24
+} {
+  Din cfg_0/cfg_data
+}
+
+# Create xlslice for the altitude data. off=11
+cell xilinx.com:ip:xlslice:1.0 reg_altitude {
+  DIN_WIDTH 1024 DIN_FROM 383 DIN_TO 352 DOUT_WIDTH 24
+} {
+  Din cfg_0/cfg_data
+}
+
+# Create xlslice for the satellite data. off=12
+cell xilinx.com:ip:xlslice:1.0 reg_satellite {
+  DIN_WIDTH 1024 DIN_FROM 415 DIN_TO 384 DOUT_WIDTH 24
 } {
   Din cfg_0/cfg_data
 }
@@ -104,7 +153,7 @@ cell xilinx.com:ip:xlconstant:1.1 const_1 {
 
 # Create xlslice for set the gpsen_i input
 cell xilinx.com:ip:xlslice:1.0 pps_en {
-  DIN_WIDTH 256 DIN_FROM 4 DIN_TO 4 DOUT_WIDTH 1
+  DIN_WIDTH 1024 DIN_FROM 4 DIN_TO 4 DOUT_WIDTH 1
 } {
   Din cfg_0/cfg_data
 }
@@ -148,6 +197,13 @@ cell labdpr:user:axis_lago_trigger:1.1 trigger_0 {
   subtrig_lvl_b_i subtrig_lvl_b/dout
   pps_i pps_0/pps_o
   clk_cnt_pps_i pps_0/clk_cnt_pps_o
+  temp_i reg_temp/dout
+  pressure_i reg_pressure/dout
+  time_i reg_time/dout
+  latitude_i reg_latitude/dout
+  longitude_i reg_longitude/dout
+  altitude_i  reg_altitude/dout 
+  satellites_i reg_satellite/dout     
 }
 
 # Create GPIO core
@@ -226,37 +282,37 @@ set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_sts_0_reg0]
 set_property OFFSET 0x40002000 [get_bd_addr_segs ps_0/Data/SEG_sts_0_reg0]
 
 #Now all related to the DAC PWM
-# Create xlslice
+# Create xlslice. off=0
 cell xilinx.com:ip:xlslice:1.0 rst_2 {
-  DIN_WIDTH 256 DIN_FROM 3 DIN_TO 3 DOUT_WIDTH 1
+  DIN_WIDTH 1024 DIN_FROM 3 DIN_TO 3 DOUT_WIDTH 1
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice. 
+# Create xlslice. off=17 
 cell xilinx.com:ip:xlslice:1.0 slice_6 {
-  DIN_WIDTH 256 DIN_FROM 143 DIN_TO 128 DOUT_WIDTH 16
+  DIN_WIDTH 1024 DIN_FROM 543 DIN_TO 512 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice.
+# Create xlslice.. off=18
 cell xilinx.com:ip:xlslice:1.0 slice_7 {
-  DIN_WIDTH 256 DIN_FROM 159 DIN_TO 144 DOUT_WIDTH 16
+  DIN_WIDTH 1024 DIN_FROM 575 DIN_TO 544 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice.
+# Create xlslice.. off=19
 cell xilinx.com:ip:xlslice:1.0 slice_8 {
-  DIN_WIDTH 256 DIN_FROM 175 DIN_TO 160 DOUT_WIDTH 16
+  DIN_WIDTH 1024 DIN_FROM 607 DIN_TO 576 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice. 
+# Create xlslice.. off=20 
 cell xilinx.com:ip:xlslice:1.0 slice_9 {
-  DIN_WIDTH 256 DIN_FROM 191 DIN_TO 176 DOUT_WIDTH 16
+  DIN_WIDTH 1024 DIN_FROM 639 DIN_TO 608 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
@@ -320,7 +376,7 @@ cell labdpr:user:ramp_gen:1.0 gen_3 {
   led_o xlconcat_0/In5
 }
 
-group_bd_cells Fast_ADC [get_bd_cells tlast_gen_0] [get_bd_cells rst_1] [get_bd_cells subtrig_lvl_a] [get_bd_cells subtrig_lvl_b] [get_bd_cells pps_0] [get_bd_cells pll_0] [get_bd_cells pps_en] [get_bd_cells conv_0] [get_bd_cells slice_2] [get_bd_cells trig_lvl_a] [get_bd_cells const_0] [get_bd_cells const_1] [get_bd_cells trig_lvl_b] [get_bd_cells fifo_0] [get_bd_cells slice_3] [get_bd_cells writer_0] [get_bd_cells slice_4] [get_bd_cells trigger_0] [get_bd_cells adc_0] [get_bd_cells axi_gpio_0]
+group_bd_cells Fast_ADC [get_bd_cells tlast_gen_0] [get_bd_cells rst_1] [get_bd_cells subtrig_lvl_a] [get_bd_cells subtrig_lvl_b] [get_bd_cells pps_0] [get_bd_cells pll_0] [get_bd_cells pps_en] [get_bd_cells conv_0] [get_bd_cells slice_2] [get_bd_cells trig_lvl_a] [get_bd_cells const_0] [get_bd_cells const_1] [get_bd_cells trig_lvl_b] [get_bd_cells fifo_0] [get_bd_cells slice_3] [get_bd_cells writer_0] [get_bd_cells slice_4] [get_bd_cells trigger_0] [get_bd_cells adc_0] [get_bd_cells axi_gpio_0] [get_bd_cells reg_temp] [get_bd_cells reg_pressure] [get_bd_cells reg_time] [get_bd_cells reg_satellite] [get_bd_cells reg_longitude] [get_bd_cells reg_latitude] [get_bd_cells reg_altitude]
 
 group_bd_cells Analog_Output [get_bd_cells slice_8] [get_bd_cells slice_9] [get_bd_cells gen_0] [get_bd_cells gen_1] [get_bd_cells gen_2] [get_bd_cells gen_3] [get_bd_cells rst_2] [get_bd_cells slice_6] [get_bd_cells slice_7] [get_bd_cells xlconcat_1]
 

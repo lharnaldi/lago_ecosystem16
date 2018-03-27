@@ -59,7 +59,8 @@ int main(int argc, char * argv []){
 				close(fd);
 				return 0;
 }
-void write_samples (void){
+void write_samples (void)
+{
 				int i = 0, k = 0;
 				int fd;
 				off_t sample_addr;

@@ -59,7 +59,7 @@ cell xilinx.com:ip:xlslice:1.0 slice_3 {
 }
 
 # Create xlslice for set the # of samples to get. off=1
-cell xilinx.com:ip:xlslice:1.0 slice_4 {
+cell xilinx.com:ip:xlslice:1.0 nsamples {
   DIN_WIDTH 1024 DIN_FROM 63 DIN_TO 32 DOUT_WIDTH 32
 } {
   Din cfg_0/cfg_data
@@ -206,27 +206,24 @@ cell labdpr:user:axis_lago_trigger:1.1 trigger_0 {
   satellites_i reg_satellite/dout     
 }
 
-# Create GPIO core
-cell xilinx.com:ip:axi_gpio:2.0 axi_gpio_0 {
-  C_GPIO_WIDTH 1
-  C_IS_DUAL 0
-  C_ALL_INPUTS 1
-  C_INTERRUPT_PRESENT 1
+# Create axi_intc
+cell xilinx.com:ip:axi_intc:4.1 axi_intc_0 {
+  C_IRQ_CONNECTION 1
+  C_S_AXI_ACLK_FREQ_MHZ 143
+  C_PROCESSOR_CLK_FREQ_MHZ 143
 } {
-  s_axi_aclk ps_0/FCLK_CLK0
-  s_axi_aresetn rst_0/peripheral_aresetn
-  ip2intc_irpt ps_0/IRQ_F2P
-  gpio_io_i pps_0/pps_o
+  irq ps_0/IRQ_F2P
+  intr pps_0/int_o
 }
 
 # Create all required interconnections
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
   Master /ps_0/M_AXI_GP0
   Clk Auto
-} [get_bd_intf_pins axi_gpio_0/S_AXI]
+} [get_bd_intf_pins axi_intc_0/s_axi]
 
-set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_axi_gpio_0_reg]
-set_property OFFSET 0x40000000 [get_bd_addr_segs ps_0/Data/SEG_axi_gpio_0_reg]
+set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_axi_intc_0_Reg]
+set_property OFFSET 0x40000000 [get_bd_addr_segs ps_0/Data/SEG_axi_intc_0_Reg]
 
 # Create the tlast generator
 cell labdpr:user:axis_tlast_gen:1.0 tlast_gen_0 {
@@ -234,7 +231,7 @@ cell labdpr:user:axis_tlast_gen:1.0 tlast_gen_0 {
   PKT_CNTR_BITS 32
 } {
   S_AXIS trigger_0/M_AXIS
-  pkt_length slice_4/Dout
+  pkt_length nsamples/Dout
   aclk ps_0/FCLK_CLK0
   aresetn slice_2/Dout
 }
@@ -376,7 +373,7 @@ cell labdpr:user:ramp_gen:1.0 gen_3 {
   led_o xlconcat_0/In5
 }
 
-group_bd_cells Fast_ADC [get_bd_cells tlast_gen_0] [get_bd_cells rst_1] [get_bd_cells subtrig_lvl_a] [get_bd_cells subtrig_lvl_b] [get_bd_cells pps_0] [get_bd_cells pll_0] [get_bd_cells pps_en] [get_bd_cells conv_0] [get_bd_cells slice_2] [get_bd_cells trig_lvl_a] [get_bd_cells const_0] [get_bd_cells const_1] [get_bd_cells trig_lvl_b] [get_bd_cells fifo_0] [get_bd_cells slice_3] [get_bd_cells writer_0] [get_bd_cells slice_4] [get_bd_cells trigger_0] [get_bd_cells adc_0] [get_bd_cells axi_gpio_0] [get_bd_cells reg_temp] [get_bd_cells reg_pressure] [get_bd_cells reg_time] [get_bd_cells reg_satellite] [get_bd_cells reg_longitude] [get_bd_cells reg_latitude] [get_bd_cells reg_altitude]
+group_bd_cells Fast_ADC [get_bd_cells tlast_gen_0] [get_bd_cells rst_1] [get_bd_cells subtrig_lvl_a] [get_bd_cells subtrig_lvl_b] [get_bd_cells pps_0] [get_bd_cells pll_0] [get_bd_cells pps_en] [get_bd_cells conv_0] [get_bd_cells slice_2] [get_bd_cells trig_lvl_a] [get_bd_cells const_0] [get_bd_cells const_1] [get_bd_cells trig_lvl_b] [get_bd_cells fifo_0] [get_bd_cells slice_3] [get_bd_cells writer_0] [get_bd_cells nsamples] [get_bd_cells trigger_0] [get_bd_cells adc_0] [get_bd_cells axi_intc_0] [get_bd_cells reg_temp] [get_bd_cells reg_pressure] [get_bd_cells reg_time] [get_bd_cells reg_satellite] [get_bd_cells reg_longitude] [get_bd_cells reg_latitude] [get_bd_cells reg_altitude]
 
 group_bd_cells Analog_Output [get_bd_cells slice_8] [get_bd_cells slice_9] [get_bd_cells gen_0] [get_bd_cells gen_1] [get_bd_cells gen_2] [get_bd_cells gen_3] [get_bd_cells rst_2] [get_bd_cells slice_6] [get_bd_cells slice_7] [get_bd_cells xlconcat_1]
 

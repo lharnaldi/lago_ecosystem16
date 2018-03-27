@@ -287,28 +287,28 @@ cell xilinx.com:ip:xlslice:1.0 rst_2 {
 }
 
 # Create xlslice. off=17 
-cell xilinx.com:ip:xlslice:1.0 slice_6 {
+cell xilinx.com:ip:xlslice:1.0 cfg_dac_pwm_0 {
   DIN_WIDTH 1024 DIN_FROM 543 DIN_TO 512 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice.. off=18
-cell xilinx.com:ip:xlslice:1.0 slice_7 {
+cell xilinx.com:ip:xlslice:1.0 cfg_dac_pwm_1 {
   DIN_WIDTH 1024 DIN_FROM 575 DIN_TO 544 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice.. off=19
-cell xilinx.com:ip:xlslice:1.0 slice_8 {
+cell xilinx.com:ip:xlslice:1.0 cfg_dac_pwm_2 {
   DIN_WIDTH 1024 DIN_FROM 607 DIN_TO 576 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
 # Create xlslice.. off=20 
-cell xilinx.com:ip:xlslice:1.0 slice_9 {
+cell xilinx.com:ip:xlslice:1.0 cfg_dac_pwm_3 {
   DIN_WIDTH 1024 DIN_FROM 639 DIN_TO 608 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
@@ -329,7 +329,7 @@ cell labdpr:user:ramp_gen:1.0 gen_0 {
 } {
   aclk ps_0/FCLK_CLK0
   aresetn rst_2/Dout
-  data_i slice_6/Dout
+  data_i cfg_dac_pwm_0/Dout
   pwm_o xlconcat_1/In0
   led_o xlconcat_0/In2
 }
@@ -342,7 +342,7 @@ cell labdpr:user:ramp_gen:1.0 gen_1 {
 } {
   aclk ps_0/FCLK_CLK0
   aresetn rst_2/Dout
-  data_i slice_7/Dout
+  data_i cfg_dac_pwm_1/Dout
   pwm_o xlconcat_1/In1
   led_o xlconcat_0/In3
 }
@@ -355,7 +355,7 @@ cell labdpr:user:ramp_gen:1.0 gen_2 {
 } {
   aclk ps_0/FCLK_CLK0
   aresetn rst_2/Dout
-  data_i slice_8/Dout
+  data_i cfg_dac_pwm_2/Dout
   pwm_o xlconcat_1/In2
   led_o xlconcat_0/In4
 }
@@ -368,14 +368,14 @@ cell labdpr:user:ramp_gen:1.0 gen_3 {
 } {
   aclk ps_0/FCLK_CLK0
   aresetn rst_2/Dout
-  data_i slice_9/Dout
+  data_i cfg_dac_pwm_3/Dout
   pwm_o xlconcat_1/In3
   led_o xlconcat_0/In5
 }
 
 group_bd_cells Fast_ADC [get_bd_cells tlast_gen_0] [get_bd_cells rst_1] [get_bd_cells subtrig_lvl_a] [get_bd_cells subtrig_lvl_b] [get_bd_cells pps_0] [get_bd_cells pll_0] [get_bd_cells pps_en] [get_bd_cells conv_0] [get_bd_cells slice_2] [get_bd_cells trig_lvl_a] [get_bd_cells const_0] [get_bd_cells const_1] [get_bd_cells trig_lvl_b] [get_bd_cells fifo_0] [get_bd_cells slice_3] [get_bd_cells writer_0] [get_bd_cells nsamples] [get_bd_cells trigger_0] [get_bd_cells adc_0] [get_bd_cells axi_intc_0] [get_bd_cells reg_temp] [get_bd_cells reg_pressure] [get_bd_cells reg_time] [get_bd_cells reg_satellite] [get_bd_cells reg_longitude] [get_bd_cells reg_latitude] [get_bd_cells reg_altitude]
 
-group_bd_cells Analog_Output [get_bd_cells slice_8] [get_bd_cells slice_9] [get_bd_cells gen_0] [get_bd_cells gen_1] [get_bd_cells gen_2] [get_bd_cells gen_3] [get_bd_cells rst_2] [get_bd_cells slice_6] [get_bd_cells slice_7] [get_bd_cells xlconcat_1]
+group_bd_cells Analog_Output [get_bd_cells cfg_dac_pwm_2] [get_bd_cells cfg_dac_pwm_3] [get_bd_cells gen_0] [get_bd_cells gen_1] [get_bd_cells gen_2] [get_bd_cells gen_3] [get_bd_cells rst_2] [get_bd_cells cfg_dac_pwm_0] [get_bd_cells cfg_dac_pwm_1] [get_bd_cells xlconcat_1]
 
 #XADC related
 # Create xadc

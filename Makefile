@@ -22,7 +22,8 @@ CORES = axis_rp_adc_v1_0 axis_rp_dac_v1_0 dna_reader_v1_0 axi_sts_register_v1_0 
    axis_trigger_v1_0 axis_variable_v1_0 axis_lago_trigger_v1_0 axis_tlast_gen_v1_0 \
    pps_gen_v1_0 axis_zero_crossing_det_v1_0 pwm_gen_v1_0 ramp_gen_v1_0 \
    axis_adpll_v1_0 axis_lpf_v1_0 axis_bram_writer_v1_0 axis_bram_reader_v1_0 \
-   axi_bram_reader_v1_0 axis_gpio_reader_i_v1_0 axis_lago_trigger_v1_1
+   axi_bram_reader_v1_0 axis_gpio_reader_i_v1_0 axis_lago_trigger_v1_1\
+   int_counter_v1_0
 
 VIVADO = vivado -nolog -nojournal -mode batch
 HSI = hsi -nolog -nojournal -mode batch

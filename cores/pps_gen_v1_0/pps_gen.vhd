@@ -20,7 +20,8 @@ port (
   pps_o              : out std_logic;
   clk_cnt_pps_o      : out std_logic_vector(27-1 downto 0);
   pps_gps_o          : out std_logic;
-  false_pps_led_o    : out std_logic
+  false_pps_led_o    : out std_logic;
+  int_o              : out std_logic
 );
 end pps_gen;
 
@@ -42,6 +43,8 @@ architecture rtl of pps_gen is
 
 begin
     
+  int_o <= pps_reg or false_pps;
+ 
   IBUF_inst : IBUF
    port map (
     O => pps_ibuf,

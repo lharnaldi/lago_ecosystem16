@@ -81,6 +81,7 @@ int main(int argc, char *argv[])
 	/* Read value from the device register */
 		value = *((unsigned *)(ptr + page_offset));
 		printf("gpio dev-mem test: input: %08x\n",value);
+		printf("gpio dev-mem test: input: %5d\n",(value>>4));
 	} else {
 	/* Write value to the device register */
 		*((unsigned *)(ptr + page_offset)) = value;

@@ -36,7 +36,8 @@ char scAction[MAXCHRLEN], scRegister[MAXCHRLEN], scReg[MAXCHRLEN],
 		 scCount[MAXCHRLEN], scByte[MAXCHRLEN], scData[MAXCHRLEN], scCurrentMetaData[MAXCHRLEN];
 
 
-typedef struct ldata {
+typedef struct ldata 
+{
 				int trigg_1;   // trigger level ch1
 				int trigg_2;   // trigger level ch2
 				int strigg_1;  // sub-trigger level ch1
@@ -57,24 +58,20 @@ void signal_handler(int sig)
 				interrupted = 1;
 }
 
-inline void dev_write(void *dev_base, unsigned int offset, unsigned int value)
+inline void dev_write(void *dev_base, uint32_t offset, uint32_t value)
 {
 				*((volatile unsigned *)(dev_base + offset)) = value;
 }
 
-inline unsigned int dev_read(void *dev_base, unsigned int offset)
+inline uint32_t dev_read(void *dev_base, uint32_t offset)
 {
 				return *((volatile unsigned *)(dev_base + offset));
 }
 
 int wait_for_interrupt(int fd_int, void *dev_ptr) 
 {
-				static unsigned int count = 0, bntd_flag = 0, bntu_flag = 0;
-				int flag_end=0;
-				int pending = 0;
-				int reenable = 1;
-				unsigned int reg;
-				unsigned int value;
+				uint32_t reg;
+				uint32_t value;
 				uint32_t info = 1; /* unmask */
 
 				ssize_t nb = write(fd_int, &info, sizeof(info));
@@ -112,10 +109,10 @@ int wait_for_interrupt(int fd_int, void *dev_ptr)
 				return ret;
 }
 
-unsigned int get_memory_size(char *sysfs_path_file)
+uint32_t get_memory_size(char *sysfs_path_file)
 {
 				FILE *size_fp;
-				unsigned int size;
+				uint32_t size;
 
 				// open the file that describes the memory range size that is based on the
 				// reg property of the node in the device tree
@@ -136,13 +133,14 @@ unsigned int get_memory_size(char *sysfs_path_file)
 				return size;
 }
 
-//void *thread_isr(void *p) 
-//{
-//  wait_for_interrupt(fd, dev_ptr);
-//
-//}
+/*void *thread_isr(void *p) 
+	{
+	wait_for_interrupt(fd, dev_ptr);
 
-int int_init(){
+	}*/
+
+int intc_init()
+{
 				char *uiod = "/dev/uio0";
 
 				printf("Initializing INTC device...\n");
@@ -150,7 +148,7 @@ int int_init(){
 				// open the UIO device file to allow access to the device in user space
 				int_fd = open(uiod, O_RDWR);
 				if (int_fd < 1) {
-								printf("Invalid UIO device file:%s.\n", uiod);
+								printf("intc_init: Invalid UIO device file:%s.\n", uiod);
 								return -1;
 				}
 
@@ -159,23 +157,23 @@ int int_init(){
 				// mmap the INTC device into user space
 				int_ptr = mmap(NULL, dev_size, PROT_READ|PROT_WRITE, MAP_SHARED, int_fd, 0);
 				if (int_ptr == MAP_FAILED) {
-								printf("mmap call failure.\n");
+								printf("intc_init: mmap call failure.\n");
 								return -1;
 				}
 
 
 				// steps to accept interrupts -> as pg. 26 of pg099-axi-intc.pdf
 				//1) Each bit in the IER corresponding to an interrupt must be set to 1.
-								dev_write(int_ptr,XIL_AXI_INTC_IER_OFFSET, 1);
+				dev_write(int_ptr,XIL_AXI_INTC_IER_OFFSET, 1);
 				//2) There are two bits in the MER. The ME bit must be set to enable the
 				//interrupt request outputs.
-								dev_write(int_ptr,XIL_AXI_INTC_MER_OFFSET, XIL_AXI_INTC_MER_ME_MASK | XIL_AXI_INTC_MER_HIE_MASK);
+				dev_write(int_ptr,XIL_AXI_INTC_MER_OFFSET, XIL_AXI_INTC_MER_ME_MASK | XIL_AXI_INTC_MER_HIE_MASK);
 				//				dev_write(dev_ptr,XIL_AXI_INTC_MER_OFFSET, XIL_AXI_INTC_MER_ME_MASK);
 
 				//The next block of code is to test interrupts by software
 				//3) Software testing can now proceed by writing a 1 to any bit position
 				//in the ISR that corresponds to an existing interrupt input.
-				       dev_write(int_ptr,XIL_AXI_INTC_IPR_OFFSET, 1);
+				//				dev_write(int_ptr,XIL_AXI_INTC_IPR_OFFSET, 1);
 
 				//        for(a=0; a<10; a++)
 				//        {
@@ -188,7 +186,8 @@ int int_init(){
 				return 0;
 }
 
-int cfg_init(){
+int cfg_init()
+{
 				char *uiod = "/dev/uio1";
 
 				printf("Initializing CFG device...\n");
@@ -196,7 +195,7 @@ int cfg_init(){
 				// open the UIO device file to allow access to the device in user space
 				cfg_fd = open(uiod, O_RDWR);
 				if (cfg_fd < 1) {
-								printf("Invalid UIO device file:%s.\n", uiod);
+								printf("cfg_init: Invalid UIO device file:%s.\n", uiod);
 								return -1;
 				}
 
@@ -205,14 +204,15 @@ int cfg_init(){
 				// mmap the cfgC device into user space
 				cfg_ptr = mmap(NULL, dev_size, PROT_READ|PROT_WRITE, MAP_SHARED, cfg_fd, 0);
 				if (cfg_ptr == MAP_FAILED) {
-								printf("mmap call failure.\n");
+								printf("cfg_init: mmap call failure.\n");
 								return -1;
 				}
 
 				return 0;
 }
 
-int sts_init(){
+int sts_init()
+{
 				char *uiod = "/dev/uio2";
 
 				printf("Initializing STS device...\n");
@@ -220,7 +220,7 @@ int sts_init(){
 				// open the UIO device file to allow access to the device in user space
 				sts_fd = open(uiod, O_RDWR);
 				if (sts_fd < 1) {
-								printf("Invalid UIO device file:%s.\n", uiod);
+								printf("sts_init: Invalid UIO device file:%s.\n", uiod);
 								return -1;
 				}
 
@@ -229,14 +229,15 @@ int sts_init(){
 				// mmap the STS device into user space
 				sts_ptr = mmap(NULL, dev_size, PROT_READ|PROT_WRITE, MAP_SHARED, sts_fd, 0);
 				if (sts_ptr == MAP_FAILED) {
-								printf("mmap call failure.\n");
+								printf("sts_init: mmap call failure.\n");
 								return -1;
 				}
 
 				return 0;
 }
 
-int xadc_init(){
+int xadc_init()
+{
 				char *uiod = "/dev/uio3";
 
 				printf("Initializing XADC device...\n");
@@ -244,7 +245,7 @@ int xadc_init(){
 				// open the UIO device file to allow access to the device in user space
 				xadc_fd = open(uiod, O_RDWR);
 				if (xadc_fd < 1) {
-								printf("Invalid UIO device file:%s.\n", uiod);
+								printf("xadc_init: Invalid UIO device file:%s.\n", uiod);
 								return -1;
 				}
 
@@ -253,14 +254,15 @@ int xadc_init(){
 				// mmap the XADC device into user space
 				xadc_ptr = mmap(NULL, dev_size, PROT_READ|PROT_WRITE, MAP_SHARED, xadc_fd, 0);
 				if (xadc_ptr == MAP_FAILED) {
-								printf("mmap call failure.\n");
+								printf("xadc_init: mmap call failure.\n");
 								return -1;
 				}
 
 				return 0;
 }
 
-void show_usage(char *progname) {
+void show_usage(char *progname) 
+{
 				if (fshowversion) {
 								printf("LAGO ACQUA BRC v%dr%d data v%d\n",VERSION,REVISION,DATAVERSION);
 				} else {
@@ -301,7 +303,9 @@ void show_usage(char *progname) {
 				}
 }
 
-void StrcpyS(char *szDst, size_t cchDst, const char *szSrc) {
+//TODO: change this function to just strncpy
+void StrcpyS(char *szDst, size_t cchDst, const char *szSrc) 
+{
 
 #if defined (WIN32)     
 
@@ -317,7 +321,9 @@ void StrcpyS(char *szDst, size_t cchDst, const char *szSrc) {
 
 #endif
 }      
-int parse_param(int argc, char *argv[]) {
+
+int parse_param(int argc, char *argv[]) 
+{
 
 				int    arg;
 
@@ -335,16 +341,14 @@ int parse_param(int argc, char *argv[]) {
 				fByte      = 0;
 				fData      = 0;
 
-				/* Ensure sufficient paramaters. Need at least program name and
-				 ** action flag
-				 */
-				if (argc < 2) {
+				// Ensure sufficient paramaters. Need at least program name and action flag
+				if (argc < 2) 
+				{
 								return 0;
 				}
 
-				/* The first parameter is the action to perform. Copy the
-				 ** first parameter into the action string.
-				 */
+				// The first parameter is the action to perform. Copy the
+				// first parameter into the action string.
 				StrcpyS(scAction, MAXCHRLEN, argv[1]);
 				if(strcmp(scAction, "-r") == 0) {
 								fGetReg = 1;
@@ -505,89 +509,186 @@ float get_voltage(unsigned long offset)
 
 void set_voltage(unsigned long offset, float value)
 {
-//fit after calibration. See file data_calib.txt in /ramp_test directory 
-// y = a*x + b
-//a               = 0.0382061     
-//b               = 4.11435   
-        int dac_val;
-        float a = 0.0382061, b = 4.11435;
-        dac_val = (int)(value - b)/a;
+				//fit after calibration. See file data_calib.txt in /ramp_test directory 
+				// y = a*x + b
+				//a               = 0.0382061     
+				//b               = 4.11435   
+				int dac_val;
+				float a = 0.0382061, b = 4.11435;
+				dac_val = (int)(value - b)/a;
 
 				dev_write(cfg_ptr, offset, dac_val);
-				  printf("The Voltage is: %.1lf mV\n", value);
-				  printf("The DAC value is: %d DACs\n", dac_val);
+				printf("The Voltage is: %.1lf mV\n", value);
+				printf("The DAC value is: %d DACs\n", dac_val);
+}
+
+//int get_data()
+//{
+//  while(!interrupted) {
+//    /* read writer position */
+//    position = dev_read(sts_ptr, 0);
+//
+//    /* print 512 IN1 and IN2 samples if ready, otherwise sleep 1 ms */
+//    if((limit > 0 && position > limit) || (limit == 0 && position < 512*1024)) {
+//
+//      offset = limit > 0 ? 0 : 512*1024;
+//      limit = limit > 0 ? 0 : 512*1024;
+//
+//      for(i = 0; i < 512 * 1024; ++i) {
+//        ch[0] = *((int16_t *)(ram + offset + 4*i + 0));
+//        ch[1] = *((int16_t *)(ram + offset + 4*i + 2));
+//        //printf("%5d %5d\n", ch[0], ch[1]);
+//        wo = *((uint32_t *)(ram + offset + 4*i));
+//        switch(wo>>30) {
+//         case 0:
+//          fprintf(fd,"%5hd %5hd\n", (((ch[0]>>13)<<14) + ((ch[0]>>13)<<15) + ch[0]),(((ch[1]>>13)<<14) + ((ch[1]>>13)<<15) + ch[1]));
+//          //printf("# p %5d\n", wo);
+//          break;
+//         case 1:
+//          fprintf(fd,"# t %d %d\n", (wo>>27)&0x7, wo&0x7FFFFFF);
+//          break;
+//         case 2:
+//          mtd_pulse_pnt = mtd_pulse_cnt;
+//          mtd_pulse_cnt = (wo&0x3FFFFFFF);
+//          mtd_dp = (mtd_pulse_cnt - mtd_pulse_pnt - 1);
+//          if (mtd_dp > 0 && mtd_pulse_pnt)
+//            mtd_cdp += mtd_dp;
+//          fprintf(fd,"# c %d\n", mtd_pulse_cnt);
+//          break;
+//         default:
+//          printf("# E @@@\n");
+//          printf("# E 3 - unknown word from FPGA: %d %x\n",wo>>27,wo>>27);
+//          break;
+//         }
+//      }
+//    }
+//    else{
+//      usleep(100);
+//    }
+//  }
+//}
+
+uint32_t get_reg_value(int n_dev, uint32_t reg_addr) 
+{
+				uint32_t reg_val;
+				switch(n_dev) 
+				{
+								case '0':
+												reg_val = dev_read(intc_ptr, reg_addr);
+												break;
+								case '1':
+												reg_val = dev_read(cfg_ptr, reg_addr);
+												break;
+								case '2':
+												reg_val = dev_read(sts_ptr, reg_addr);
+												break;
+								case '3':
+												reg_val = dev_read(xadc_ptr, reg_addr);
+								default:
+												printf("Invalid option: %d\n", n_dev);
+												show_usage();
+												return -1;
+				}
+				printf("Complete. Received data 0x%08d\n", reg_val);
+
+				return 0;
 }
 
 int main(int argc, char *argv[])
 {
 				int i, p=0,a,b=40000;
-				unsigned int val;
+				uint32_t val;
 				pthread_t t1;
-//FIXME: just for test commented
-/*				if (!parse_param(argc, argv)) {
-								show_usage(argv[0]);
-								return 1;
-				}
-*/
+				//FIXME: just for test commented
+				/*				if (!parse_param(argc, argv)) {
+									show_usage(argv[0]);
+									return 1;
+									}
+				 */
 
 				signal(SIGINT, signal_handler);
 
 				//initialize devices. TODO: add error checking 
-				int_init();    
+				intc_init();    
 				cfg_init();    
 				sts_init();    
 				xadc_init();    
 
-      //dev_write(cfg_ptr, CFG_RESET_GRAL_OFFSET, 8); //first reset
-      dev_write(cfg_ptr, CFG_RESET_GRAL_OFFSET, RST_PPS_TRG_FIFO_MASK); //first reset
-       printf("STATUS Register: 0x%08d\n",dev_read(cfg_ptr, 0));
+				//TODO: here put something like init_interrupts()
 
-								while(!interrupted) wait_for_interrupt(int_fd, int_ptr);
+				val = dev_read(cfg_ptr, 0);
+				printf("Initial STATUS Register: 0x%08d\n",val);
+				//dev_write(cfg_ptr, CFG_RESET_GRAL_OFFSET, 8); //first reset
+				//dev_write(cfg_ptr, CFG_RESET_GRAL_OFFSET, val | RST_PPS_TRG_FIFO_MASK | PPS_EN_MASK); //first reset
+				dev_write(cfg_ptr, CFG_RESET_GRAL_OFFSET, val & RST_PPS_TRG_FIFO_MASK); //first reset
+				printf("PPS_EN_MASK negado: 0x%08d\n",~PPS_EN_MASK);
+				printf("STATUS Register: 0x%08d\n",dev_read(cfg_ptr, 0));
 
-//STS test
+				while(!interrupted) 
+				{
+								//								printf("IPR Register antes: 0x%08d\n",dev_read(int_ptr, XIL_AXI_INTC_IPR_OFFSET));
+								wait_for_interrupt(int_fd, int_ptr);
+								//								printf("IPR Register después: 0x%08d\n",dev_read(int_ptr, XIL_AXI_INTC_IPR_OFFSET));
+				}
+
+				//STS test
 				//do a loop looking for the position in writer
-//				while(!interrupted){
-//								printf("POSITION: 0x%08d\n",dev_read(sts_ptr, 0));
-//								sleep(1);
-//				}  
+				/*				while(!interrupted){
+									printf("POSITION: 0x%08d\n",dev_read(sts_ptr, 0));
+									sleep(1);
+									}  
+				 */
+				//XADC test
+				/*			while(!interrupted){
+								printf("Voltage at AI0: %lf V\n",get_voltage(XADC_AI0_OFFSET));
+								printf("Voltage at AI1: %lf V\n",get_voltage(XADC_AI1_OFFSET));
+								printf("Voltage at AI2: %lf V\n",get_voltage(XADC_AI2_OFFSET));
+								printf("Voltage at AI3: %lf V\n",get_voltage(XADC_AI3_OFFSET));
+								printf("\n\n\n");
+								sleep(1);
+								}  
+				 */
+				//AO test
+				/*      
+								dev_write(cfg_ptr, CFG_RESET_GRAL_OFFSET, 0x8); //first reset
+								set_voltage(CFG_DAC_PWM0_OFFSET, 600);
+								sleep(3);
 
-//XADC test
-//			while(!interrupted){
-//							printf("Voltage at AI0: %lf V\n",get_voltage(XADC_AI0_OFFSET));
-//							printf("Voltage at AI1: %lf V\n",get_voltage(XADC_AI1_OFFSET));
-//							printf("Voltage at AI2: %lf V\n",get_voltage(XADC_AI2_OFFSET));
-//							printf("Voltage at AI3: %lf V\n",get_voltage(XADC_AI3_OFFSET));
-//							printf("\n\n\n");
-//							sleep(1);
-//			}  
-//AO test
-      
-//      dev_write(cfg_ptr, CFG_RESET_GRAL_OFFSET, 0x8); //first reset
-//      set_voltage(CFG_DAC_PWM0_OFFSET, 600);
-//      sleep(3);
-//
-//      dev_write(cfg_ptr, CFG_RESET_GRAL_OFFSET, ~0x8); //first reset
-//      for(a=40;a<60;a++)
-//{
-//							printf("Colocando valor DAC: %d \n",b);
-//              dev_write(cfg_ptr, CFG_DAC_PWM0_OFFSET, b);
-//              b +=1000;
-//              getchar();
-//              sleep(1); 
-//
-//}
-				//				printf("\n\n\n");
-				//				printf("STS: 0x%08d\n",dev_read(int_ptr, XIL_AXI_INTC_ISR_OFFSET));
-				//				printf("IPR: 0x%08d\n",dev_read(int_ptr, XIL_AXI_INTC_IPR_OFFSET));
-				//				printf("IER: 0x%08d\n",dev_read(int_ptr, XIL_AXI_INTC_IER_OFFSET));
-				//				printf("IAR: 0x%08d\n",dev_read(int_ptr, XIL_AXI_INTC_IAR_OFFSET));
-				//				printf("SIE: 0x%08d\n",dev_read(int_ptr, XIL_AXI_INTC_SIE_OFFSET));
-				//				printf("CIE: 0x%08d\n",dev_read(int_ptr, XIL_AXI_INTC_CIE_OFFSET));
-				//				printf("IVR: 0x%08d\n",dev_read(int_ptr, XIL_AXI_INTC_IVR_OFFSET));
-				//				printf("MER: 0x%08d\n",dev_read(int_ptr, XIL_AXI_INTC_MER_OFFSET));
-				//				printf("IMR: 0x%08d\n",dev_read(int_ptr, XIL_AXI_INTC_IMR_OFFSET));
-				//				printf("ILR: 0x%08d\n",dev_read(int_ptr, XIL_AXI_INTC_ILR_OFFSET));
-				//				printf("IVAR: 0x%08d\n",dev_read(int_ptr, XIL_AXI_INTC_IVAR_OFFSET));
+								dev_write(cfg_ptr, CFG_RESET_GRAL_OFFSET, ~0x8); //first reset
+								for(a=40;a<60;a++)
+								{
+								printf("Colocando valor DAC: %d \n",b);
+								dev_write(cfg_ptr, CFG_DAC_PWM0_OFFSET, b);
+								b +=1000;
+								getchar();
+								sleep(1); 
+
+								}*/
+
+				if(fGetReg) {
+								get_reg_value();          // Get single byte from register
+				}
+
+				else if (fPutReg) {
+								DoPutRegSync();          // Send single byte to register 
+				}
+
+				else if (fPutRegSet) {
+								DoPutRegSetSync();        // Send two bytes to consecutive registers
+				}
+
+				else if (fGetRegSet) {
+								DoGetRegSetSync();        // Get registers status
+				}
+
+				else if (fGetPT) {
+								DoGetPandTnFifoSync();     // Get pressure and temperature from sensor
+				}
+
+				else if (fGetGPS) {
+								DoGetGPSnFifoSync();      // Save file with contents of register 
+				}
+
 
 				// unmap and close the devices 
 				munmap(int_ptr, dev_size);

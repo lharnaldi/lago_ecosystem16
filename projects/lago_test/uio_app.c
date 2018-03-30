@@ -23,11 +23,13 @@
 
 //Globals
 int int_fd, cfg_fd, sts_fd, xadc_fd;
-void *int_ptr, *cfg_ptr, *sts_ptr, *xadc_ptr;
+void *intc_ptr, *cfg_ptr, *sts_ptr, *xadc_ptr;
 int dev_size;
 int interrupted = 0;
+int n_dev;
+uint32_t reg_off;
 
-int fGetReg, fGetRegSet, fGetPT, fGetGPS, fPutReg, fPutRegSet,
+int fGetReg, fGetRegSet, fGetPT, fGetGPS, fSetReg, fSetRegSet,
 		fToFile, fToStdout, fFile, fCount, fByte, fData, fFirstTime=1,
 		fshowversion;
 
@@ -155,8 +157,8 @@ int intc_init()
 				dev_size = get_memory_size("/sys/class/uio/uio0/maps/map0/size");
 
 				// mmap the INTC device into user space
-				int_ptr = mmap(NULL, dev_size, PROT_READ|PROT_WRITE, MAP_SHARED, int_fd, 0);
-				if (int_ptr == MAP_FAILED) {
+				intc_ptr = mmap(NULL, dev_size, PROT_READ|PROT_WRITE, MAP_SHARED, int_fd, 0);
+				if (intc_ptr == MAP_FAILED) {
 								printf("intc_init: mmap call failure.\n");
 								return -1;
 				}
@@ -164,16 +166,16 @@ int intc_init()
 
 				// steps to accept interrupts -> as pg. 26 of pg099-axi-intc.pdf
 				//1) Each bit in the IER corresponding to an interrupt must be set to 1.
-				dev_write(int_ptr,XIL_AXI_INTC_IER_OFFSET, 1);
+				dev_write(intc_ptr,XIL_AXI_INTC_IER_OFFSET, 1);
 				//2) There are two bits in the MER. The ME bit must be set to enable the
 				//interrupt request outputs.
-				dev_write(int_ptr,XIL_AXI_INTC_MER_OFFSET, XIL_AXI_INTC_MER_ME_MASK | XIL_AXI_INTC_MER_HIE_MASK);
+				dev_write(intc_ptr,XIL_AXI_INTC_MER_OFFSET, XIL_AXI_INTC_MER_ME_MASK | XIL_AXI_INTC_MER_HIE_MASK);
 				//				dev_write(dev_ptr,XIL_AXI_INTC_MER_OFFSET, XIL_AXI_INTC_MER_ME_MASK);
 
 				//The next block of code is to test interrupts by software
 				//3) Software testing can now proceed by writing a 1 to any bit position
 				//in the ISR that corresponds to an existing interrupt input.
-				//				dev_write(int_ptr,XIL_AXI_INTC_IPR_OFFSET, 1);
+				//				dev_write(intc_ptr,XIL_AXI_INTC_IPR_OFFSET, 1);
 
 				//        for(a=0; a<10; a++)
 				//        {
@@ -278,7 +280,7 @@ void show_usage(char *progname)
 
 								printf("\n\tActions:\n");
 								//  printf("\t-r\t\t\t\tGet a single register value\n");
-								//  printf("\t-p\t\t\t\tPut a value into a single register\n");
+								//  printf("\t-p\t\t\t\tSet a value into a single register\n");
 								printf("\t-a\t\t\t\tGet all registers status\n");
 								printf("\t-s\t\t\t\tSet registers\n");
 								printf("\t-f\t\t\t\tStart DAQ and save data to file\n");
@@ -327,11 +329,11 @@ int parse_param(int argc, char *argv[])
 
 				int    arg;
 
-				/* Initialize default flag values */
+				// Initialize default flag values 
 				fGetReg    = 0;
-				fPutReg    = 0;
+				fSetReg    = 0;
 				fGetRegSet = 0;
-				fPutRegSet = 0;
+				fSetRegSet = 0;
 				fToFile    = 0;
 				fToStdout  = 0;
 				fGetPT     = 0;
@@ -341,60 +343,95 @@ int parse_param(int argc, char *argv[])
 				fByte      = 0;
 				fData      = 0;
 
-				// Ensure sufficient paramaters. Need at least program name and action flag
+				// Ensure sufficient paramaters. Need at least program name and action
+				// flag
 				if (argc < 2) 
 				{
 								return 0;
 				}
 
-				// The first parameter is the action to perform. Copy the
-				// first parameter into the action string.
+				// The first parameter is the action to perform. Copy the first
+				// parameter into the action string.
 				StrcpyS(scAction, MAXCHRLEN, argv[1]);
 				if(strcmp(scAction, "-r") == 0) {
 								fGetReg = 1;
-				} else if( strcmp(scAction, "-p") == 0) {
-								fPutReg = 1;
-				} else if( strcmp(scAction, "-a") == 0) {
+				} 
+				else if( strcmp(scAction, "-p") == 0) {
+								fSetReg = 1;
+				} 
+				else if( strcmp(scAction, "-a") == 0) {
 								fGetRegSet = 1;
 								return 1;
-				} else if( strcmp(scAction, "-v") == 0) {
+				} 
+				else if( strcmp(scAction, "-v") == 0) {
 								fshowversion = 1;
 								return 0;
-				} else if( strcmp(scAction, "-s") == 0) {
-								fPutRegSet = 1;
-				} else if( strcmp(scAction, "-f") == 0) {
+				} 
+				else if( strcmp(scAction, "-s") == 0) {
+								fSetRegSet = 1;
+				} 
+				else if( strcmp(scAction, "-f") == 0) {
 								fToFile = 1;
-				} else if( strcmp(scAction, "-o") == 0) {
+				} 
+				else if( strcmp(scAction, "-o") == 0) {
 								fToStdout = 1;
 								return 1;
-				} else if( strcmp(scAction, "-t") == 0) {
+				} 
+				else if( strcmp(scAction, "-t") == 0) {
 								fGetPT = 1;
 								return 1;
-				} else if( strcmp(scAction, "-g") == 0) {
+				} 
+				else if( strcmp(scAction, "-g") == 0) {
 								fGetGPS = 1;
 								return 1;
-				} else { // unrecognized action
+				} 
+				else { // unrecognized action
 								return 0;
 				}
-				/* Second paramater is target register on device. Copy second
-				 ** paramater to the register string */
 
-				if (fPutRegSet) {
+				// Second paramater is target register on device. Copy second paramater
+				// to the register string
+				if(fGetReg) {
+								StrcpyS(scReg, MAXCHRLEN, argv[2]);
+								if(strcmp(scReg, "intc") == 0) {
+												n_reg = 0; 
+								} 
+								else if(strcmp(scReg, "cfg") == 0) {
+												n_reg = 1; 
+								} 
+								else if(strcmp(scReg, "sts") == 0) {
+												n_reg = 2; 
+								} 
+								else if(strcmp(scReg, "xadc") == 0) {
+												n_reg = 3; 
+								}
+								else { // unrecognized device to set
+												return 0;
+								}
+                        reg_off = strtoul(argv[3],NULL, 0);
+												return 1;
+				}
+
+				else if(fSetRegSet) {
 								StrcpyS(scReg, MAXCHRLEN, argv[2]);
 								/*Registers for Triggers*/
 								if(strcmp(scReg, "t1") == 0) {
 												scRegister[0] = '1'; /* registers 1 and 2 are for trigger 1*/
-								} else if(strcmp(scReg, "t2") == 0) {
+								} 
+								else if(strcmp(scReg, "t2") == 0) {
 												scRegister[0] = '3'; /* registers 3 and 4 are for trigger 2*/
-								} else if(strcmp(scReg, "t3") == 0) {
+								} 
+								else if(strcmp(scReg, "t3") == 0) {
 												scRegister[0] = '5'; /* registers 5 and 6 are for trigger 3*/
 								}
 								/*Registers for Subtrigger*/
 								else if(strcmp(scReg, "st1") == 0) {
 												scRegister[0] = '7'; /* registers 7 and 8 are for scaler 1*/
-								} else if(strcmp(scReg, "st2") == 0) {
+								} 
+								else if(strcmp(scReg, "st2") == 0) {
 												scRegister[0] = '9'; /* registers 9 and 10 are for scaler 2a*/
-								} else if(strcmp(scReg, "st3") == 0) {
+								} 
+								else if(strcmp(scReg, "st3") == 0) {
 												scRegister[0] = '1'; /* registers 11 and 12 are for scaler 3a*/
 												scRegister[1] = '1';
 								}
@@ -402,13 +439,16 @@ int parse_param(int argc, char *argv[])
 								else if(strcmp(scReg, "hv1") == 0) {
 												scRegister[0] = '1'; /* registers 13 and 14 are for DAC 4 aka hv1*/
 												scRegister[1] = '3';
-								} else if(strcmp(scReg, "hv2") == 0) {
+								} 
+								else if(strcmp(scReg, "hv2") == 0) {
 												scRegister[0] = '1'; /* registers 15 and 16 are for PWM 1*/
 												scRegister[1] = '5';
-								} else if(strcmp(scReg, "hv3") == 0) {
+								} 
+								else if(strcmp(scReg, "hv3") == 0) {
 												scRegister[0] = '1'; /* registers 17 and 18 are for PWM 2*/
 												scRegister[1] = '7';
-								} else if(strcmp(scReg, "tm") == 0) {
+								} 
+								else if(strcmp(scReg, "tm") == 0) {
 												scRegister[0] = '1'; /* register 19 are for Time Mode*/
 												scRegister[1] = '9';
 								}
@@ -426,23 +466,25 @@ int parse_param(int argc, char *argv[])
 												}
 								}
 								fData = 1;
-				} else if(fToFile) {
+				} 
+				else if(fToFile) {
 								if(argv[2] != NULL) {
 												StrcpyS(scFile, MAXFILENAMELEN, argv[2]);
 												fFile = 1;
-								} else {
+								} 
+								else {
 												return 0;
 								}
-				} else {
+				} 
+				else {
 								StrcpyS(scRegister, MAXCHRLEN, argv[2]);
 
-								/* Parse the command line parameters. */
+								// Parse the command line parameters.
 								arg = 3;
 								while(arg < argc) {
 
-												/* Check for the -f parameter used to specify the
-												 ** input/output file name.
-												 */
+												// Check for the -f parameter used to specify the
+												// input/output file name.
 												if (strcmp(argv[arg], "-f") == 0) {
 																arg += 1;
 																if (arg >= argc) {
@@ -452,9 +494,8 @@ int parse_param(int argc, char *argv[])
 																fFile = 1;
 												}
 
-												/* Check for the -c parameter used to specify the
-												 ** number of bytes to read/write from file.
-												 */
+												// Check for the -c parameter used to specify the number
+												// of bytes to read/write from file.
 												else if (strcmp(argv[arg], "-c") == 0) {
 																arg += 1;
 																if (arg >= argc) {
@@ -464,9 +505,8 @@ int parse_param(int argc, char *argv[])
 																fCount = 1;
 												}
 
-												/* Check for the -b paramater used to specify the
-												 ** value of a single data byte to be written to the register
-												 */
+												// Check for the -b paramater used to specify the value
+												// of a single data byte to be written to the register 
 												else if (strcmp(argv[arg], "-b") == 0) {
 																arg += 1;
 																if (arg >= argc) {
@@ -476,16 +516,14 @@ int parse_param(int argc, char *argv[])
 																fByte = 1;
 												}
 
-												/* Not a recognized parameter
-												 */
+												// Not a recognized parameter
 												else {
 																return 0;
 												}
 								} // End while
 
-								/* Input combination validity checks
-								 */
-								if( fPutReg && !fByte ) {
+								// Input combination validity checks 
+								if( fSetReg && !fByte ) {
 												printf("Error: No byte value provided\n");
 												return 0;
 								}
@@ -568,22 +606,22 @@ void set_voltage(unsigned long offset, float value)
 //  }
 //}
 
-uint32_t get_reg_value(int n_dev, uint32_t reg_addr) 
+int get_reg_value(int n_dev, uint32_t reg_off) 
 {
 				uint32_t reg_val;
 				switch(n_dev) 
 				{
 								case '0':
-												reg_val = dev_read(intc_ptr, reg_addr);
+												reg_val = dev_read(intc_ptr, reg_off);
 												break;
 								case '1':
-												reg_val = dev_read(cfg_ptr, reg_addr);
+												reg_val = dev_read(cfg_ptr, reg_off);
 												break;
 								case '2':
-												reg_val = dev_read(sts_ptr, reg_addr);
+												reg_val = dev_read(sts_ptr, reg_off);
 												break;
 								case '3':
-												reg_val = dev_read(xadc_ptr, reg_addr);
+												reg_val = dev_read(xadc_ptr, reg_off);
 								default:
 												printf("Invalid option: %d\n", n_dev);
 												show_usage();
@@ -626,9 +664,11 @@ int main(int argc, char *argv[])
 
 				while(!interrupted) 
 				{
-								//								printf("IPR Register antes: 0x%08d\n",dev_read(int_ptr, XIL_AXI_INTC_IPR_OFFSET));
-								wait_for_interrupt(int_fd, int_ptr);
-								//								printf("IPR Register después: 0x%08d\n",dev_read(int_ptr, XIL_AXI_INTC_IPR_OFFSET));
+								//								printf("IPR Register antes:
+								//								0x%08d\n",dev_read(intc_ptr, XIL_AXI_INTC_IPR_OFFSET));
+								wait_for_interrupt(int_fd, intc_ptr);
+								//								printf("IPR Register después:
+								//								0x%08d\n",dev_read(intc_ptr, XIL_AXI_INTC_IPR_OFFSET));
 				}
 
 				//STS test
@@ -666,14 +706,14 @@ int main(int argc, char *argv[])
 								}*/
 
 				if(fGetReg) {
-								get_reg_value();          // Get single byte from register
+								get_reg_value(n_dev, reg_off);  // Get single byte from register
 				}
 
-				else if (fPutReg) {
+				else if (fSetReg) {
 								DoPutRegSync();          // Send single byte to register 
 				}
 
-				else if (fPutRegSet) {
+				else if (fSetRegSet) {
 								DoPutRegSetSync();        // Send two bytes to consecutive registers
 				}
 
@@ -691,7 +731,7 @@ int main(int argc, char *argv[])
 
 
 				// unmap and close the devices 
-				munmap(int_ptr, dev_size);
+				munmap(intc_ptr, dev_size);
 				munmap(cfg_ptr, dev_size);
 				munmap(sts_ptr, dev_size);
 				munmap(xadc_ptr, dev_size);

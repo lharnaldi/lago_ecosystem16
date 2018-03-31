@@ -28,14 +28,15 @@ int dev_size;
 int interrupted = 0;
 int n_dev;
 uint32_t reg_off;
+uint32_t reg_val;
 
-int fGetReg, fGetRegSet, fGetPT, fGetGPS, fSetReg, fSetRegSet,
-		fToFile, fToStdout, fFile, fCount, fByte, fData, fFirstTime=1,
+int fReadReg, fGetRegSet, fGetPT, fGetGPS, fWriteReg, fSetCfgReg,
+		fToFile, fToStdout, fFile, fCount, fByte, fRegValue, fData, fFirstTime=1,
 		fshowversion;
 
-char scAction[MAXCHRLEN], scRegister[MAXCHRLEN], scReg[MAXCHRLEN],
+char scAction[MAXCHRLEN], scRegister[MAXCHRLEN], charReg[MAXCHRLEN],
 		 scDvc[MAXCHRLEN] = "Nexys2", scFile[MAXCHRLEN], scCurrentFile[MAXCHRLEN],
-		 scCount[MAXCHRLEN], scByte[MAXCHRLEN], scData[MAXCHRLEN], scCurrentMetaData[MAXCHRLEN];
+		 scCount[MAXCHRLEN], scByte[MAXCHRLEN], charRegValue[MAXCHRLEN], scCurrentMetaData[MAXCHRLEN];
 
 
 typedef struct ldata 
@@ -330,10 +331,10 @@ int parse_param(int argc, char *argv[])
 				int    arg;
 
 				// Initialize default flag values 
-				fGetReg    = 0;
-				fSetReg    = 0;
+				fReadReg    = 0;
+				fWriteReg    = 0;
 				fGetRegSet = 0;
-				fSetRegSet = 0;
+				fSetCfgReg = 0;
 				fToFile    = 0;
 				fToStdout  = 0;
 				fGetPT     = 0;
@@ -342,6 +343,7 @@ int parse_param(int argc, char *argv[])
 				fCount     = 0;
 				fByte      = 0;
 				fData      = 0;
+				fRegValue  = 0;
 
 				// Ensure sufficient paramaters. Need at least program name and action
 				// flag
@@ -354,10 +356,10 @@ int parse_param(int argc, char *argv[])
 				// parameter into the action string.
 				StrcpyS(scAction, MAXCHRLEN, argv[1]);
 				if(strcmp(scAction, "-r") == 0) {
-								fGetReg = 1;
+								fReadReg = 1;
 				} 
-				else if( strcmp(scAction, "-p") == 0) {
-								fSetReg = 1;
+				else if( strcmp(scAction, "-w") == 0) {
+								fWriteReg = 1;
 				} 
 				else if( strcmp(scAction, "-a") == 0) {
 								fGetRegSet = 1;
@@ -368,7 +370,7 @@ int parse_param(int argc, char *argv[])
 								return 0;
 				} 
 				else if( strcmp(scAction, "-s") == 0) {
-								fSetRegSet = 1;
+								fSetCfgReg = 1;
 				} 
 				else if( strcmp(scAction, "-f") == 0) {
 								fToFile = 1;
@@ -391,81 +393,67 @@ int parse_param(int argc, char *argv[])
 
 				// Second paramater is target register on device. Copy second paramater
 				// to the register string
-				if(fGetReg) {
-								StrcpyS(scReg, MAXCHRLEN, argv[2]);
-								if(strcmp(scReg, "intc") == 0) {
-												n_reg = 0; 
+				if((fReadReg == 1) || (fWriteReg == 1)) {
+								StrcpyS(charReg, MAXCHRLEN, argv[2]);
+								if(strcmp(charReg, "intc") == 0) {
+												n_dev = 0; 
 								} 
-								else if(strcmp(scReg, "cfg") == 0) {
-												n_reg = 1; 
+								else if(strcmp(charReg, "cfg") == 0) {
+												n_dev = 1; 
 								} 
-								else if(strcmp(scReg, "sts") == 0) {
-												n_reg = 2; 
+								else if(strcmp(charReg, "sts") == 0) {
+												n_dev = 2; 
 								} 
-								else if(strcmp(scReg, "xadc") == 0) {
-												n_reg = 3; 
+								else if(strcmp(charReg, "xadc") == 0) {
+												n_dev = 3; 
 								}
 								else { // unrecognized device to set
 												return 0;
 								}
-                        reg_off = strtoul(argv[3],NULL, 0);
-												return 1;
+								reg_off = strtoul(argv[3],NULL, 16);
+//FIXME: see if this can be done better
+                if (fWriteReg) reg_val = strtoul(argv[4],NULL,10);
+								return 1;
 				}
 
-				else if(fSetRegSet) {
-								StrcpyS(scReg, MAXCHRLEN, argv[2]);
-								/*Registers for Triggers*/
-								if(strcmp(scReg, "t1") == 0) {
-												scRegister[0] = '1'; /* registers 1 and 2 are for trigger 1*/
+				else if(fSetCfgReg) {
+								StrcpyS(charReg, MAXCHRLEN, argv[2]);
+								// Registers for Triggers
+								if(strcmp(charReg, "t1") == 0) {
+												reg_off = CFG_TRLVL_1_OFFSET;
 								} 
-								else if(strcmp(scReg, "t2") == 0) {
-												scRegister[0] = '3'; /* registers 3 and 4 are for trigger 2*/
+								else if(strcmp(charReg, "t2") == 0) {
+												reg_off = CFG_TRLVL_2_OFFSET;
 								} 
-								else if(strcmp(scReg, "t3") == 0) {
-												scRegister[0] = '5'; /* registers 5 and 6 are for trigger 3*/
-								}
-								/*Registers for Subtrigger*/
-								else if(strcmp(scReg, "st1") == 0) {
-												scRegister[0] = '7'; /* registers 7 and 8 are for scaler 1*/
+								// Registers for Subtriggers
+								else if(strcmp(charReg, "st1") == 0) {
+												reg_off = CFG_STRLVL_1_OFFSET;
 								} 
-								else if(strcmp(scReg, "st2") == 0) {
-												scRegister[0] = '9'; /* registers 9 and 10 are for scaler 2a*/
+								else if(strcmp(charReg, "st2") == 0) {
+												reg_off = CFG_STRLVL_2_OFFSET;
 								} 
-								else if(strcmp(scReg, "st3") == 0) {
-												scRegister[0] = '1'; /* registers 11 and 12 are for scaler 3a*/
-												scRegister[1] = '1';
-								}
-								/*Registers for High Voltage*/
-								else if(strcmp(scReg, "hv1") == 0) {
-												scRegister[0] = '1'; /* registers 13 and 14 are for DAC 4 aka hv1*/
-												scRegister[1] = '3';
+								// Registers for High Voltage
+								else if(strcmp(charReg, "hv1") == 0) {
+												reg_off = CFG_HV1_OFFSET;
 								} 
-								else if(strcmp(scReg, "hv2") == 0) {
-												scRegister[0] = '1'; /* registers 15 and 16 are for PWM 1*/
-												scRegister[1] = '5';
+								else if(strcmp(charReg, "hv2") == 0) {
+												reg_off = CFG_HV2_OFFSET;
 								} 
-								else if(strcmp(scReg, "hv3") == 0) {
-												scRegister[0] = '1'; /* registers 17 and 18 are for PWM 2*/
-												scRegister[1] = '7';
-								} 
-								else if(strcmp(scReg, "tm") == 0) {
-												scRegister[0] = '1'; /* register 19 are for Time Mode*/
-												scRegister[1] = '9';
-								}
-								/*Unrecognized */
+								// Unrecognized
 								else { // unrecognized register to set
 												return 0;
 								}
 								//scCount[0] = '4';
 								//fCount = 1;
-								StrcpyS(scData, 16, argv[3]);
-								if((strncmp(scReg, "hv",2) == 0)) {
-												if (atoi(scData)>4000) {
-																printf ("Error: maximum voltage 4000\n");
+								StrcpyS(charRegValue, 16, argv[3]);
+								if((strncmp(charReg, "hv",2) == 0)) {
+												if (atof(charRegValue)>2500) {
+																printf ("Error: maximum voltage is 2500 mV\n");
 																exit(1);
 												}
+												fRegValue = 1;
 								}
-								fData = 1;
+								//fData = 1; FIXME: not used apparently
 				} 
 				else if(fToFile) {
 								if(argv[2] != NULL) {
@@ -523,7 +511,7 @@ int parse_param(int argc, char *argv[])
 								} // End while
 
 								// Input combination validity checks 
-								if( fSetReg && !fByte ) {
+								if( fWriteReg && !fByte ) {
 												printf("Error: No byte value provided\n");
 												return 0;
 								}
@@ -537,7 +525,7 @@ int parse_param(int argc, char *argv[])
 				return 1;
 }
 
-float get_voltage(unsigned long offset)
+float get_voltage(uint32_t offset)
 {
 				int16_t value;
 				value = (int16_t) dev_read(xadc_ptr, offset);
@@ -545,15 +533,16 @@ float get_voltage(unsigned long offset)
 				return ((value>>4)*XADC_CONV_VAL);
 }
 
-void set_voltage(unsigned long offset, float value)
+void set_voltage(uint32_t offset, float value)
 {
 				//fit after calibration. See file data_calib.txt in /ramp_test directory 
 				// y = a*x + b
 				//a               = 0.0382061     
 				//b               = 4.11435   
-				int dac_val;
+				uint32_t dac_val;
 				float a = 0.0382061, b = 4.11435;
-				dac_val = (int)(value - b)/a;
+
+				dac_val = (uint32_t)(value - b)/a;
 
 				dev_write(cfg_ptr, offset, dac_val);
 				printf("The Voltage is: %.1lf mV\n", value);
@@ -606,28 +595,53 @@ void set_voltage(unsigned long offset, float value)
 //  }
 //}
 
-int get_reg_value(int n_dev, uint32_t reg_off) 
+int rd_reg_value(int n_dev, uint32_t reg_off) 
 {
 				uint32_t reg_val;
 				switch(n_dev) 
 				{
-								case '0':
+								case 0:
 												reg_val = dev_read(intc_ptr, reg_off);
 												break;
-								case '1':
+								case 1:
 												reg_val = dev_read(cfg_ptr, reg_off);
 												break;
-								case '2':
+								case 2:
 												reg_val = dev_read(sts_ptr, reg_off);
 												break;
-								case '3':
+								case 3:
 												reg_val = dev_read(xadc_ptr, reg_off);
+												break;
 								default:
 												printf("Invalid option: %d\n", n_dev);
-												show_usage();
 												return -1;
 				}
-				printf("Complete. Received data 0x%08d\n", reg_val);
+				printf("Complete. Received data %d\n", reg_val);
+
+				return 0;
+}
+
+int wr_reg_value(int n_dev, uint32_t reg_off, uint32_t reg_val) 
+{
+				switch(n_dev) 
+				{
+								case 0:
+												dev_write(intc_ptr, reg_off, reg_val);
+												break;
+								case 1:
+												dev_write(cfg_ptr, reg_off, reg_val);
+												break;
+								case 2:
+												dev_write(sts_ptr, reg_off, reg_val);
+												break;
+								case 3:
+												dev_write(xadc_ptr, reg_off, reg_val);
+												break;
+								default:
+												printf("Invalid option: %d\n", n_dev);
+												return -1;
+				}
+				printf("Complete. Data written to register %d\n", reg_val);
 
 				return 0;
 }
@@ -638,11 +652,11 @@ int main(int argc, char *argv[])
 				uint32_t val;
 				pthread_t t1;
 				//FIXME: just for test commented
-				/*				if (!parse_param(argc, argv)) {
-									show_usage(argv[0]);
-									return 1;
-									}
-				 */
+				if (!parse_param(argc, argv)) {
+								show_usage(argv[0]);
+								return 1;
+				}
+
 
 				signal(SIGINT, signal_handler);
 
@@ -654,22 +668,22 @@ int main(int argc, char *argv[])
 
 				//TODO: here put something like init_interrupts()
 
-				val = dev_read(cfg_ptr, 0);
-				printf("Initial STATUS Register: 0x%08d\n",val);
-				//dev_write(cfg_ptr, CFG_RESET_GRAL_OFFSET, 8); //first reset
-				//dev_write(cfg_ptr, CFG_RESET_GRAL_OFFSET, val | RST_PPS_TRG_FIFO_MASK | PPS_EN_MASK); //first reset
-				dev_write(cfg_ptr, CFG_RESET_GRAL_OFFSET, val & RST_PPS_TRG_FIFO_MASK); //first reset
-				printf("PPS_EN_MASK negado: 0x%08d\n",~PPS_EN_MASK);
-				printf("STATUS Register: 0x%08d\n",dev_read(cfg_ptr, 0));
-
-				while(!interrupted) 
-				{
-								//								printf("IPR Register antes:
-								//								0x%08d\n",dev_read(intc_ptr, XIL_AXI_INTC_IPR_OFFSET));
-								wait_for_interrupt(int_fd, intc_ptr);
-								//								printf("IPR Register después:
-								//								0x%08d\n",dev_read(intc_ptr, XIL_AXI_INTC_IPR_OFFSET));
-				}
+				//				val = dev_read(cfg_ptr, 0);
+				//				printf("Initial STATUS Register: 0x%08d\n",val);
+				//				//dev_write(cfg_ptr, CFG_RESET_GRAL_OFFSET, 8); //first reset
+				//				//dev_write(cfg_ptr, CFG_RESET_GRAL_OFFSET, val | RST_PPS_TRG_FIFO_MASK | PPS_EN_MASK); //first reset
+				//				dev_write(cfg_ptr, CFG_RESET_GRAL_OFFSET, val & RST_PPS_TRG_FIFO_MASK); //first reset
+				//				printf("PPS_EN_MASK negado: 0x%08d\n",~PPS_EN_MASK);
+				//				printf("STATUS Register: 0x%08d\n",dev_read(cfg_ptr, 0));
+				//
+				//				while(!interrupted) 
+				//				{
+				//								//								printf("IPR Register antes:
+				//								//								0x%08d\n",dev_read(intc_ptr, XIL_AXI_INTC_IPR_OFFSET));
+				//								wait_for_interrupt(int_fd, intc_ptr);
+				//								//								printf("IPR Register después:
+				//								//								0x%08d\n",dev_read(intc_ptr, XIL_AXI_INTC_IPR_OFFSET));
+				//				}
 
 				//STS test
 				//do a loop looking for the position in writer
@@ -705,28 +719,26 @@ int main(int argc, char *argv[])
 
 								}*/
 
-				if(fGetReg) {
-								get_reg_value(n_dev, reg_off);  // Get single byte from register
+				if(fReadReg) {
+								rd_reg_value(n_dev, reg_off);  // Read single register
 				}
-
-				else if (fSetReg) {
-								DoPutRegSync();          // Send single byte to register 
+				else if (fWriteReg) {
+								wr_reg_value(n_dev, reg_off, reg_val);  // Write single register
 				}
-
-				else if (fSetRegSet) {
-								DoPutRegSetSync();        // Send two bytes to consecutive registers
+				else if (fSetCfgReg) {
+								if (fRegValue) set_voltage(reg_off, atof(charRegValue)); // For HV
+								else wr_reg_value(1,reg_off, reg_val);                            // For t1, t2, st1, st2  
 				}
-
 				else if (fGetRegSet) {
-								DoGetRegSetSync();        // Get registers status
+								//		DoGetRegSetSync();        // Get registers status
 				}
 
 				else if (fGetPT) {
-								DoGetPandTnFifoSync();     // Get pressure and temperature from sensor
+								//			DoGetPandTnFifoSync();     // Get pressure and temperature from sensor
 				}
 
 				else if (fGetGPS) {
-								DoGetGPSnFifoSync();      // Save file with contents of register 
+								//				DoGetGPSnFifoSync();      // Save file with contents of register 
 				}
 
 

@@ -50,6 +50,8 @@
 #define CFG_LONGITUDE_OFFSET     0x28
 #define CFG_ALTITUDE_OFFSET      0x2C
 #define CFG_SATELLITE_OFFSET     0x30
+#define CFG_HV1_OFFSET           0x40
+#define CFG_HV2_OFFSET           0x44
 
 //CFG Slow DAC
 #define CFG_DAC_PWM0_OFFSET 0x40

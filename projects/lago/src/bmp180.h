@@ -1,6 +1,11 @@
 #ifndef __BMP180__
 #define __BMP180__
 
+#include <string.h> 
+#include <stdlib.h> 
+#include <fcntl.h> 
+#include <linux/i2c-dev.h> 
+#include <math.h> 
 #include<unistd.h>
 #include<inttypes.h>
 
@@ -123,15 +128,9 @@ typedef struct {
 } bmp180_eprom_t;
 
 /* Prototypes for helper functions */
-int bmp180_set_addr(void *_bmp);
-void bmp180_read_eprom_reg(void *_bmp, int32_t *_data, uint8_t reg, int32_t sign);
 void bmp180_read_eprom(void *_bmp);
-int32_t bmp180_read_raw_pressure(void *_bmp, uint8_t oss);
-int32_t bmp180_read_raw_temperature(void *_bmp);
-void bmp180_init_error_cleanup(void *_bmp);
 void *bmp180_init(int address, const char* i2c_device_filepath);
 void bmp180_close(void *_bmp);
-long bmp180_pressure(void *_bmp);
 void bmp180_set_oss(void *_bmp, int oss);
 float bmp180_temperature(void *_bmp);
 float bmp180_altitude(void *_bmp);

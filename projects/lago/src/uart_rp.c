@@ -1,11 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <termios.h>
-#include <inttypes.h>
-#include <string.h>
-
 #include "uart_rp.h"
 
 /* File descriptor definition */

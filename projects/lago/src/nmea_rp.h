@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <string.h>
+#include <math.h>
 
 #define _EMPTY 0x00
 #define NMEA_GPRMC 0x01
@@ -35,10 +37,10 @@ typedef struct gprmc {
     char lon;
     double speed;
     double course;
+    double date;
 } gprmc_t;
 
 uint8_t rp_NmeaGetMessageType(const char *);
-uint8_t rp_NmeaValidChecksum(const char *);
 void rp_NmeaParseGpgga(char *, gpgga_t *);
 void rp_NmeaParseGprmc(char *, gprmc_t *);
 

@@ -1,10 +1,22 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <inttypes.h>
-#include <string.h>
-#include <math.h>
-
 #include "nmea_rp.h"
+
+static uint8_t rp_NmeaValidChecksum(const char *message) 
+{
+    uint8_t checksum= (uint8_t)strtol(strchr(message, '*')+1, NULL, 16);
+
+    char p;
+    uint8_t sum = 0;
+    ++message;
+    while ((p = *message++) != '*') {
+        sum ^= p;
+    }
+
+    if (sum != checksum) {
+        return NMEA_CHECKSUM_ERR;
+    }
+
+    return _EMPTY;
+}
 
 void rp_NmeaParseGpgga(char *nmea, gpgga_t *loc)
 {
@@ -103,6 +115,9 @@ void rp_NmeaParseGprmc(char *nmea, gprmc_t *loc)
 
     ptr = strchr(ptr, ',')+1;
     loc->course = atof(ptr);
+
+    ptr = strchr(ptr, ',')+1;
+    loc->date = atof(ptr);
 }
 
 /**
@@ -129,22 +144,5 @@ uint8_t rp_NmeaGetMessageType(const char *message)
     }
 
     return NMEA_UNKNOWN;
-}
-
-uint8_t rp_NmeaValidChecksum(const char *message) {
-    uint8_t checksum= (uint8_t)strtol(strchr(message, '*')+1, NULL, 16);
-
-    char p;
-    uint8_t sum = 0;
-    ++message;
-    while ((p = *message++) != '*') {
-        sum ^= p;
-    }
-
-    if (sum != checksum) {
-        return NMEA_CHECKSUM_ERR;
-    }
-
-    return _EMPTY;
 }
 

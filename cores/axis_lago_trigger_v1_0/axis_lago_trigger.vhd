@@ -85,8 +85,7 @@ architecture rtl of axis_lago_trigger is
   signal tr_status_reg, tr_status_next   : std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
   signal cnt_status_reg, cnt_status_next : std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
 
-  signal trig_cnt_reg, trig_cnt_next     : unsigned(AXIS_TDATA_WIDTH-1 downto 0); 
-  signal cont_bines_reg, cont_bines_next : unsigned(AXIS_TDATA_WIDTH-1 downto 0); 
+  signal trig_cnt_reg, trig_cnt_next     : std_logic_vector(30-1 downto 0); 
 
   --Charge signals
   signal charge1_reg, charge1_next       : unsigned(ADC_DATA_WIDTH-1 downto 0);
@@ -222,10 +221,10 @@ begin
 
   tr_status_next <=   "010" & tr2_s & tr1_s & clk_cnt_pps_i when (tr_s = '1') else
                       tr_status_reg;
-  cnt_status_next <=  "10" & std_logic_vector(trig_cnt_reg(AXIS_TDATA_WIDTH-3 downto 0)) when (tr_s = '1') else
+  cnt_status_next <=  "10" & trig_cnt_reg when (tr_s = '1') else
                       cnt_status_reg;
 
-  trig_cnt_next <= trig_cnt_reg + 1 when (tr_s = '1') else
+  trig_cnt_next <= std_logic_vector(unsigned(trig_cnt_reg) + 1) when (tr_s = '1') else
                    trig_cnt_reg;
 
 ----------------------------------------------------------------------------------------------------------

@@ -15,7 +15,7 @@ Lago Ecosystem is a build system for quick prototyping and working with the Zynq
 ```bash
 $ sudo apt-get install curl
 $ cd ~/Downloads
-$ curl https://raw.githubusercontent.com/lagoprojectrp/lago_ecosystem/master/scripts/install_vivado.sh | sudo /bin/bash /dev/stdin
+$ curl https://raw.githubusercontent.com/lharnaldi/lago_ecosystem/master/scripts/install_vivado.sh | sudo /bin/bash /dev/stdin
 $ sudo ln -s make /usr/bin/gmake # tells Vivado to use make instead of gmake
 ```
 
@@ -32,7 +32,7 @@ $ sudo apt-get --no-install-recommends install \
     libssl-dev qemu-user-static binfmt-support \
     dosfstools parted debootstrap
 
-$ git clone https://github.com/lagoprojectrp/lago_ecosystem
+$ git clone https://github.com/lharnaldi/lago_ecosystem
 $ cd lago_ecosystem
 ```
 

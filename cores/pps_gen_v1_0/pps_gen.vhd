@@ -19,7 +19,7 @@ port (
   gpsen_i            : in  std_logic; -- PPS enable 0 -> GPS, 1 -> False PPS 
   pps_o              : out std_logic;
   clk_cnt_pps_o      : out std_logic_vector(27-1 downto 0);
-  pps_gps_o          : out std_logic;
+  pps_gps_led_o      : out std_logic;
   false_pps_led_o    : out std_logic;
   int_o              : out std_logic
 );
@@ -37,13 +37,12 @@ architecture rtl of pps_gen is
 
   type pps_st_t is (ZERO, EDGE, ONE);
   signal pps_st_reg, pps_st_next: pps_st_t;
-  signal one_clk_pps : std_logic;
-  signal pps_ibuf    : std_logic;
-  signal pps_reg, pps_next : std_logic;
+  signal one_clk_pps       : std_logic;
+  signal pps_ibuf          : std_logic;
 
 begin
     
-  int_o <= pps_reg or false_pps;
+  int_o <= one_clk_pps;
  
   IBUF_inst : IBUF
    port map (
@@ -51,26 +50,12 @@ begin
     I => pps_i
    );
 
-  -- register pps input
-  process(aclk)
-  begin
-    if (rising_edge(aclk)) then
-      if (aresetn = '0') then
-        pps_reg <= '0';
-      else
-        pps_reg <= pps_next;
-      end if;
-    end if;
-  end process;
-  --next-state logic
-  pps_next <= pps_ibuf;
-
-  pps_gps_o <= pps_reg;
-
-  --PPS MUX 
-  pps             <=  false_pps when (gpsen_i = '1') else pps_reg;
+  pps_gps_led_o <= pps_ibuf when (gpsen_i = '0') else '0';
 
   false_pps_led_o <=  false_pps when (gpsen_i = '1') else '0';
+
+  --PPS MUX 
+  pps             <=  false_pps when (gpsen_i = '1') else pps_ibuf;
 
   pps_o           <= one_clk_pps;
   clk_cnt_pps_o   <= clk_cnt_pps;

@@ -22,13 +22,14 @@ port (
   subtrig_lvl_b_i    : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
   pps_i              : in std_logic;
   clk_cnt_pps_i      : in std_logic_vector(27-1 downto 0);
-  temp_i             : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
-  pressure_i         : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
-  time_i             : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
-  latitude_i         : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
-  longitude_i        : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
-  altitude_i         : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
-  satellites_i       : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
+  temp_i             : in std_logic_vector(24-1 downto 0);
+  pressure_i         : in std_logic_vector(24-1 downto 0);
+  time_i             : in std_logic_vector(24-1 downto 0);
+  date_i             : in std_logic_vector(24-1 downto 0);
+  latitude_i         : in std_logic_vector(24-1 downto 0);
+  longitude_i        : in std_logic_vector(24-1 downto 0);
+  altitude_i         : in std_logic_vector(24-1 downto 0);
+  satellites_i       : in std_logic_vector(24-1 downto 0);
 
   -- Slave side
   s_axis_tready     : out std_logic;
@@ -69,8 +70,7 @@ architecture rtl of axis_lago_trigger is
   signal tr_status_reg, tr_status_next   : std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
   signal cnt_status_reg, cnt_status_next : std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
 
-  signal trig_cnt_reg, trig_cnt_next     : unsigned(AXIS_TDATA_WIDTH-1 downto 0); 
-  signal cont_bines_reg, cont_bines_next : unsigned(AXIS_TDATA_WIDTH-1 downto 0); 
+  signal trig_cnt_reg, trig_cnt_next     : std_logic_vector(30-1 downto 0); 
 
   --Charge signals
   signal charge1_reg, charge1_next       : unsigned(ADC_DATA_WIDTH-1 downto 0);
@@ -140,7 +140,7 @@ begin
   array_pps_next(METADATA_ARRAY_LENGTH-5)<= "11" & "100" & "000" &  latitude_i        when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
   array_pps_next(METADATA_ARRAY_LENGTH-4)<= "11" & "100" & "001" &  longitude_i       when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-4);
   array_pps_next(METADATA_ARRAY_LENGTH-3)<= "11" & "100" & "010" &  altitude_i        when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-3);
-  array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" &  altitude_i        when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
+  array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" &  date_i            when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
   array_pps_next(METADATA_ARRAY_LENGTH-1)<= "11" & "100" & "100" &  satellites_i      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
 
 --  array_pps_next(METADATA_ARRAY_LENGTH-10)<= x"FFFFFFFF"                                   when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
@@ -217,10 +217,10 @@ begin
 
   tr_status_next <=   "010" & tr2_s & tr1_s & clk_cnt_pps_i when (tr_s = '1') else
                       tr_status_reg;
-  cnt_status_next <=  "10" & std_logic_vector(trig_cnt_reg(AXIS_TDATA_WIDTH-3 downto 0)) when (tr_s = '1') else
+  cnt_status_next <=  "10" & trig_cnt_reg when (tr_s = '1') else
                       cnt_status_reg;
 
-  trig_cnt_next <= trig_cnt_reg + 1 when (tr_s = '1') else
+  trig_cnt_next <= std_logic_vector(unsigned(trig_cnt_reg) + 1) when (tr_s = '1') else
                    trig_cnt_reg;
 
 ----------------------------------------------------------------------------------------------------------

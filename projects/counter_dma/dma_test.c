@@ -111,9 +111,9 @@ void memdump(void* virtual_address, int byte_count) {
 
 int main() {
     int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
-    unsigned int* virtual_address = mmap(NULL, 16*sysconf(_SC_PAGESIZE), PROT_READ | PROT_WRITE, MAP_SHARED, dh, 0x40400000); // Memory map AXI Lite register block
-    unsigned int* virtual_source_address  = mmap(NULL, 16*sysconf(_SC_PAGESIZE), PROT_READ | PROT_WRITE, MAP_SHARED, dh, 0x0e000000); // Memory map source address
-    unsigned int* virtual_destination_address = mmap(NULL,16*sysconf(_SC_PAGESIZE), PROT_READ | PROT_WRITE, MAP_SHARED, dh, 0x0f000000); // Memory map destination address
+    unsigned int* virtual_address = mmap(NULL, 16*sysconf(_SC_PAGESIZE), PROT_READ | PROT_WRITE, MAP_SHARED, dh, 0x40000000); // Memory map AXI Lite register block
+    unsigned int* virtual_source_address  = mmap(NULL, 16*sysconf(_SC_PAGESIZE), PROT_READ | PROT_WRITE, MAP_SHARED, dh, 0x1E001000); // Memory map source address
+    unsigned int* virtual_destination_address = mmap(NULL,16*sysconf(_SC_PAGESIZE), PROT_READ | PROT_WRITE, MAP_SHARED, dh, 0x1E000000); // Memory map destination address
 
 //    virtual_source_address[0]= 0x11223344; // Write random stuff to source block
 //    memset(virtual_destination_address, 0, 32); // Clear destination block

@@ -166,9 +166,7 @@ cell xilinx.com:ip:xlslice:1.0 gpsen {
 }
 
 # Create axis_clock_converter
-cell xilinx.com:ip:axis_clock_converter:1.1 fifo_0 {
-  SYNCHRONIZATION_STAGES 8
-} {
+cell xilinx.com:ip:axis_clock_converter:1.1 fifo_0 {} {
   S_AXIS adc_0/M_AXIS
   s_axis_aclk pll_0/clk_out1
   s_axis_aresetn const_0/dout

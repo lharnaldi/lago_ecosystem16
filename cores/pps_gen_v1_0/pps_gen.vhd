@@ -8,7 +8,7 @@ use unisim.vcomponents.all;
 
 entity pps_gen is
 generic (
-  CLK_FREQ : natural := 142857132
+  CLK_FREQ : natural := 125000000
 );
 port (
   -- System signals

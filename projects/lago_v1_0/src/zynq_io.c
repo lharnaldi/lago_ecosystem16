@@ -4,7 +4,7 @@ int intc_fd, cfg_fd, sts_fd, xadc_fd, mem_fd;
 void *intc_ptr, *cfg_ptr, *sts_ptr, *xadc_ptr, *mem_ptr;
 int dev_size;
 
-void dev_write(void *dev_base, uint32_t offset, uint32_t value)
+void dev_write(void *dev_base, uint32_t offset, int32_t value)
 {
 				*((volatile unsigned *)(dev_base + offset)) = value;
 }
@@ -61,11 +61,12 @@ int32_t rd_reg_value(int n_dev, uint32_t reg_off)
 												return -1;
 				}
 				printf("Complete. Received data 0x%08x\n", reg_val);
+				//printf("Complete. Received data %d\n", reg_val);
 
 				return reg_val;
 }
 
-int32_t wr_reg_value(int n_dev, uint32_t reg_off, uint32_t reg_val)
+int32_t wr_reg_value(int n_dev, uint32_t reg_off, int32_t reg_val)
 {
 				switch(n_dev)
 				{
@@ -86,11 +87,12 @@ int32_t wr_reg_value(int n_dev, uint32_t reg_off, uint32_t reg_val)
 												return -1;
 				}
 				printf("Complete. Data written: 0x%08x\n", reg_val);
+				//printf("Complete. Data written: %d\n", reg_val);
 
 				return 0;
 }
 
-int32_t rd_cfg_status()
+int32_t rd_cfg_status(void)
 {
 
 				printf("#Trigger Level Ch1 = %d\n", dev_read(cfg_ptr, CFG_TRLVL_1_OFFSET));
@@ -131,7 +133,7 @@ static uint32_t get_memory_size(char *sysfs_path_file)
 				return size;
 }
 
-int intc_init()
+int intc_init(void)
 {
 				char *uiod = "/dev/uio0";
 
@@ -156,7 +158,7 @@ int intc_init()
 				return 0;
 }
 
-int cfg_init()
+int cfg_init(void)
 {
 				char *uiod = "/dev/uio1";
 
@@ -181,7 +183,7 @@ int cfg_init()
 				return 0;
 }
 
-int sts_init()
+int sts_init(void)
 {
 				char *uiod = "/dev/uio2";
 
@@ -206,7 +208,7 @@ int sts_init()
 				return 0;
 }
 
-int xadc_init()
+int xadc_init(void)
 {
 				char *uiod = "/dev/uio3";
 
@@ -231,7 +233,7 @@ int xadc_init()
 				return 0;
 }
 
-int mem_init()
+int mem_init(void)
 {
 				char *mem_name = "/dev/mem";
 
@@ -244,7 +246,7 @@ int mem_init()
 								return -1;
 				}
 
-				dev_size = 1024*sysconf(_SC_PAGESIZE);
+				dev_size = 2048*sysconf(_SC_PAGESIZE);
 
 				// mmap the mem device into user space 
 				mem_ptr = mmap(NULL, dev_size, PROT_READ|PROT_WRITE, MAP_SHARED, mem_fd, 0x1E000000);
@@ -264,7 +266,7 @@ float get_voltage(uint32_t offset)
 				return ((value>>4)*XADC_CONV_VAL);
 }       
 
-void set_voltage(uint32_t offset, uint32_t value)
+void set_voltage(uint32_t offset, int32_t value)
 {       
 				//fit after calibration. See file data_calib.txt in /ramp_test directory 
 				// y = a*x + b
@@ -281,7 +283,7 @@ void set_voltage(uint32_t offset, uint32_t value)
 }
 
 //System initialization
-int init_system()
+int init_system(void)
 {
 				uint32_t reg_val;
 
@@ -345,7 +347,7 @@ int init_system()
 				return 0;
 }
 
-int enable_interrupt()
+int enable_interrupt(void)
 {
 				// steps to accept interrupts -> as pg. 26 of pg099-axi-intc.pdf
 				//1) Each bit in the IER corresponding to an interrupt must be set to 1.
@@ -370,7 +372,7 @@ int enable_interrupt()
 
 }
 
-int disable_interrupt()
+int disable_interrupt(void)
 {
 				uint32_t value;
 				//Disable interrupt INTC0

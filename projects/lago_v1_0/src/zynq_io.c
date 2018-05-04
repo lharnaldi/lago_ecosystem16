@@ -293,8 +293,6 @@ int init_system(void)
 
 				// set trigger_lvl_2
 				dev_write(cfg_ptr,CFG_TRLVL_2_OFFSET,8190);
-				//reg_val = dev_read(cfg_ptr, 10);
-				//printf("reg_val for trg_lvl_b : %d\n",reg_val);
 
 				// set subtrigger_lvl_1
 				dev_write(cfg_ptr,CFG_STRLVL_1_OFFSET,8190);
@@ -302,11 +300,13 @@ int init_system(void)
 				// set subtrigger_lvl_2
 				dev_write(cfg_ptr,CFG_STRLVL_2_OFFSET,8190);
 
+				// reset ramp generators
+				reg_val = dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET);
+				dev_write(cfg_ptr,CFG_RESET_GRAL_OFFSET, reg_val & ~8);
+
 				// reset pps_gen, fifo and trigger modules
 				reg_val = dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET);
-				//printf("reg_val : 0x%08d\n",reg_val);
 				dev_write(cfg_ptr,CFG_RESET_GRAL_OFFSET, reg_val & ~1);
-				//printf("written reg_val : 0x%08d\n",reg_val & ~1);
 
 				/* reset data converter and writer */
 				reg_val = dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET);
@@ -344,6 +344,10 @@ int init_system(void)
 									dev_write(cfg_ptr,CFG_RESET_GRAL_OFFSET, reg_val | 4); 
 				//printf("written reg_val : 0x%08hx\n",reg_val | 4);
 				 */
+				// enter normal mode for ramp generators
+				reg_val = dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET);
+				dev_write(cfg_ptr,CFG_RESET_GRAL_OFFSET, reg_val | 8); 
+
 				return 0;
 }
 

@@ -45,10 +45,11 @@
 #define CFG_TEMPERATURE_OFFSET   0x18
 #define CFG_PRESSURE_OFFSET      0x1C
 #define CFG_TIME_OFFSET          0x20
-#define CFG_LATITUDE_OFFSET      0x24
-#define CFG_LONGITUDE_OFFSET     0x28
-#define CFG_ALTITUDE_OFFSET      0x2C
-#define CFG_SATELLITE_OFFSET     0x30
+#define CFG_DATE_OFFSET          0x24
+#define CFG_LATITUDE_OFFSET      0x28
+#define CFG_LONGITUDE_OFFSET     0x2C
+#define CFG_ALTITUDE_OFFSET      0x30
+#define CFG_SATELLITE_OFFSET     0x34
 #define CFG_HV1_OFFSET           0x40
 #define CFG_HV2_OFFSET           0x44
 
@@ -119,11 +120,11 @@
 extern int intc_fd, cfg_fd, sts_fd, xadc_fd, mem_fd;
 extern void *intc_ptr, *cfg_ptr, *sts_ptr, *xadc_ptr, *mem_ptr;
 
-void     dev_write(void *dev_base, uint32_t offset, uint32_t value);
+void     dev_write(void *dev_base, uint32_t offset, int32_t value);
 uint32_t dev_read(void *dev_base, uint32_t offset);
 //int    dev_init(int n_dev);
 int32_t  rd_reg_value(int n_dev, uint32_t reg_off);
-int32_t  wr_reg_value(int n_dev, uint32_t reg_off, uint32_t reg_val);
+int32_t  wr_reg_value(int n_dev, uint32_t reg_off, int32_t reg_val);
 int32_t  rd_cfg_status(void);
 int      intc_init(void);
 int      cfg_init(void);
@@ -131,7 +132,7 @@ int      sts_init(void);
 int      xadc_init(void);
 int      mem_init(void);
 float    get_voltage(uint32_t offset);
-void     set_voltage(uint32_t offset, uint32_t value);
+void     set_voltage(uint32_t offset, int32_t value);
 int      init_system(void);
 int      enable_interrupt(void);
 int      disable_interrupt(void);

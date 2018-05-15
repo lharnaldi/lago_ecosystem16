@@ -32,36 +32,36 @@ end adpll;
 
 architecture rtl of adpll is
 
---constant C_GAIN: std_logic_vector(32-1 downto 0):= std_logic_vector(to_unsigned(2097152, 32)); --"00000000001000000000000000000000"; 8192.00
---constant I_GAIN: std_logic_vector(32-1 downto 0):=std_logic_vector(to_unsigned(32,32));
-constant PADDING_WIDTH : natural := AXIS_TDATA_WIDTH/2 - ADC_DATA_WIDTH;
-
---input registers for loop filter parameters
-signal kp_reg, kp_next : std_logic_vector(32-1 downto 0);
-signal ki_reg, ki_next : std_logic_vector(32-1 downto 0);
-
---PSD realted signals
-signal reset: std_logic := '0';
-signal comp_up_reg, comp_up_next : std_logic := '0';
-signal comp_dn_reg, comp_dn_next : std_logic := '0';
-
---Loop filter related signals
-signal pos_gain_reg, pos_gain_next : std_logic_vector(32-1 downto 0);
-signal neg_gain_reg, neg_gain_next : std_logic_vector(32-1 downto 0);
-signal dds_fbk_reg, dds_fbk_next   : std_logic_vector(32-1 downto 0);
-signal dds_fbk                     : std_logic_vector(32-1 downto 0);
-
---DDS related signals
-signal phase_acc_reg, phase_acc_next: std_logic_vector(50-1 downto 0);
-signal phase_step: std_logic_vector(50-1 downto 0) := (others => '0');
-signal dds_sync  : std_logic;
-
-signal lut_addr  : std_logic_vector(14-1 downto 0);
-signal sine      : std_logic_vector(14-1 downto 0);
-signal cosine    : std_logic_vector(14-1 downto 0);
-
-signal gen_s     : std_logic;
-signal ref_s     : std_logic;
+  --constant C_GAIN: std_logic_vector(32-1 downto 0):= std_logic_vector(to_unsigned(2097152, 32)); --"00000000001000000000000000000000"; 8192.00
+  --constant I_GAIN: std_logic_vector(32-1 downto 0):=std_logic_vector(to_unsigned(32,32));
+  constant PADDING_WIDTH : natural := AXIS_TDATA_WIDTH/2 - ADC_DATA_WIDTH;
+  
+  --input registers for loop filter parameters
+  signal kp_reg, kp_next : std_logic_vector(32-1 downto 0);
+  signal ki_reg, ki_next : std_logic_vector(32-1 downto 0);
+  
+  --PSD realted signals
+  signal reset: std_logic := '0';
+  signal comp_up_reg, comp_up_next : std_logic := '0';
+  signal comp_dn_reg, comp_dn_next : std_logic := '0';
+  
+  --Loop filter related signals
+  signal pos_gain_reg, pos_gain_next : std_logic_vector(32-1 downto 0);
+  signal neg_gain_reg, neg_gain_next : std_logic_vector(32-1 downto 0);
+  signal dds_fbk_reg, dds_fbk_next   : std_logic_vector(32-1 downto 0);
+  signal dds_fbk                     : std_logic_vector(32-1 downto 0);
+  
+  --DDS related signals
+  signal phase_acc_reg, phase_acc_next: std_logic_vector(50-1 downto 0);
+  signal phase_step: std_logic_vector(50-1 downto 0) := (others => '0');
+  signal dds_sync  : std_logic;
+  
+  signal lut_addr  : std_logic_vector(14-1 downto 0);
+  signal sine      : std_logic_vector(14-1 downto 0);
+  signal cosine    : std_logic_vector(14-1 downto 0);
+  
+  signal gen_s     : std_logic;
+  signal ref_s     : std_logic;
 
 begin
 

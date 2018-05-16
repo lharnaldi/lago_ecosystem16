@@ -372,6 +372,8 @@ cell labdpr:user:axis_ram_writer:1.0 writer_0 {
   aresetn reset_2/Dout
 }
 
+group_bd_cells ram_wr [get_bd_cells tlast_gen_0] [get_bd_cells conv_0] [get_bd_cells reset_1] [get_bd_cells writer_0] [get_bd_cells wr_offset] [get_bd_cells nsamples] [get_bd_cells reset_2]
+
 # Create status register
 cell labdpr:user:axi_sts_register:1.0 sts_0 {
   STS_DATA_WIDTH 32

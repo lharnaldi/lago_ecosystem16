@@ -50,6 +50,8 @@
 #define CFG_LONGITUDE_OFFSET     0x2C
 #define CFG_ALTITUDE_OFFSET      0x30
 #define CFG_SATELLITE_OFFSET     0x34
+#define CFG_TR_SCAL_A_OFFSET     0x38
+#define CFG_TR_SCAL_B_OFFSET     0x3C
 #define CFG_HV1_OFFSET           0x40
 #define CFG_HV2_OFFSET           0x44
 

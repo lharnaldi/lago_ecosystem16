@@ -19,7 +19,8 @@ delete_bd_objs [get_bd_ports exp_p_tri_io]
 delete_bd_objs [get_bd_ports exp_n_tri_io]
 
 # Create input port
-create_bd_port -dir I -from 0 -to 0 exp_p_tri_io
+create_bd_port -dir I -from 7 -to 7 exp_n_tri_io
+create_bd_port -dir O -from 7 -to 7 exp_p_tri_io
 
 # Create axi_cfg_register
 cell labdpr:user:axi_cfg_register:1.0 cfg_0 {
@@ -149,6 +150,20 @@ cell xilinx.com:ip:xlslice:1.0 reg_satellite {
   Din cfg_0/cfg_data
 }
 
+# Create xlslice for the trigger scaler a. off=14
+cell xilinx.com:ip:xlslice:1.0 reg_trig_scaler_a {
+  DIN_WIDTH 1024 DIN_FROM 479 DIN_TO 448 DOUT_WIDTH 32
+} {
+  Din cfg_0/cfg_data
+}
+
+# Create xlslice for the trigger scaler b. off=15
+cell xilinx.com:ip:xlslice:1.0 reg_trig_scaler_b {
+  DIN_WIDTH 1024 DIN_FROM 511 DIN_TO 480 DOUT_WIDTH 24
+} {
+  Din cfg_0/cfg_data
+}
+
 # Create xlconstant
 cell xilinx.com:ip:xlconstant:1.1 const_0
 
@@ -186,13 +201,13 @@ cell labdpr:user:pps_gen:1.0 pps_0 {} {
   aclk ps_0/FCLK_CLK0
   aresetn reset_0/Dout
   gpsen_i gpsen/Dout
-  pps_i exp_p_tri_io
+  pps_i exp_n_tri_io
   pps_gps_led_o xlconcat_0/In0
   false_pps_led_o xlconcat_0/In1
 }
 
 # Create lago trigger
-cell labdpr:user:axis_lago_trigger:1.1 trigger_0 {
+cell labdpr:user:axis_lago_trigger:1.2 trigger_0 {
   DATA_ARRAY_LENGTH 32
 } {
   S_AXIS fifo_0/M_AXIS
@@ -212,6 +227,8 @@ cell labdpr:user:axis_lago_trigger:1.1 trigger_0 {
   longitude_i reg_longitude/dout
   altitude_i  reg_altitude/dout 
   satellites_i reg_satellite/dout     
+  scaler_a_i reg_trig_scaler_a/dout
+  scaler_b_i reg_trig_scaler_b/dout
 }
 
 # Create axi_intc
@@ -294,28 +311,28 @@ cell xilinx.com:ip:xlslice:1.0 reset_3 {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice. off=17 
+# Create xlslice. off=16 
 cell xilinx.com:ip:xlslice:1.0 cfg_dac_pwm_0 {
   DIN_WIDTH 1024 DIN_FROM 543 DIN_TO 512 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice.. off=18
+# Create xlslice.. off=17
 cell xilinx.com:ip:xlslice:1.0 cfg_dac_pwm_1 {
   DIN_WIDTH 1024 DIN_FROM 575 DIN_TO 544 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice.. off=19
+# Create xlslice.. off=18
 cell xilinx.com:ip:xlslice:1.0 cfg_dac_pwm_2 {
   DIN_WIDTH 1024 DIN_FROM 607 DIN_TO 576 DOUT_WIDTH 16
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice.. off=20 
+# Create xlslice.. off=19 
 cell xilinx.com:ip:xlslice:1.0 cfg_dac_pwm_3 {
   DIN_WIDTH 1024 DIN_FROM 639 DIN_TO 608 DOUT_WIDTH 16
 } {
@@ -381,7 +398,7 @@ cell labdpr:user:ramp_gen:1.0 gen_3 {
   led_o xlconcat_0/In5
 }
 
-group_bd_cells Fast_ADC [get_bd_cells reg_date] [get_bd_cells tlast_gen_0] [get_bd_cells reset_0] [get_bd_cells subtrig_lvl_a] [get_bd_cells subtrig_lvl_b] [get_bd_cells pps_0] [get_bd_cells pll_0] [get_bd_cells gpsen] [get_bd_cells conv_0] [get_bd_cells reset_1] [get_bd_cells trig_lvl_a] [get_bd_cells const_0] [get_bd_cells const_1] [get_bd_cells trig_lvl_b] [get_bd_cells fifo_0] [get_bd_cells reset_2] [get_bd_cells writer_0] [get_bd_cells nsamples] [get_bd_cells trigger_0] [get_bd_cells adc_0] [get_bd_cells axi_intc_0] [get_bd_cells reg_temp] [get_bd_cells reg_pressure] [get_bd_cells reg_time] [get_bd_cells reg_satellite] [get_bd_cells reg_longitude] [get_bd_cells reg_latitude] [get_bd_cells reg_altitude]
+group_bd_cells Fast_ADC [get_bd_cells reg_trig_scaler_a] [get_bd_cell reg_trig_scaler_b] [get_bd_cells reg_date] [get_bd_cells tlast_gen_0] [get_bd_cells reset_0] [get_bd_cells subtrig_lvl_a] [get_bd_cells subtrig_lvl_b] [get_bd_cells pps_0] [get_bd_cells pll_0] [get_bd_cells gpsen] [get_bd_cells conv_0] [get_bd_cells reset_1] [get_bd_cells trig_lvl_a] [get_bd_cells const_0] [get_bd_cells const_1] [get_bd_cells trig_lvl_b] [get_bd_cells fifo_0] [get_bd_cells reset_2] [get_bd_cells writer_0] [get_bd_cells nsamples] [get_bd_cells trigger_0] [get_bd_cells adc_0] [get_bd_cells axi_intc_0] [get_bd_cells reg_temp] [get_bd_cells reg_pressure] [get_bd_cells reg_time] [get_bd_cells reg_satellite] [get_bd_cells reg_longitude] [get_bd_cells reg_latitude] [get_bd_cells reg_altitude]
 
 group_bd_cells Analog_Output [get_bd_cells cfg_dac_pwm_2] [get_bd_cells cfg_dac_pwm_3] [get_bd_cells gen_0] [get_bd_cells gen_1] [get_bd_cells gen_2] [get_bd_cells gen_3] [get_bd_cells reset_3] [get_bd_cells cfg_dac_pwm_0] [get_bd_cells cfg_dac_pwm_1] [get_bd_cells xlconcat_1]
 

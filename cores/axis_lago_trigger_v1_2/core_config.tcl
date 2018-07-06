@@ -1,4 +1,4 @@
-set display_name {AXI4-Stream LAGO Trigger}
+set display_name {AXI4-Stream LAGO Trigger v1r2}
 
 set core [ipx::current_core]
 

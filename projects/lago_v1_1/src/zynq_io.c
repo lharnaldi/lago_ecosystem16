@@ -319,6 +319,10 @@ int init_system(void)
 				// set number of samples
 				dev_write(cfg_ptr,CFG_NSAMPLES_OFFSET, 1024 * 1024);
 
+				// set default value for trigger scalers a and b
+				dev_write(cfg_ptr,CFG_TR_SCAL_A_OFFSET, 1);
+				dev_write(cfg_ptr,CFG_TR_SCAL_B_OFFSET, 1);
+
 				// enter normal mode for tlast_gen
 				/*        reg_val = dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET);
 				//printf("reg_val : 0x%08x\n",reg_val);

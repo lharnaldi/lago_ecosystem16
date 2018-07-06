@@ -30,6 +30,8 @@ port (
   longitude_i        : in std_logic_vector(24-1 downto 0);
   altitude_i         : in std_logic_vector(24-1 downto 0);
   satellites_i       : in std_logic_vector(24-1 downto 0);
+  scaler_a_i         : in std_logic_vector(32-1 downto 0);
+  scaler_b_i         : in std_logic_vector(32-1 downto 0);
 
   -- Slave side
   s_axis_tready     : out std_logic;
@@ -96,6 +98,11 @@ architecture rtl of axis_lago_trigger is
   signal subtrig_lvl_a, subtrig_lvl_b : std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
   signal adc_dat_a, adc_dat_b         : std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
 
+  --Trigger scaler signals
+  signal scaler_a_cnt_reg, scaler_a_cnt_next : std_logic_vector(32-1 downto 0);
+  signal scaler_b_cnt_reg, scaler_b_cnt_next : std_logic_vector(32-1 downto 0);
+  signal scaler_a_max_tick, scaler_b_max_tick: std_logic;
+
 begin
     
   trig_lvl_a <= ((PADDING_WIDTH-1) downto 0 => trig_lvl_a_i(ADC_DATA_WIDTH-1)) & trig_lvl_a_i(ADC_DATA_WIDTH-1 downto 0);
@@ -121,16 +128,6 @@ begin
     end loop;
   end process;
   --next state logic
---  array_pps_next(METADATA_ARRAY_LENGTH-10)<= x"FFFFFFFF" when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
---  array_pps_next(METADATA_ARRAY_LENGTH-9)<= "11" & "000" & clk_cnt_pps_i when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
---  array_pps_next(METADATA_ARRAY_LENGTH-8)<= "11" & "001" & "00000000000" & ptemperatura when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);
---  array_pps_next(METADATA_ARRAY_LENGTH-7)<= "11" & "010" & "00000000000" & ppresion when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-7);
---  array_pps_next(METADATA_ARRAY_LENGTH-6)<= "11" & "011" & "000" & phora & pminutos & psegundos when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-6);
---  array_pps_next(METADATA_ARRAY_LENGTH-5)<= "11" & "100" & "000" & latitude1_port & latitude2_port & latitude3_port when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
---  array_pps_next(METADATA_ARRAY_LENGTH-4)<= "11" & "100" & "001" & longitude1_port & longitude2_port & latitude4_port when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-4);
---  array_pps_next(METADATA_ARRAY_LENGTH-3)<= "11" & "100" & "010" & ellipsoid1_port & longitude3_port & longitude4_port when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-3);
---  array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" & ellipsoid2_port & ellipsoid3_port & ellipsoid4_port when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
---  array_pps_next(METADATA_ARRAY_LENGTH-1)<= "11" & "100" & "100" & num_track_sat_port & num_vis_sat_port & rsf_port when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
 
   array_pps_next(METADATA_ARRAY_LENGTH-10)<= x"FFFFFFFF"                              when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
   array_pps_next(METADATA_ARRAY_LENGTH-9)<= "11" & "000" & clk_cnt_pps_i              when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
@@ -143,16 +140,6 @@ begin
   array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" &  date_i            when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
   array_pps_next(METADATA_ARRAY_LENGTH-1)<= "11" & "100" & "100" &  satellites_i      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
 
---  array_pps_next(METADATA_ARRAY_LENGTH-10)<= x"FFFFFFFF"                                   when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
---  array_pps_next(METADATA_ARRAY_LENGTH-9)<= "11" & "000" & clk_cnt_pps_i                   when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
---  array_pps_next(METADATA_ARRAY_LENGTH-8)<= "11" & "001" & "00000000000" & trig_lvl_a      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);
---  array_pps_next(METADATA_ARRAY_LENGTH-7)<= "11" & "010" & "00000000000" & trig_lvl_a      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-7);
---  array_pps_next(METADATA_ARRAY_LENGTH-6)<= "11" & "011" & "00000000000" & trig_lvl_a      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-6);
---  array_pps_next(METADATA_ARRAY_LENGTH-5)<= "11" & "100" & "00000000000" & trig_lvl_a      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
---  array_pps_next(METADATA_ARRAY_LENGTH-4)<= "11" & "100" & "001" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-4);
---  array_pps_next(METADATA_ARRAY_LENGTH-3)<= "11" & "100" & "010" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-3);
---  array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
---  array_pps_next(METADATA_ARRAY_LENGTH-1)<= "11" & "100" & "100" & "00000000" & trig_lvl_a when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
 ------------------------------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------------------------------
@@ -180,6 +167,33 @@ begin
     end loop;
   end process;
 
+-----------------------------------------------------------------------------------------------------
+  --trigger scaler
+  process(aclk)
+  begin
+    if (rising_edge(aclk)) then
+    if (aresetn = '0') then
+      scaler_a_cnt_reg  <= (others => '0');
+      scaler_b_cnt_reg  <= (others => '0');
+    else
+      scaler_a_cnt_reg  <= scaler_a_cnt_next;
+      scaler_b_cnt_reg  <= scaler_b_cnt_next;
+    end if;
+    end if;
+  end process;
+
+  --next state logic
+  scaler_a_cnt_next <= std_logic_vector(unsigned(scaler_a_cnt_reg) + 1) when tr1_s = '1' else
+                       (others => '0') when unsigned(scaler_a_cnt_reg) = unsigned(scaler_a_i) else
+                       scaler_a_cnt_reg;
+
+  scaler_a_max_tick <= '1' when unsigned(scaler_a_cnt_reg) = unsigned(scaler_a_i) else '0';
+
+  scaler_b_cnt_next <= std_logic_vector(unsigned(scaler_b_cnt_reg) + 1) when tr2_s = '1' else
+                       (others => '0') when unsigned(scaler_b_cnt_reg) = unsigned(scaler_b_i) else
+                       scaler_b_cnt_reg;
+
+  scaler_b_max_tick <= '1' when unsigned(scaler_b_cnt_reg) = unsigned(scaler_b_i) else '0';
 -----------------------------------------------------------------------------------------------------
 
 -----------------------------------------------------------------------------------------------------
@@ -213,7 +227,8 @@ begin
                       (signed(adc_dat_b_reg(1)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0)))) else
             '0';
 
-  tr_s <= '1' when  ((tr1_s = '1') or (tr2_s = '1')) else '0';
+  --tr_s <= '1' when  ((tr1_s = '1') or (tr2_s = '1')) else '0';
+  tr_s <= '1' when  ((scaler_a_max_tick = '1') or (scaler_b_max_tick = '1')) else '0';
 
   tr_status_next <=   "010" & tr2_s & tr1_s & clk_cnt_pps_i when (tr_s = '1') else
                       tr_status_reg;

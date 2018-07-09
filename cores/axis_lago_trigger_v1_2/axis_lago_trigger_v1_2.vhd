@@ -9,7 +9,7 @@ entity axis_lago_trigger is
   -- data arrays bit numbers
   ADC_DATA_WIDTH        : natural := 14;    
   DATA_ARRAY_LENGTH     : natural := 20;
-  METADATA_ARRAY_LENGTH : natural := 10;
+  METADATA_ARRAY_LENGTH : natural := 12;
   SUBTRIG_ARRAY_LENGTH  : natural := 3
 );
 port (
@@ -103,6 +103,10 @@ architecture rtl of axis_lago_trigger is
   signal scaler_b_cnt_reg, scaler_b_cnt_next : std_logic_vector(32-1 downto 0);
   signal scaler_a_max_tick, scaler_b_max_tick: std_logic;
 
+  --Trigger scaler signals
+  signal rate_a_cnt_reg, rate_a_cnt_next : std_logic_vector(24-1 downto 0);
+  signal rate_b_cnt_reg, rate_b_cnt_next : std_logic_vector(24-1 downto 0);
+
 begin
     
   trig_lvl_a <= ((PADDING_WIDTH-1) downto 0 => trig_lvl_a_i(ADC_DATA_WIDTH-1)) & trig_lvl_a_i(ADC_DATA_WIDTH-1 downto 0);
@@ -129,6 +133,8 @@ begin
   end process;
   --next state logic
 
+  array_pps_next(METADATA_ARRAY_LENGTH-12)<= "11" & "100" & "110" & rate_b_cnt_reg    when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-12);
+  array_pps_next(METADATA_ARRAY_LENGTH-11)<= "11" & "100" & "101" & rate_a_cnt_reg    when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-11);
   array_pps_next(METADATA_ARRAY_LENGTH-10)<= x"FFFFFFFF"                              when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
   array_pps_next(METADATA_ARRAY_LENGTH-9)<= "11" & "000" & clk_cnt_pps_i              when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
   array_pps_next(METADATA_ARRAY_LENGTH-8)<= "11" & "001" & "000" &  temp_i            when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);
@@ -167,6 +173,30 @@ begin
     end loop;
   end process;
 
+-----------------------------------------------------------------------------------------------------
+  --rate counter
+  process(aclk)
+  begin
+    if (rising_edge(aclk)) then
+    if (aresetn = '0') then
+      rate_a_cnt_reg  <= (others => '0');
+      rate_b_cnt_reg  <= (others => '0');
+    else
+      rate_a_cnt_reg  <= rate_a_cnt_next;
+      rate_b_cnt_reg  <= rate_b_cnt_next;
+    end if;
+    end if;
+  end process;
+
+  --next state logic
+  rate_a_cnt_next <= std_logic_vector(unsigned(rate_a_cnt_reg) + 1) when tr1_s = '1' else
+                     (others => '0') when pps_i = '1' else
+                     rate_a_cnt_reg;
+  
+  rate_b_cnt_next <= std_logic_vector(unsigned(rate_b_cnt_reg) + 1) when tr2_s = '1' else
+                     (others => '0') when pps_i = '1' else
+                     rate_b_cnt_reg;
+-----------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------
   --trigger scaler
   process(aclk)

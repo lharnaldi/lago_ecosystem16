@@ -234,8 +234,8 @@ cell labdpr:user:axis_lago_trigger:1.2 trigger_0 {
 # Create axi_intc
 cell xilinx.com:ip:axi_intc:4.1 axi_intc_0 {
   C_IRQ_CONNECTION 1
-  C_S_AXI_ACLK_FREQ_MHZ 143
-  C_PROCESSOR_CLK_FREQ_MHZ 143
+  C_S_AXI_ACLK_FREQ_MHZ 125
+  C_PROCESSOR_CLK_FREQ_MHZ 125
 } {
   irq ps_0/IRQ_F2P
   intr pps_0/int_o

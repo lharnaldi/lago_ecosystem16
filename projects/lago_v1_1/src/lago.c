@@ -310,7 +310,7 @@ int main(int argc, char *argv[])
 												printf("\t-v\t\t\t\tShow DAQ version\n");
 
 												printf("\n\tRegisters:\n");
-												printf("\tt1, t2\t\t\tSpecify triggers 1 and 2\n");
+												printf("\tt1, t2\t\t\t\tSpecify triggers 1 and 2\n");
 												//printf("\tst1, st2, st3\t\t\tSpecify subtriggers 1, 2 and
 												//3\n");
 												printf("\thv1, hv2\t\t\tSpecify high voltages ...\n");
@@ -626,9 +626,9 @@ int main(int argc, char *argv[])
 								//fprintf(fhout,"# #                      it is a subtrigger with the pulse maximum bin if only one such line is found\n");
 								//fprintf(fhout,"# #                      it is a trigger with the full pulse if 16 lines are found\n");
 								fprintf(fhout,"# #   # t <C> <V>      : end of a trigger\n");
-								fprintf(fhout,"# #                      gives the channel trigger (<C>: 3 bit mask) and 40MHZ clock count (<V>) of the trigger time\n");
+								fprintf(fhout,"# #                      gives the channel trigger (<C>: 3 bit mask) and 125 MHZ clock count (<V>) of the trigger time\n");
 								fprintf(fhout,"# #   # c <C>          : internal trigger counter\n");
-								fprintf(fhout,"# #   # x f <V>        : 40 MHz frequency\n");
+								fprintf(fhout,"# #   # x f <V>        : 125 MHz frequency\n");
 								fprintf(fhout,"# #   # x r C1-DD <V>  : raw temperature and pressure sensor value\n");
 								fprintf(fhout,"# #   # x r D1 <V>     : raw temperature/pressure value\n");
 								fprintf(fhout,"# #   # x r D2 <V>     : raw temperature/pressure value\n");
@@ -822,21 +822,17 @@ int main(int argc, char *argv[])
 																																				fprintf(fhout,"# x f         %d \n", wo&0x03FFFFFF);//PPS counter
 																																				break;
 																																case 0x19:
-																																				//FIXME: here put
-																																				//temperature
-																																				//value
+																																				//FIXME: here put temperature value
 																																				fprintf(fhout,"# x r D2         %lf \n", (float)((int32_t)wo&0x00FFFFFF)/65536.0);//n = (float)((int32_t)reg_val)/65536.;
 																																				//ptD2=wo&0x0000FFFF;
 																																				break;
 																																case 0x1A:
-																																				//FIXME: here
-																																				//put the
-																																				//pressure value
+																																				//FIXME: here put the pressure value
 																																				fprintf(fhout,"# x r D1         %lf \n", (float)((int32_t)wo&0x00FFFFFF)/65536.0);
 																																				//ptD1=wo&0x0000FFFF;
 																																				break;
 																																case 0x1B:
-																																				if (falseGPS) {
+																																				if(falseGPS) {
 																																								fileDate->tm_sec++;
 																																								if (fileDate->tm_sec==60 && fileDate->tm_min==59) { // new hour
 																																												if (!fToStdout)
@@ -911,6 +907,12 @@ int main(int argc, char *argv[])
 																																								default:
 																																												break;
 																																				}
+																																				break;
+																																case 0x1D: //rate ch1 counter
+																																				fprintf(fhout,"Pulse rate CH1: %d \n", wo>>24);
+																																				break;
+																																case 0x1E: //rate ch2 counter
+																																				fprintf(fhout,"Pulse rate CH2: %d \n", wo>>24);
 																																				break;
 																																default:
 																																				fprintf(fhout,"# E @@@\n");

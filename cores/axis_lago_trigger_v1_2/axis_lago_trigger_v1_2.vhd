@@ -133,18 +133,18 @@ begin
   end process;
   --next state logic
 
-  array_pps_next(METADATA_ARRAY_LENGTH-12)<= "11" & "100" & "110" & rate_b_cnt_reg    when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-12);
+  array_pps_next(METADATA_ARRAY_LENGTH-1) <= x"FFFFFFFF"                              when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
+  array_pps_next(METADATA_ARRAY_LENGTH-2) <= "11" & "000" & clk_cnt_pps_i             when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
+  array_pps_next(METADATA_ARRAY_LENGTH-3) <= "11" & "001" & "000" & temp_i            when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-3);
+  array_pps_next(METADATA_ARRAY_LENGTH-4) <= "11" & "010" & "000" & pressure_i        when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-4);
+  array_pps_next(METADATA_ARRAY_LENGTH-5) <= "11" & "011" & "000" & time_i            when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
+  array_pps_next(METADATA_ARRAY_LENGTH-6) <= "11" & "100" & "000" & latitude_i        when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-6);
+  array_pps_next(METADATA_ARRAY_LENGTH-7) <= "11" & "100" & "001" & longitude_i       when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-7);
+  array_pps_next(METADATA_ARRAY_LENGTH-8) <= "11" & "100" & "010" & altitude_i        when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);
+  array_pps_next(METADATA_ARRAY_LENGTH-9) <= "11" & "100" & "011" & date_i            when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
+  array_pps_next(METADATA_ARRAY_LENGTH-10)<= "11" & "100" & "100" & satellites_i      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
   array_pps_next(METADATA_ARRAY_LENGTH-11)<= "11" & "100" & "101" & rate_a_cnt_reg    when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-11);
-  array_pps_next(METADATA_ARRAY_LENGTH-10)<= x"FFFFFFFF"                              when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-10);
-  array_pps_next(METADATA_ARRAY_LENGTH-9)<= "11" & "000" & clk_cnt_pps_i              when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-9);
-  array_pps_next(METADATA_ARRAY_LENGTH-8)<= "11" & "001" & "000" &  temp_i            when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);
-  array_pps_next(METADATA_ARRAY_LENGTH-7)<= "11" & "010" & "000" &  pressure_i        when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-7);
-  array_pps_next(METADATA_ARRAY_LENGTH-6)<= "11" & "011" & "000" &  time_i            when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-6);
-  array_pps_next(METADATA_ARRAY_LENGTH-5)<= "11" & "100" & "000" &  latitude_i        when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
-  array_pps_next(METADATA_ARRAY_LENGTH-4)<= "11" & "100" & "001" &  longitude_i       when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-4);
-  array_pps_next(METADATA_ARRAY_LENGTH-3)<= "11" & "100" & "010" &  altitude_i        when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-3);
-  array_pps_next(METADATA_ARRAY_LENGTH-2)<= "11" & "100" & "011" &  date_i            when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
-  array_pps_next(METADATA_ARRAY_LENGTH-1)<= "11" & "100" & "100" &  satellites_i      when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-1);
+  array_pps_next(METADATA_ARRAY_LENGTH-12)<= "11" & "100" & "110" & rate_b_cnt_reg    when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-12);
 
 ------------------------------------------------------------------------------------------------------
 

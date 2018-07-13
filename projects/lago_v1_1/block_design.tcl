@@ -21,6 +21,7 @@ delete_bd_objs [get_bd_ports exp_n_tri_io]
 # Create input port
 create_bd_port -dir I -from 7 -to 7 exp_n_tri_io
 create_bd_port -dir O -from 7 -to 7 exp_p_tri_io
+create_bd_port -dir I -from 0 -to 0 ext_resetn
 
 # Create axi_cfg_register
 cell labdpr:user:axi_cfg_register:1.0 cfg_0 {
@@ -197,13 +198,21 @@ cell xilinx.com:ip:xlconcat:2.1 xlconcat_0 {
 }
 
 # Create pps generator
-cell labdpr:user:pps_gen:1.0 pps_0 {} {
+cell labdpr:user:pps_gen:1.1 pps_0 {} {
   aclk ps_0/FCLK_CLK0
   aresetn reset_0/Dout
   gpsen_i gpsen/Dout
   pps_i exp_n_tri_io
+  pps_sig_o exp_p_tri_io
   pps_gps_led_o xlconcat_0/In0
   false_pps_led_o xlconcat_0/In1
+}
+
+# Create proc_sys_reset
+cell xilinx.com:ip:proc_sys_reset:5.0 rst_1 {} {
+  slowest_sync_clk ps_0/FCLK_CLK0
+  ext_reset_in ext_resetn
+  peripheral_aresetn pps_0/resetn_i
 }
 
 # Create lago trigger

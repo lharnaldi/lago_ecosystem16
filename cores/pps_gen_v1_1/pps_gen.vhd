@@ -22,6 +22,7 @@ port (
   clk_cnt_pps_o      : out std_logic_vector(27-1 downto 0);
   pps_gps_led_o      : out std_logic;
   false_pps_led_o    : out std_logic;
+  pps_sig_o          : out std_logic;
   int_o              : out std_logic
 );
 end pps_gen;
@@ -43,6 +44,8 @@ architecture rtl of pps_gen is
   signal rst_sig           : std_logic;
 
 begin
+
+  pps_sig_o <= pps_ibuf or false_pps;
 
   rst_sig <= not aresetn or not resetn_i;
     

@@ -189,11 +189,11 @@ begin
   end process;
 
   --next state logic
-  rate_a_cnt_next <= std_logic_vector(unsigned(rate_a_cnt_reg) + 1) when tr1_s = '1' else
+  rate_a_cnt_next <= std_logic_vector(unsigned(rate_a_cnt_reg) + 1) when scaler_a_max_tick = '1' else
                      (others => '0') when pps_i = '1' else
                      rate_a_cnt_reg;
   
-  rate_b_cnt_next <= std_logic_vector(unsigned(rate_b_cnt_reg) + 1) when tr2_s = '1' else
+  rate_b_cnt_next <= std_logic_vector(unsigned(rate_b_cnt_reg) + 1) when scaler_b_max_tick = '1' else
                      (others => '0') when pps_i = '1' else
                      rate_b_cnt_reg;
 -----------------------------------------------------------------------------------------------------

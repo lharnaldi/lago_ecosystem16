@@ -97,12 +97,18 @@ int32_t rd_cfg_status(void)
 
 				printf("#Trigger Level Ch1 = %d\n", dev_read(cfg_ptr, CFG_TRLVL_1_OFFSET));
 				printf("#Trigger Level Ch2 = %d\n", dev_read(cfg_ptr, CFG_TRLVL_2_OFFSET));
-				//printf("#Subtrigger Ch1    = %d\n", dev_read(cfg_ptr,
-				//CFG_STRLVL_1_OFFSET));
-				//printf("#Subtrigger Ch2    = %d\n", dev_read(cfg_ptr,
-				//CFG_STRLVL_2_OFFSET));
+				//printf("#Subtrigger Ch1    = %d\n", dev_read(cfg_ptr, CFG_STRLVL_1_OFFSET));
+				//printf("#Subtrigger Ch2    = %d\n", dev_read(cfg_ptr, CFG_STRLVL_2_OFFSET));
 				printf("#High Voltage 1    = %d\n", dev_read(cfg_ptr, CFG_HV1_OFFSET));
 				printf("#High Voltage 2    = %d\n", dev_read(cfg_ptr, CFG_HV2_OFFSET));
+				printf("#Trigger Scaler 1  = %d\n", dev_read(cfg_ptr, CFG_TR_SCAL_A_OFFSET));
+				printf("#Trigger Scaler 2  = %d\n", dev_read(cfg_ptr, CFG_TR_SCAL_B_OFFSET));
+				if (((dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET)>>5) & 0x1) == 0) //Slave
+				{
+								printf("#Working mode is SLAVE\n");
+				}else{
+								printf("#Working mode is MASTER\n");
+				}
 				printf("\n");
 				printf("Status from registers complete!\n");
 				return 0;
@@ -300,6 +306,10 @@ int init_system(void)
 				// set subtrigger_lvl_2
 				dev_write(cfg_ptr,CFG_STRLVL_2_OFFSET,8190);
 
+				// set hv1 and hv2 to zero
+				dev_write(cfg_ptr,CFG_HV1_OFFSET,0);
+				dev_write(cfg_ptr,CFG_HV2_OFFSET,0);
+
 				// reset ramp generators
 				reg_val = dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET);
 				dev_write(cfg_ptr,CFG_RESET_GRAL_OFFSET, reg_val & ~8);
@@ -341,6 +351,7 @@ int init_system(void)
 				//printf("written reg_val : 0x%08x\n",reg_val | 16);
 				// disable
 				//dev_write(cfg_ptr,CFG_RESET_GRAL_OFFSET, reg_val & ~16);
+				//dev_write(cfg_ptr,CFG_RESET_GRAL_OFFSET, reg_val & ~FGPS_EN_MASK);
 				//printf("written reg_val : 0x%08x\n",reg_val & ~16);
 
 				/*        // enter normal mode for data converter and writer
@@ -351,6 +362,8 @@ int init_system(void)
 				// enter normal mode for ramp generators
 				reg_val = dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET);
 				dev_write(cfg_ptr,CFG_RESET_GRAL_OFFSET, reg_val | 8); 
+				// enter in MASTER mode (default)
+				dev_write(cfg_ptr,CFG_RESET_GRAL_OFFSET, reg_val | 0x20);
 
 				return 0;
 }

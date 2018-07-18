@@ -103,6 +103,11 @@ int32_t rd_cfg_status(void)
 				printf("#High Voltage 2    = %d\n", dev_read(cfg_ptr, CFG_HV2_OFFSET));
 				printf("#Trigger Scaler 1  = %d\n", dev_read(cfg_ptr, CFG_TR_SCAL_A_OFFSET));
 				printf("#Trigger Scaler 2  = %d\n", dev_read(cfg_ptr, CFG_TR_SCAL_B_OFFSET));
+				if (((dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET)>>4) & 0x1) == 1) { // No GPS is present
+								printf("#No GPS device is present or enabled\n");
+				}else{
+								printf("#Using GPS data\n");
+				}
 				if (((dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET)>>5) & 0x1) == 0) //Slave
 				{
 								printf("#Working mode is SLAVE\n");

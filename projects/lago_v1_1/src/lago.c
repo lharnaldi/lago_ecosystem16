@@ -72,17 +72,19 @@ long int mtd_dp = 0, mtd_cdp = 0, mtd_pulse_cnt = 0, mtd_pulse_pnt = 0;
 // hash table
 // for future implementations. For now, we just dump the lago-configs file
 //vector <string> configs_lines;
+int position;
+
 
 int main(int argc, char *argv[])
 {
-				int position;
+				//int position;
 				int rc;
 				//int i, p=0,a,b=40000;
 				//uint32_t val;
 
 				pthread_t t1;
 
-				//Check the pased parameters
+				//Check the arguments
 				if (!parse_param(argc, argv)) {
 								show_usage(argv[0]);
 								return 1;
@@ -97,12 +99,13 @@ int main(int argc, char *argv[])
 
 				//Check if it is the first time we access the PL
 				//This is for initial configuration
+        //default is MASTER mode, using false PPS
 				if (dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET) == 0) //first time access
 				{
 								printf("Initializing registers...\n");
 								init_system();
 				}
-				//FIXME: we must configure GPS first (false or actual)
+
 				//Ckeck if we should use GPS data or PC data
 				if (((dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET)>>4) & 0x1) == 0) //ok, we should use GPS data
 				{
@@ -135,7 +138,7 @@ int main(int argc, char *argv[])
 				}
 				else if (fGetGPS) { 
 								if (((dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET)>>4) & 0x1) == 1) { // No GPS is present
-												printf("No GPS device is present!!!\n");
+												printf("No GPS device is present or enabled!!!\n");
 								}
 								else{
 												gps_print_data();     // Print GPS data to stdout 
@@ -158,10 +161,12 @@ printf("Initializing registers...\n");
 								reg_val = dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET);
 								dev_write(cfg_ptr,CFG_RESET_GRAL_OFFSET, reg_val | 4);
 
+//FIXME: here we should enable interrupts 
 								while(!interrupted){
 												// alarm(2);   // setting 1 sec timeout
 												// read writer position 
 												position = dev_read(sts_ptr, STS_STATUS_OFFSET); 
+wait_for_interrupt(intc_fd, intc_ptr);
 												read_buffer(position);
 												// alarm(0);   // cancelling 1 sec timeout
 								}
@@ -227,6 +232,9 @@ int wait_for_interrupt(int fd_int, void *dev_ptr)
 												if ((value & 0x00000001) != 0) {
 																dev_write(dev_ptr, XIL_AXI_INTC_IAR_OFFSET, 1);
 																printf("PPS pulse interrupt #%u!\n", info);
+// read writer position 
+                        position = dev_read(sts_ptr, STS_STATUS_OFFSET);
+
 												}
 								} else {
 												perror("poll()");
@@ -243,7 +251,7 @@ void *thread_isr(void *p)
 				int32_t g_tim, g_dat, g_lat, g_lon, g_alt, g_sat;
 				//loc_t gps_data;
 
-				//initialize GPS connectiion
+				//initialize GPS connection
 				gps_init();
 
 				while(1)

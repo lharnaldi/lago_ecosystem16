@@ -82,7 +82,8 @@ int main(int argc, char *argv[])
 				//int i, p=0,a,b=40000;
 				//uint32_t val;
 
-				pthread_t t1;
+				pthread_t not_gps;
+				pthread_t actual_gps;
 
 				//Check the arguments
 				if (!parse_param(argc, argv)) {
@@ -99,17 +100,13 @@ int main(int argc, char *argv[])
 
 				//Check if it is the first time we access the PL
 				//This is for initial configuration
-        //default is MASTER mode, using false PPS
+				//default is MASTER mode, using false PPS
 				if (dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET) == 0) //first time access
 				{
 								printf("Initializing registers...\n");
 								init_system();
-				}
-
-				//Ckeck if we should use GPS data or PC data
-				if (((dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET)>>4) & 0x1) == 0) //ok, we should use GPS data
-				{
-								rc = pthread_create(&t1,NULL,thread_isr,NULL);
+//FIXME: here i should initialise my thread for working with false PPS
+								rc = pthread_create(&not_gps,NULL,thread_isr_not_gps,NULL);
 								if (rc != EXIT_SUCCESS) {
 												perror("pthread_create :: error \n");
 												exit(EXIT_FAILURE);
@@ -117,6 +114,18 @@ int main(int argc, char *argv[])
 
 								enable_interrupt();
 				}
+
+				//Ckeck if we should use GPS data or PC data
+/*				if (((dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET)>>4) & 0x1) == 0) //ok, we should use GPS data
+				{
+								rc = pthread_create(&actual_gps,NULL,thread_isr,NULL);
+								if (rc != EXIT_SUCCESS) {
+												perror("pthread_create :: error \n");
+												exit(EXIT_FAILURE);
+								}
+
+								enable_interrupt();
+				}*/
 
 				signal(SIGINT, signal_handler);
 
@@ -145,8 +154,8 @@ int main(int argc, char *argv[])
 								}		
 				}
 				else if (fInitSystem) {
-printf("Initializing registers...\n");
-                init_system();
+								printf("Initializing registers...\n");
+								init_system();
 				}
 				else if (fToFile || fToStdout) {
 
@@ -161,12 +170,12 @@ printf("Initializing registers...\n");
 								reg_val = dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET);
 								dev_write(cfg_ptr,CFG_RESET_GRAL_OFFSET, reg_val | 4);
 
-//FIXME: here we should enable interrupts 
+								//FIXME: here we should enable interrupts 
 								while(!interrupted){
 												// alarm(2);   // setting 1 sec timeout
 												// read writer position 
-												position = dev_read(sts_ptr, STS_STATUS_OFFSET); 
-wait_for_interrupt(intc_fd, intc_ptr);
+												//position = dev_read(sts_ptr, STS_STATUS_OFFSET); 
+												wait_for_interrupt(intc_fd, intc_ptr);
 												read_buffer(position);
 												// alarm(0);   // cancelling 1 sec timeout
 								}
@@ -232,8 +241,8 @@ int wait_for_interrupt(int fd_int, void *dev_ptr)
 												if ((value & 0x00000001) != 0) {
 																dev_write(dev_ptr, XIL_AXI_INTC_IAR_OFFSET, 1);
 																printf("PPS pulse interrupt #%u!\n", info);
-// read writer position 
-                        position = dev_read(sts_ptr, STS_STATUS_OFFSET);
+																// read writer position 
+																position = dev_read(sts_ptr, STS_STATUS_OFFSET);
 
 												}
 								} else {
@@ -279,6 +288,33 @@ void *thread_isr(void *p)
 								}
 }
 
+void *thread_isr_not_gps(void *p) 
+{
+				int32_t g_tim, g_dat, g_lat, g_lon, g_alt, g_sat;
+
+				while(1)
+								if (wait_for_interrupt(intc_fd, intc_ptr)){
+												//write GPS data into registers
+												//FIXME: see how and where to write pressure and temperature data
+												// convert float to int32_t to write to FPGA
+												/*g_tim = (int32_t)(g_data.times); 
+												g_dat = (int32_t)(g_data.date); 
+												g_lat = (int32_t)(g_data.latitude * 65536);
+												g_lon = (int32_t)(g_data.longitude * 65536);
+												g_alt = (int32_t)(g_data.altitude * 65536);
+												g_sat = (int32_t)(g_data.satellites); 
+
+												dev_write(cfg_ptr,CFG_TIME_OFFSET, g_tim);
+												dev_write(cfg_ptr,CFG_DATE_OFFSET, g_dat);
+												dev_write(cfg_ptr,CFG_LATITUDE_OFFSET, g_lat);
+												dev_write(cfg_ptr,CFG_LONGITUDE_OFFSET, g_lon);
+												dev_write(cfg_ptr,CFG_ALTITUDE_OFFSET, g_alt);
+												dev_write(cfg_ptr,CFG_SATELLITE_OFFSET, g_sat);
+*/
+												//printf("%lf %lf\n", gps_data.latitude, gps_data.longitude);
+								}
+}
+
 void show_usage(char *progname) 
 {
 				if (fshowversion) {
@@ -311,6 +347,7 @@ void show_usage(char *progname)
 								//printf("\tst1, st2, st3\t\t\tSpecify subtriggers 1, 2 and
 								//3\n");
 								printf("\thv1, hv2\t\t\tSpecify high voltages ...\n");
+								printf("\tov1, ov2, ov3, ov4\t\t\tSpecify output voltages ...\n");
 
 								printf("\n\tOptions:\n");
 								printf("\t-f <filename>\t\t\tSpecify file name\n");
@@ -458,6 +495,19 @@ int parse_param(int argc, char *argv[])
 								else if(strcmp(charReg, "hv2") == 0) {
 												reg_off = CFG_HV2_OFFSET;
 								} 
+								// Registers for output voltages
+								else if(strcmp(charReg, "ov1") == 0) {
+												reg_off = CFG_HV1_OFFSET;
+								} 
+								else if(strcmp(charReg, "ov2") == 0) {
+												reg_off = CFG_HV2_OFFSET;
+								} 
+								else if(strcmp(charReg, "ov3") == 0) {
+												reg_off = CFG_HV3_OFFSET;
+								} 
+								else if(strcmp(charReg, "ov4") == 0) {
+												reg_off = CFG_HV4_OFFSET;
+								} 
 								// Registers for scalers
 								else if(strcmp(charReg, "sc1") == 0) {
 												reg_off = CFG_TR_SCAL_A_OFFSET;
@@ -472,7 +522,7 @@ int parse_param(int argc, char *argv[])
 								//charCount[0] = '4';
 								//fCount = 1;
 								StrcpyS(charRegValue, 16, argv[3]);
-								if((strncmp(charReg, "hv",2) == 0)) {
+								if((strncmp(charReg, "hv", 2) == 0) || (strncmp(charReg, "ov", 2) == 0)) {
 												if (atoi(charRegValue)>2500) {
 																printf ("Error: maximum voltage is 2500 mV\n");
 																exit(1);
@@ -887,14 +937,14 @@ int read_buffer(int pos)
 																																//				r[i] = 0;
 																																//}
 																																break;
-//FIXME: see if can add the FPGA interface in this stage
+																																//FIXME: see if can add the FPGA interface in this stage
 																												case 0x1C: // Longitude, latitude, defined by other bits
-																															//	if (wo & 0x800000){ 
-																															//					v_temp = (wo|0xFF000000);
-																															//	}else{ 
-																															//					v_temp = (wo&0xEFFFFF);
-																															//	}
-																													
+																																//	if (wo & 0x800000){ 
+																																//					v_temp = (wo|0xFF000000);
+																																//	}else{ 
+																																//					v_temp = (wo&0xEFFFFF);
+																																//	}
+
 																																switch(((wo)>>24) & 0x7) {
 																																				case 0:
 																																								gps_lat=((int32_t)(wo&0xFFFFFF)<<8>>8)/65536.0;

@@ -52,8 +52,10 @@
 #define CFG_SATELLITE_OFFSET     0x34
 #define CFG_TR_SCAL_A_OFFSET     0x38
 #define CFG_TR_SCAL_B_OFFSET     0x3C
-#define CFG_HV1_OFFSET           0x48
-#define CFG_HV2_OFFSET           0x4C
+#define CFG_HV1_OFFSET           0x48 //DAC_PWM2
+#define CFG_HV2_OFFSET           0x4C //DAC_PWM3
+#define CFG_HV3_OFFSET           0x40 //DAC_PWM0
+#define CFG_HV4_OFFSET           0x44 //DAC_PWM1
 
 //CFG Slow DAC
 #define CFG_DAC_PWM0_OFFSET 0x40

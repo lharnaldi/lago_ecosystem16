@@ -246,13 +246,27 @@ begin
 
   -- The trigger is at  bin 4 because we loose a clock pulse in the state machine
   -- next state logic
-  tr1_s <=  '1' when ((adc_dat_a_reg(3)(adc_dat_a_reg(3)'left) = trig_lvl_a(trig_lvl_a'left)) and 
-                      (signed(adc_dat_a_reg(3)(AXIS_TDATA_WIDTH/2-2 downto 0)) >= signed(trig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+  tr1_s <=  '1' when ((adc_dat_a_reg(10)(adc_dat_a_reg(10)'left) = trig_lvl_a(trig_lvl_a'left)) and 
+                      (signed(adc_dat_a_reg(10)(AXIS_TDATA_WIDTH/2-2 downto 0)) >= signed(trig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (signed(adc_dat_a_reg(9)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (signed(adc_dat_a_reg(8)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (signed(adc_dat_a_reg(7)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (signed(adc_dat_a_reg(6)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (signed(adc_dat_a_reg(5)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (signed(adc_dat_a_reg(4)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (signed(adc_dat_a_reg(3)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0))) and
                       (signed(adc_dat_a_reg(2)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0))) and
                       (signed(adc_dat_a_reg(1)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_a(AXIS_TDATA_WIDTH/2-2 downto 0)))) else
             '0';
-  tr2_s <=  '1' when ((adc_dat_b_reg(3)(adc_dat_b_reg(3)'left) = trig_lvl_b(trig_lvl_b'left)) and 
-                      (signed(adc_dat_b_reg(3)(AXIS_TDATA_WIDTH/2-2 downto 0)) >= signed(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+  tr2_s <=  '1' when ((adc_dat_b_reg(10)(adc_dat_b_reg(10)'left) = trig_lvl_b(trig_lvl_b'left)) and 
+                      (signed(adc_dat_b_reg(10)(AXIS_TDATA_WIDTH/2-2 downto 0)) >= signed(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (signed(adc_dat_b_reg(9)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (signed(adc_dat_b_reg(8)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (signed(adc_dat_b_reg(7)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (signed(adc_dat_b_reg(6)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (signed(adc_dat_b_reg(5)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (signed(adc_dat_b_reg(4)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0))) and
+                      (signed(adc_dat_b_reg(3)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0))) and
                       (signed(adc_dat_b_reg(2)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0))) and
                       (signed(adc_dat_b_reg(1)(AXIS_TDATA_WIDTH/2-2 downto 0)) < signed(trig_lvl_b(AXIS_TDATA_WIDTH/2-2 downto 0)))) else
             '0';

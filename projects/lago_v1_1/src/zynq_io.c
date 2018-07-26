@@ -94,13 +94,14 @@ int32_t wr_reg_value(int n_dev, uint32_t reg_off, int32_t reg_val)
 
 int32_t rd_cfg_status(void)
 {
+				float a = 0.0382061, b = 4.11435;  // FIXME hardcoded here and below at setvoltage
 
 				printf("#Trigger Level Ch1 = %d\n", dev_read(cfg_ptr, CFG_TRLVL_1_OFFSET));
 				printf("#Trigger Level Ch2 = %d\n", dev_read(cfg_ptr, CFG_TRLVL_2_OFFSET));
 				//printf("#Subtrigger Ch1    = %d\n", dev_read(cfg_ptr, CFG_STRLVL_1_OFFSET));
 				//printf("#Subtrigger Ch2    = %d\n", dev_read(cfg_ptr, CFG_STRLVL_2_OFFSET));
-				printf("#High Voltage 1    = %d\n", dev_read(cfg_ptr, CFG_HV1_OFFSET));
-				printf("#High Voltage 2    = %d\n", dev_read(cfg_ptr, CFG_HV2_OFFSET));
+				printf("#High Voltage 1    = %d (%.1f V)\n", dev_read(cfg_ptr, CFG_HV1_OFFSET),a*dev_read(cfg_ptr, CFG_HV1_OFFSET)+b);
+				printf("#High Voltage 2    = %d (%.1f V)\n", dev_read(cfg_ptr, CFG_HV2_OFFSET),a*dev_read(cfg_ptr, CFG_HV2_OFFSET)+b);
 				printf("#Trigger Scaler 1  = %d\n", dev_read(cfg_ptr, CFG_TR_SCAL_A_OFFSET));
 				printf("#Trigger Scaler 2  = %d\n", dev_read(cfg_ptr, CFG_TR_SCAL_B_OFFSET));
 				if (((dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET)>>4) & 0x1) == 1) { // No GPS is present
@@ -293,6 +294,13 @@ void set_voltage(uint32_t offset, int32_t value)
 				printf("The DAC value is: %d DACs\n", dac_val);
 }
 
+float get_temp_AD592(uint32_t offset)
+{
+				float value;
+				value = get_voltage(offset);
+				return ((value*1000)-273.15);
+}       
+
 //System initialization
 int init_system(void)
 {
@@ -368,6 +376,7 @@ int init_system(void)
 				reg_val = dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET);
 				dev_write(cfg_ptr,CFG_RESET_GRAL_OFFSET, reg_val | 8); 
 				// enter in MASTER mode (default)
+				reg_val = dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET);
 				dev_write(cfg_ptr,CFG_RESET_GRAL_OFFSET, reg_val | 0x20);
 
 				return 0;

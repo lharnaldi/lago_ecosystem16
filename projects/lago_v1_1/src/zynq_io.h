@@ -52,8 +52,8 @@
 #define CFG_SATELLITE_OFFSET     0x34
 #define CFG_TR_SCAL_A_OFFSET     0x38
 #define CFG_TR_SCAL_B_OFFSET     0x3C
-#define CFG_HV1_OFFSET           0x48 //DAC_PWM2
-#define CFG_HV2_OFFSET           0x4C //DAC_PWM3
+#define CFG_HV1_OFFSET           0x4C //DAC_PWM3
+#define CFG_HV2_OFFSET           0x48 //DAC_PWM2
 #define CFG_HV3_OFFSET           0x40 //DAC_PWM0
 #define CFG_HV4_OFFSET           0x44 //DAC_PWM1
 
@@ -137,6 +137,7 @@ int      xadc_init(void);
 int      mem_init(void);
 float    get_voltage(uint32_t offset);
 void     set_voltage(uint32_t offset, int32_t value);
+float    get_temp_AD592(uint32_t offset);
 int      init_system(void);
 int      enable_interrupt(void);
 int      disable_interrupt(void);

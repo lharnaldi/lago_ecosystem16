@@ -19,11 +19,16 @@ uint32_t reg_off;
 int32_t reg_val;
 //double r_val;
 int limit;
+int current;
 loc_t g_data;
+// detector rates
+int r1,r2;
+// timing horrible hack
+int hack=0;
 
-int fReadReg, fGetCfgStatus, fGetPT, fGetGPS, fInitSystem, fWriteReg, fSetCfgReg,
-		fToFile, fToStdout, fFile, fCount, fByte, fRegValue, fData, fFirstTime=1,
-		fshowversion;
+int fReadReg, fGetCfgStatus, fGetPT, fGetGPS, fGetXADC, fInitSystem, fWriteReg, 
+    fSetCfgReg, fToFile, fToStdout, fFile, fCount, fByte, fRegValue, fData, 
+    fFirstTime=1,	fshowversion;
 
 char charAction[MAXCHRLEN], scRegister[MAXCHRLEN], charReg[MAXCHRLEN],
 		 charFile[MAXCHRLEN], charCurrentFile[MAXCHRLEN], charCount[MAXCHRLEN],
@@ -83,7 +88,7 @@ int main(int argc, char *argv[])
 				//uint32_t val;
 
 				pthread_t not_gps;
-				pthread_t actual_gps;
+				//pthread_t actual_gps;
 
 				//Check the arguments
 				if (!parse_param(argc, argv)) {
@@ -136,8 +141,8 @@ int main(int argc, char *argv[])
 								wr_reg_value(n_dev, reg_off, reg_val);  // Write single register
 				}
 				else if (fSetCfgReg) {
-								if (fRegValue) set_voltage(reg_off, atoi(charRegValue)); // For HV
-								else wr_reg_value(1,reg_off, atoi(charRegValue));                   // For t1, t2, st1, st2  
+								if (fRegValue) set_voltage(reg_off, atoi(charRegValue)); // For HV, OV
+								else wr_reg_value(1,reg_off, atoi(charRegValue));        // For t1, t2, st1, st2  
 				}
 				else if (fGetCfgStatus) {
 								rd_cfg_status();        // Get registers status
@@ -157,9 +162,19 @@ int main(int argc, char *argv[])
 								printf("Initializing registers...\n");
 								init_system();
 				}
+				else if (fGetXADC) {
+								printf("Reading XADC channels...\n");
+								printf("Voltage CH1: %.3f\n",get_voltage(XADC_AI0_OFFSET));
+								printf("Voltage CH2: %.3f\n",get_voltage(XADC_AI1_OFFSET));
+								printf("Voltage CH3: %.3f\n",get_voltage(XADC_AI2_OFFSET));
+								printf("Voltage CH4: %.3f\n",get_voltage(XADC_AI3_OFFSET));
+								printf("Temperature CH1: %.1f ºC\n",get_temp_AD592(XADC_AI0_OFFSET));
+								printf("Temperature CH2: %.1f ºC\n",get_temp_AD592(XADC_AI1_OFFSET));
+				}
 				else if (fToFile || fToStdout) {
 
-								limit = 512*1024; //middle of the memory
+								limit = 1024*1024*8; // whole memory
+								current = 0; // new readout system
 								// enter normal mode for tlast_gen
 								reg_val = dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET);
 								dev_write(cfg_ptr,CFG_RESET_GRAL_OFFSET, reg_val | 2);
@@ -240,7 +255,6 @@ int wait_for_interrupt(int fd_int, void *dev_ptr)
 												value = dev_read(dev_ptr, XIL_AXI_INTC_IPR_OFFSET);
 												if ((value & 0x00000001) != 0) {
 																dev_write(dev_ptr, XIL_AXI_INTC_IAR_OFFSET, 1);
-																printf("PPS pulse interrupt #%u!\n", info);
 																// read writer position 
 																position = dev_read(sts_ptr, STS_STATUS_OFFSET);
 
@@ -290,7 +304,7 @@ void *thread_isr(void *p)
 
 void *thread_isr_not_gps(void *p) 
 {
-				int32_t g_tim, g_dat, g_lat, g_lon, g_alt, g_sat;
+				//int32_t g_tim, g_dat, g_lat, g_lon, g_alt, g_sat;
 
 				while(1)
 								if (wait_for_interrupt(intc_fd, intc_ptr)){
@@ -327,6 +341,7 @@ void show_usage(char *progname)
 								printf("\n\tThe LAGO Project, lago@lagoproject.org\n");
 								printf("\n\tDPR Lab. 2018\n");
 								printf("\tH. Arnaldi, lharnaldi@gmail.com\n");
+								printf("\tX. Bertou, bertou@gmail.com\n");
 								printf("\t%s v%dr%d comms soft\n\n",EXP,VERSION,REVISION);
 								printf("Usage: %s <action> <register> <value> [options]\n", progname);
 
@@ -340,14 +355,17 @@ void show_usage(char *progname)
 								printf("\t-g\t\t\t\tGet GPS data\n");
 								printf("\t-t\t\t\t\tGet Pressure and Temperature data\n");
 								printf("\t-i\t\t\t\tInitialise registers to default values\n");
+								printf("\t-x\t\t\t\tRead the voltage in the XADC channels\n");
 								printf("\t-v\t\t\t\tShow DAQ version\n");
 
 								printf("\n\tRegisters:\n");
 								printf("\tt1, t2\t\t\t\tSpecify triggers 1 and 2\n");
+								printf("\tsc1, sc2\t\t\tSpecify scaling factor 1 and 2\n");
 								//printf("\tst1, st2, st3\t\t\tSpecify subtriggers 1, 2 and
 								//3\n");
-								printf("\thv1, hv2\t\t\tSpecify high voltages ...\n");
-								printf("\tov1, ov2, ov3, ov4\t\t\tSpecify output voltages ...\n");
+								printf("\thv1, hv2\t\t\tSpecify high voltages\n");
+								printf("\tov1, ov2, ov3, ov4\t\tSpecify output voltages\n");
+								//printf("\tiv1, iv2, iv3, iv4\t\t\tRead input voltages\n");
 
 								printf("\n\tOptions:\n");
 								printf("\t-f <filename>\t\t\tSpecify file name\n");
@@ -396,6 +414,7 @@ int parse_param(int argc, char *argv[])
 				fByte      = 0;
 				fData      = 0;
 				fRegValue  = 0;
+				fGetXADC   = 0;
 
 				// Ensure sufficient paramaters. Need at least program name and action
 				// flag
@@ -441,6 +460,10 @@ int parse_param(int argc, char *argv[])
 				} 
 				else if( strcmp(charAction, "-i") == 0) {
 								fInitSystem = 1;
+								return 1;
+				} 
+				else if( strcmp(charAction, "-x") == 0) {
+								fGetXADC = 1;
 								return 1;
 				} 
 				else { // unrecognized action
@@ -674,7 +697,8 @@ int new_file()
 								}
 								fhout = fopen(charCurrentFile, "ab");
 								//fhmtd = fopen(charCurrentMetaData, "w");
-								fprintf(stderr,"Opening files %s and %s for data taking\n",charCurrentFile, charCurrentMetaData);
+								//fprintf(stderr,"Opening files %s and %s for data taking\n",charCurrentFile, charCurrentMetaData);
+								fprintf(stderr,"Opening file %s at %02dh%02d for data taking\n",charCurrentFile,fileDate->tm_hour,fileDate->tm_min);
 				}
 				fprintf(fhout,"# v %d\n", DATAVERSION);
 				fprintf(fhout,"# #\n");
@@ -703,19 +727,26 @@ int new_file()
 				fprintf(fhout,"# # Current registers setting\n");
 				fprintf(fhout,"# #\n");
 				// Save settings into file
-				fprintf(fhout,"# x c T1 %d\n",gfT1);
-				fprintf(fhout,"# x c T2 %d\n",gfT2);
-				fprintf(fhout,"# x c T3 %d\n",gfT3);
+				fprintf(fhout,"# x c T1 %d\n",dev_read(cfg_ptr, CFG_TRLVL_1_OFFSET));
+				fprintf(fhout,"# x c T2 %d\n",dev_read(cfg_ptr, CFG_TRLVL_2_OFFSET));
+        {
+          float a = 0.0382061, b = 4.11435;  // FIXME hardcoded, should be in zynq.c
+				  fprintf(fhout,"# x c HV1 %d (%.1f V)\n",dev_read(cfg_ptr, CFG_HV1_OFFSET),dev_read(cfg_ptr, CFG_HV1_OFFSET)*a+b);
+				  fprintf(fhout,"# x c HV2 %d (%.1f V)\n",dev_read(cfg_ptr, CFG_HV2_OFFSET),dev_read(cfg_ptr, CFG_HV2_OFFSET)*a+b);
+        }
+				fprintf(fhout,"# x c SC1 %d\n",dev_read(cfg_ptr, CFG_TR_SCAL_A_OFFSET));
+				fprintf(fhout,"# x c SC2 %d\n",dev_read(cfg_ptr, CFG_TR_SCAL_B_OFFSET));
+				//fprintf(fhout,"# x c T3 %d\n",gfT3);
 				/* not used anymore...
 					 fprintf(fhout,"# x c ST1 %d\n",gfST1);
 					 fprintf(fhout,"# x c ST2 %d\n",gfST2);
 					 fprintf(fhout,"# x c ST3 %d\n",gfST3);
 				 */
-				fprintf(fhout,"# x c HV1 %d\n",gfHV1);
-				fprintf(fhout,"# x c HV2 %d\n",gfHV2);
-				fprintf(fhout,"# x c HV3 %d\n",gfHV3);
-				fprintf(fhout,"# x c GPSTM UTC\n");
-				fprintf(fhout,"# #\n");
+				//fprintf(fhout,"# x c HV1 %d\n",gfHV1);
+				//fprintf(fhout,"# x c HV2 %d\n",gfHV2);
+				//fprintf(fhout,"# x c HV3 %d\n",gfHV3);
+				//fprintf(fhout,"# x c GPSTM UTC\n");
+				//fprintf(fhout,"# #\n");
 				gethostname(buf, 256);
 				fprintf(fhout,"# # This file was started on %s\n",buf);
 				//				fprintf(fhmtd, "daqHost=\"%s\"\n",buf);
@@ -746,9 +777,11 @@ int read_buffer(int pos)
 				int16_t ch[2];
 				//uint32_t i, j;
 				uint32_t i;
-				int offset;
+				//int offset;
 				int trig;
-				int32_t v_temp;
+				//int32_t v_temp;
+        int readinit=0;
+        int readend=limit;
 
 				if (fToStdout)
 								fhout=stdout;
@@ -836,18 +869,35 @@ int read_buffer(int pos)
 								fFirstTime=0;
 				}
 
+        // pos is the number of 8 bytes word written. I need the memory
+        // location... Therefore, pos=pos*8
+        pos=pos*8;
+
+        //printf("%d %d %d\n",current,pos,limit);
+				//fprintf(fhout,"# XB %d %d %d\n", current,pos,limit);
 				// print 512 IN1 and IN2 samples if ready, otherwise sleep 1 ms
-				if((limit > 0 && pos > limit) || (limit == 0 && pos < 512*1024)) {
+        // compare current writing location (pos) with previous (limit)
+        // if current<pos, then read from current to pos and adjust current
+        // if current>pos, then read from current to end of buffer and set current to 0 at the end
+        if (current==limit-4) current=-4; // hack, because I do +4 next to read from next position
+        if (current<pos+4) {
+          readinit=current+4;
+          readend=pos;
+        } else if (current>pos) {
+          readinit=current+4;
+          readend=limit; // note: don't read after limit
+        }
+				if(current!=pos) {
 
 								//printf("# # # # NEW BUFFER %d %d \n", pos, limit);
-								offset = limit > 0 ? 0 : 4096*1024;
-								limit = limit > 0 ? 0 : 512*1024;
+								//offset = limit > 0 ? 0 : 4096*1024;
+								//limit = limit > 0 ? 0 : 512*1024;
 
-								for(i = 0; i < 4096 * 1024; i+=4) {
-												ch[0] = *((int16_t *)(mem_ptr + offset + i + 0));
-												ch[1] = *((int16_t *)(mem_ptr + offset + i + 2));
+								for(i = readinit; i < readend; i+=4) {
+												ch[0] = *((int16_t *)(mem_ptr + i + 0));
+												ch[1] = *((int16_t *)(mem_ptr + i + 2));
 												//printf("%5d %5d\n", ch[0], ch[1]);
-												wo = *((uint32_t *)(mem_ptr + offset + i));
+												wo = *((uint32_t *)(mem_ptr + i));
 												if (wo>>30==0) {
 																fprintf(fhout,"%5hd %5hd\n", (((ch[0]>>13)<<14) + ((ch[0]>>13)<<15) + ch[0]),(((ch[1]>>13)<<14) + ((ch[1]>>13)<<15) + ch[1]));
 																mtd_iBin++;
@@ -878,7 +928,7 @@ int read_buffer(int pos)
 																				else {
 																								switch(wo>>27) {
 																												case 0x18:
-																																fprintf(fhout,"# x f         %d \n", wo&0x03FFFFFF);//PPS counter
+																																fprintf(fhout,"# x f         %d \n", wo&0x07FFFFFF);//PPS counter
 																																break;
 																												case 0x19:
 																																//FIXME: here put temperature value
@@ -919,11 +969,15 @@ int read_buffer(int pos)
 																																mtd_seconds++;
 																																fileTime=timegm(fileDate);
 																																fileDate=gmtime(&fileTime); // filling all fields with properly computed values (for new month/year)
-																																fprintf(fhout,"# x h   %02d:%02d:%02d %02d/%02d/%04d %d\n",
+																																fprintf(fhout,"# x h   %02d:%02d:%02d %02d/%02d/%04d %d %d\n",
 																																								fileDate->tm_hour, fileDate->tm_min, fileDate->tm_sec,
 																																								fileDate->tm_mday, fileDate->tm_mon+1,fileDate->tm_year+1900,
-																																								(int)fileTime
+																																								(int)fileTime,wo&0x03FFFFFF
 																																			 );
+																																fprintf(fhout,"# p %u %.1f %.1f\n",hack++,get_temp_AD592(XADC_AI0_OFFSET),get_temp_AD592(XADC_AI1_OFFSET));
+																																if (hack%60==0) printf("\n");
+																																printf("rates %5d %5d, PPS %u        \r",r1,r2,hack);
+																																fflush(stdout);
 																																/*fprintf(stderr,"# %02d:%02d:%02d %02d/%02d/%04d %d - second %d - rates: %d %d %d (%d - %d - %d) [%d]\r", 
 																																	fileDate->tm_hour, fileDate->tm_min, fileDate->tm_sec,
 																																	fileDate->tm_mday, fileDate->tm_mon+1, fileDate->tm_year+1900,
@@ -978,9 +1032,11 @@ int read_buffer(int pos)
 																																break;
 																												case 0x1D: //rate ch1 counter
 																																fprintf(fhout,"# r1 %d \n", (int32_t)wo&0x00FFFFFF);
+																																r1= (int32_t)wo&0x00FFFFFF;
 																																break;
 																												case 0x1E: //rate ch2 counter
 																																fprintf(fhout,"# r2 %d \n", (int32_t)wo&0x00FFFFFF);
+																																r2= (int32_t)wo&0x00FFFFFF;
 																																break;
 																												default:
 																																fprintf(fhout,"# E @@@\n");
@@ -990,6 +1046,7 @@ int read_buffer(int pos)
 																				}
 																}
 												}
+                        current=i;
 								}
 				}
 				return 1;

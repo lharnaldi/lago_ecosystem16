@@ -45,7 +45,7 @@ architecture rtl of pps_gen is
 
 begin
 
-  pps_sig_o <= '1' when ((pps_ibuf = '1') or (false_pps = '1')) else '0';
+  pps_sig_o <= '1' when (((pps_ibuf = '1') and (gpsen_i = '0')) or ((false_pps = '1') and (gpsen_i = '1'))) else '0';
 
   rst_sig <= '1' when ((aresetn = '0') or (resetn_i = '0')) else '0';
     

@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 				else if (fToFile || fToStdout) {
 
 								limit = 1024*1024*8; // whole memory
-								current = 0; // new readout system
+								current = -4; // new readout system, hack due to using +4 for readout
 								// enter normal mode for tlast_gen
 								reg_val = dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET);
 								dev_write(cfg_ptr,CFG_RESET_GRAL_OFFSET, reg_val | 2);

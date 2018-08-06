@@ -300,6 +300,10 @@ int init_system(void)
 				// set subtrigger_lvl_2
 				dev_write(cfg_ptr,CFG_STRLVL_2_OFFSET,8190);
 
+				// set hv1 and hv2 to zero
+				dev_write(cfg_ptr,CFG_HV1_OFFSET,0);
+				dev_write(cfg_ptr,CFG_HV2_OFFSET,0);
+
 				// reset ramp generators
 				reg_val = dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET);
 				dev_write(cfg_ptr,CFG_RESET_GRAL_OFFSET, reg_val & ~8);

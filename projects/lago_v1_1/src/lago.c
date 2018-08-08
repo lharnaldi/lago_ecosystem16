@@ -3,14 +3,7 @@
 //*****************************************************
 // Pressure, temperature and other constants
 //****************************************************
-uint32_t  ptC1, ptC2, ptC3, ptC4, ptC5, ptC6, ptC7, ptD1, ptD2;
-uint8_t   ptAA, ptBB, ptCC, ptDD;
-//extern uint32_t  ptC1, ptC2, ptC3, ptC4, ptC5, ptC6, ptC7, ptD1, ptD2;
-//extern uint8_t   ptAA, ptBB, ptCC, ptDD;
-uint8_t   gpsDate[7];
-//int     tmp_gps_lat,tmp_gps_lon,tmp_gps_elips;
 double  gps_lat,gps_lon,gps_alt;
-uint32_t  gfT1,gfT2,gfT3,gfST1,gfST2,gfST3,gfHV1,gfHV2,gfHV3,gGPSTM;
 
 //Globals
 int interrupted = 0;
@@ -27,8 +20,8 @@ int r1,r2;
 int hack=0;
 
 int fReadReg, fGetCfgStatus, fGetPT, fGetGPS, fGetXADC, fInitSystem, fWriteReg, 
-    fSetCfgReg, fToFile, fToStdout, fFile, fCount, fByte, fRegValue, fData, 
-    fFirstTime=1,	fshowversion;
+		fSetCfgReg, fToFile, fToStdout, fFile, fCount, fByte, fRegValue, fData, 
+		fFirstTime=1,	fshowversion;
 
 char charAction[MAXCHRLEN], scRegister[MAXCHRLEN], charReg[MAXCHRLEN],
 		 charFile[MAXCHRLEN], charCurrentFile[MAXCHRLEN], charCount[MAXCHRLEN],
@@ -82,10 +75,20 @@ int position;
 
 int main(int argc, char *argv[])
 {
-				//int position;
 				int rc;
-				//int i, p=0,a,b=40000;
-				//uint32_t val;
+				//PT device
+				float t, p, alt;
+				char *i2c_device = "/dev/i2c-0";
+				int address = 0x77;
+
+				void *bmp = bmp180_init(address, i2c_device);
+
+				bmp180_eprom_t eprom;
+				bmp180_dump_eprom(bmp, &eprom);
+
+
+				bmp180_set_oss(bmp, 1);
+				//end PT device
 
 				pthread_t not_gps;
 				//pthread_t actual_gps;
@@ -110,7 +113,7 @@ int main(int argc, char *argv[])
 				{
 								printf("Initializing registers...\n");
 								init_system();
-//FIXME: here i should initialise my thread for working with false PPS
+								//FIXME: here i should initialise my thread for working with false PPS
 								rc = pthread_create(&not_gps,NULL,thread_isr_not_gps,NULL);
 								if (rc != EXIT_SUCCESS) {
 												perror("pthread_create :: error \n");
@@ -121,16 +124,16 @@ int main(int argc, char *argv[])
 				}
 
 				//Ckeck if we should use GPS data or PC data
-/*				if (((dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET)>>4) & 0x1) == 0) //ok, we should use GPS data
-				{
-								rc = pthread_create(&actual_gps,NULL,thread_isr,NULL);
-								if (rc != EXIT_SUCCESS) {
-												perror("pthread_create :: error \n");
-												exit(EXIT_FAILURE);
-								}
+				/*				if (((dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET)>>4) & 0x1) == 0) //ok, we should use GPS data
+									{
+									rc = pthread_create(&actual_gps,NULL,thread_isr,NULL);
+									if (rc != EXIT_SUCCESS) {
+									perror("pthread_create :: error \n");
+									exit(EXIT_FAILURE);
+									}
 
-								enable_interrupt();
-				}*/
+									enable_interrupt();
+									}*/
 
 				signal(SIGINT, signal_handler);
 
@@ -148,7 +151,22 @@ int main(int argc, char *argv[])
 								rd_cfg_status();        // Get registers status
 				}
 				else if (fGetPT) {
-								//			DoGetPandTnFifoSync();     // Get pressure and temperature from sensor
+								if(bmp != NULL){
+												//int i;
+												//for(i = 0; i < 10; i++) {
+												t = bmp180_temperature(bmp);
+												p = bmp180_pressure(bmp);
+												alt = bmp180_altitude(bmp);
+												// Temperature in Celsius, Presure in HectoPascal and Altitude in meters
+												printf("Temperature = %.1f, Pressure = %.2f, Altitude= %.1f\n", t, p/100., alt);
+												//usleep(2 * 1000 * 1000);
+												//}
+
+												bmp180_close(bmp);
+								}else{
+												printf("Error! NO BMP device is present!\n");
+								}
+
 				}
 				else if (fGetGPS) { 
 								if (((dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET)>>4) & 0x1) == 1) { // No GPS is present
@@ -168,8 +186,8 @@ int main(int argc, char *argv[])
 								printf("Voltage CH2: %.3f\n",get_voltage(XADC_AI1_OFFSET));
 								printf("Voltage CH3: %.3f\n",get_voltage(XADC_AI2_OFFSET));
 								printf("Voltage CH4: %.3f\n",get_voltage(XADC_AI3_OFFSET));
-								printf("Temperature CH1: %.1f ºC\n",get_temp_AD592(XADC_AI0_OFFSET));
-								printf("Temperature CH2: %.1f ºC\n",get_temp_AD592(XADC_AI1_OFFSET));
+								printf("Base temperature CH1: %.1f ºC\n",get_temp_AD592(XADC_AI0_OFFSET));
+								printf("Base temperature CH2: %.1f ºC\n",get_temp_AD592(XADC_AI1_OFFSET));
 				}
 				else if (fToFile || fToStdout) {
 
@@ -191,7 +209,7 @@ int main(int argc, char *argv[])
 												// read writer position 
 												//position = dev_read(sts_ptr, STS_STATUS_OFFSET); 
 												wait_for_interrupt(intc_fd, intc_ptr);
-												read_buffer(position);
+												read_buffer(position, bmp);
 												// alarm(0);   // cancelling 1 sec timeout
 								}
 								// reset pps_gen, fifo and trigger modules
@@ -312,19 +330,19 @@ void *thread_isr_not_gps(void *p)
 												//FIXME: see how and where to write pressure and temperature data
 												// convert float to int32_t to write to FPGA
 												/*g_tim = (int32_t)(g_data.times); 
-												g_dat = (int32_t)(g_data.date); 
-												g_lat = (int32_t)(g_data.latitude * 65536);
-												g_lon = (int32_t)(g_data.longitude * 65536);
-												g_alt = (int32_t)(g_data.altitude * 65536);
-												g_sat = (int32_t)(g_data.satellites); 
+													g_dat = (int32_t)(g_data.date); 
+													g_lat = (int32_t)(g_data.latitude * 65536);
+													g_lon = (int32_t)(g_data.longitude * 65536);
+													g_alt = (int32_t)(g_data.altitude * 65536);
+													g_sat = (int32_t)(g_data.satellites); 
 
-												dev_write(cfg_ptr,CFG_TIME_OFFSET, g_tim);
-												dev_write(cfg_ptr,CFG_DATE_OFFSET, g_dat);
-												dev_write(cfg_ptr,CFG_LATITUDE_OFFSET, g_lat);
-												dev_write(cfg_ptr,CFG_LONGITUDE_OFFSET, g_lon);
-												dev_write(cfg_ptr,CFG_ALTITUDE_OFFSET, g_alt);
-												dev_write(cfg_ptr,CFG_SATELLITE_OFFSET, g_sat);
-*/
+													dev_write(cfg_ptr,CFG_TIME_OFFSET, g_tim);
+													dev_write(cfg_ptr,CFG_DATE_OFFSET, g_dat);
+													dev_write(cfg_ptr,CFG_LATITUDE_OFFSET, g_lat);
+													dev_write(cfg_ptr,CFG_LONGITUDE_OFFSET, g_lon);
+													dev_write(cfg_ptr,CFG_ALTITUDE_OFFSET, g_alt);
+													dev_write(cfg_ptr,CFG_SATELLITE_OFFSET, g_sat);
+												 */
 												//printf("%lf %lf\n", gps_data.latitude, gps_data.longitude);
 								}
 }
@@ -711,9 +729,8 @@ int new_file()
 				fprintf(fhout,"# #                      gives the channel trigger (<C>: 3 bit mask) and 125 MHz clock count (<V>) of the trigger time\n");
 				fprintf(fhout,"# #   # c <C>          : internal trigger counter\n");
 				fprintf(fhout,"# #   # x f <V>        : 125 MHz frequency\n");
-				fprintf(fhout,"# #   # x r C1-DD <V>  : raw temperature and pressure sensor value\n");
-				fprintf(fhout,"# #   # x r D1 <V>     : raw temperature/pressure value\n");
-				fprintf(fhout,"# #   # x r D2 <V>     : raw temperature/pressure value\n");
+				fprintf(fhout,"# #   # x t <V>        : temperature value\n");
+				fprintf(fhout,"# #   # x p <V>        : pressure value\n");
 				fprintf(fhout,"# #   # x h <HH:MM:SS> <DD/MM/YYYY> <S> : GPS time (every new second, last number is seconds since EPOCH)\n");
 				fprintf(fhout,"# #   # x s <T> C <P> hPa <A> m : temperature <T>, pressure <P> and altitude (from pressure) <A>\n");
 				fprintf(fhout,"# #   # x g <LAT> <LON> <ALT>   : GPS data - latitude, longitude, altitude\n");
@@ -729,24 +746,14 @@ int new_file()
 				// Save settings into file
 				fprintf(fhout,"# x c T1 %d\n",dev_read(cfg_ptr, CFG_TRLVL_1_OFFSET));
 				fprintf(fhout,"# x c T2 %d\n",dev_read(cfg_ptr, CFG_TRLVL_2_OFFSET));
-        {
-          float a = 0.0382061, b = 4.11435;  // FIXME hardcoded, should be in zynq.c
-				  fprintf(fhout,"# x c HV1 %d (%.1f V)\n",dev_read(cfg_ptr, CFG_HV1_OFFSET),dev_read(cfg_ptr, CFG_HV1_OFFSET)*a+b);
-				  fprintf(fhout,"# x c HV2 %d (%.1f V)\n",dev_read(cfg_ptr, CFG_HV2_OFFSET),dev_read(cfg_ptr, CFG_HV2_OFFSET)*a+b);
-        }
+				{
+								//float a = 0.0382061, b = 4.11435;  // For gain = 1.45
+								float a = 0.0882006, b = 7.73516;  // For gain = 3.2
+								fprintf(fhout,"# x c HV1 %.1f mV\n",a*dev_read(cfg_ptr, CFG_HV1_OFFSET)+b);
+								fprintf(fhout,"# x c HV2 %.1f mV\n",a*dev_read(cfg_ptr, CFG_HV2_OFFSET)+b);
+				}
 				fprintf(fhout,"# x c SC1 %d\n",dev_read(cfg_ptr, CFG_TR_SCAL_A_OFFSET));
 				fprintf(fhout,"# x c SC2 %d\n",dev_read(cfg_ptr, CFG_TR_SCAL_B_OFFSET));
-				//fprintf(fhout,"# x c T3 %d\n",gfT3);
-				/* not used anymore...
-					 fprintf(fhout,"# x c ST1 %d\n",gfST1);
-					 fprintf(fhout,"# x c ST2 %d\n",gfST2);
-					 fprintf(fhout,"# x c ST3 %d\n",gfST3);
-				 */
-				//fprintf(fhout,"# x c HV1 %d\n",gfHV1);
-				//fprintf(fhout,"# x c HV2 %d\n",gfHV2);
-				//fprintf(fhout,"# x c HV3 %d\n",gfHV3);
-				//fprintf(fhout,"# x c GPSTM UTC\n");
-				//fprintf(fhout,"# #\n");
 				gethostname(buf, 256);
 				fprintf(fhout,"# # This file was started on %s\n",buf);
 				//				fprintf(fhmtd, "daqHost=\"%s\"\n",buf);
@@ -771,7 +778,7 @@ int new_file()
 
 int r[MTD_TRG];
 
-int read_buffer(int pos)
+int read_buffer(int pos, void *bmp)
 {
 				uint32_t wo;
 				int16_t ch[2];
@@ -780,8 +787,8 @@ int read_buffer(int pos)
 				//int offset;
 				int trig;
 				//int32_t v_temp;
-        int readinit=0;
-        int readend=limit;
+				int readinit=0;
+				int readend=limit;
 
 				if (fToStdout)
 								fhout=stdout;
@@ -803,90 +810,35 @@ int read_buffer(int pos)
 												fileDate->tm_mon=8;
 												fileDate->tm_year=2018;
 
-												/*fileDate->tm_sec=gpsDate[6];
-													fileDate->tm_min=gpsDate[5];
-													fileDate->tm_hour=gpsDate[4];
-													fileDate->tm_mday=gpsDate[1];
-													fileDate->tm_mon=gpsDate[0]-1;
-													fileDate->tm_year=((gpsDate[2] << 8) + gpsDate[3])-1900;*/
 												fileTime=timegm(fileDate);
 												fileDate=gmtime(&fileTime); // filling all fields
 								}
 								if (fhout != stdout) {
 												//FIXME: here read PyT data
-												/*for(int8 i=0; i<49; i++) {
-													if(flReadChannel(handle, 10, ucAddr[i], 1, &rgbPT[i], &error)) {
-													printf("flReadChannel failed\n");
-													handler(1);
-													}
-													}
-													ptC1 = (rgbPT[19] << 8) + rgbPT[20];
-													ptC2 = (rgbPT[21] << 8) + rgbPT[22];
-													ptC3 = (rgbPT[23] << 8) + rgbPT[24];
-													ptC4 = (rgbPT[25] << 8) + rgbPT[26];
-													ptC5 = (rgbPT[27] << 8) + rgbPT[28];
-													ptC6 = (rgbPT[30] << 8) + rgbPT[29];
-													ptC7 = (rgbPT[32] << 8) + rgbPT[31];
-													ptAA = rgbPT[33];
-													ptBB = rgbPT[34];
-													ptCC = rgbPT[35];
-													ptDD = rgbPT[36];
 
-													gfT1 = ((rgbPT[0] << 8) + rgbPT[1]);
-													gfT2 = ((rgbPT[2] << 8) + rgbPT[3]);
-													gfT3 = ((rgbPT[4] << 8) + rgbPT[5]);
-													gfST1 = ((rgbPT[6] << 8) + rgbPT[7]);
-													gfST2 = ((rgbPT[8] << 8) + rgbPT[9]);
-													gfST3 = ((rgbPT[10] << 8) + rgbPT[11]);
-													gfHV1 = ((rgbPT[12] << 8) + rgbPT[13]);
-													gfHV2 = ((rgbPT[14] << 8) + rgbPT[15]);
-													gfHV3 = ((rgbPT[16] << 8) + rgbPT[17]);
-													gGPSTM = rgbPT[18];*/
-												ptC1 =10; 
-												ptC2 =10;
-												ptC3 =10;
-												ptC4 =10;
-												ptC5 =10;
-												ptC6 =10;
-												ptC7 =10;
-												ptAA =10;
-												ptBB =10;
-												ptCC =10;
-												ptDD = 10;
-
-												gfT1 = 10;
-												gfT2 = 10;
-												gfT3 = 10;
-												gfST1 =10;
-												gfST2 =10;
-												gfST3 =10;
-												gfHV1 =10;
-												gfHV2 =10;
-												gfHV3 = 10;
-												gGPSTM = 10;
 								}
 								new_file();
 								fFirstTime=0;
 				}
 
-        // pos is the number of 8 bytes word written. I need the memory
-        // location... Therefore, pos=pos*8
-        pos=pos*8;
+				// pos is the number of 8 bytes word written. I need the memory
+				// location... Therefore, pos=pos*8
+				pos=pos*8;
 
-        //printf("%d %d %d\n",current,pos,limit);
+				//printf("%d %d %d\n",current,pos,limit);
 				//fprintf(fhout,"# XB %d %d %d\n", current,pos,limit);
 				// print 512 IN1 and IN2 samples if ready, otherwise sleep 1 ms
-        // compare current writing location (pos) with previous (limit)
-        // if current<pos, then read from current to pos and adjust current
-        // if current>pos, then read from current to end of buffer and set current to 0 at the end
-        if (current==limit-4) current=-4; // hack, because I do +4 next to read from next position
-        if (current<pos+4) {
-          readinit=current+4;
-          readend=pos;
-        } else if (current>pos) {
-          readinit=current+4;
-          readend=limit; // note: don't read after limit
-        }
+				// compare current writing location (pos) with previous (limit)
+				// if current<pos, then read from current to pos and adjust current
+				// if current>pos, then read from current to end of buffer and set current to 0 at the end
+				if (current==limit-4) current=-4; // hack, because I do +4 next to read from next position
+				if (current<pos+4) {
+								readinit=current+4;
+								readend=pos;
+				} else if (current>pos) {
+								readinit=current+4;
+								readend=limit; // note: don't read after limit
+				}
 				if(current!=pos) {
 
 								//printf("# # # # NEW BUFFER %d %d \n", pos, limit);
@@ -928,17 +880,13 @@ int read_buffer(int pos)
 																				else {
 																								switch(wo>>27) {
 																												case 0x18:
-																																fprintf(fhout,"# x f         %d \n", wo&0x07FFFFFF);//PPS counter
+																																fprintf(fhout,"# x f %d \n", wo&0x07FFFFFF);//PPS counter
 																																break;
 																												case 0x19:
-																																//FIXME: here put temperature value
-																																fprintf(fhout,"# x r D2         %lf \n", (float)((int32_t)wo&0x00FFFFFF)/65536.0);//n = (float)((int32_t)reg_val)/65536.;
-																																//ptD2=wo&0x0000FFFF;
+																																fprintf(fhout,"# x t %.1f \n", bmp180_temperature(bmp));
 																																break;
 																												case 0x1A:
-																																//FIXME: here put the pressure value
-																																fprintf(fhout,"# x r D1         %lf \n", (float)((int32_t)wo&0x00FFFFFF)/65536.0);
-																																//ptD1=wo&0x0000FFFF;
+																																fprintf(fhout,"# x p %.2f \n", (bmp180_pressure(bmp)/100.));
 																																break;
 																												case 0x1B:
 																																if(falseGPS) {
@@ -1046,7 +994,7 @@ int read_buffer(int pos)
 																				}
 																}
 												}
-                        current=i;
+												current=i;
 								}
 				}
 				return 1;

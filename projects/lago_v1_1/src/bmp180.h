@@ -86,26 +86,26 @@
 
 /* Basic structure for the bmp180 sensor */
 typedef struct {
-  /* file descriptor */
-  int file;
-  /* i2c device address */
-  int address;
-  /* BMP180 oversampling mode */
-  int oss;
-  /* i2c device file path */
-  char *i2c_device;
-  /* Eprom values */
-  int32_t ac1;
-  int32_t ac2;
-  int32_t ac3;
-  int32_t ac4;
-  int32_t ac5;
-  int32_t ac6;
-  int32_t b1;
-  int32_t b2;
-  int32_t mb;
-  int32_t mc;
-  int32_t md;
+				/* file descriptor */
+				int file;
+				/* i2c device address */
+				int address;
+				/* BMP180 oversampling mode */
+				int oss;
+				/* i2c device file path */
+				char *i2c_device;
+				/* Eprom values */
+				int32_t ac1;
+				int32_t ac2;
+				int32_t ac3;
+				int32_t ac4;
+				int32_t ac5;
+				int32_t ac6;
+				int32_t b1;
+				int32_t b2;
+				int32_t mb;
+				int32_t mc;
+				int32_t md;
 } bmp180_t;
 
 
@@ -113,18 +113,18 @@ typedef struct {
 extern int32_t bmp180_register_table[11][2];
 
 typedef struct {
-	/* Eprom values */
-	int ac1;
-	int ac2;
-	int ac3;
-	int ac4;
-	int ac5;
-	int ac6;
-	int b1;
-	int b2;
-	int mb;
-	int mc;
-	int md;
+				/* Eprom values */
+				int ac1;
+				int ac2;
+				int ac3;
+				int ac4;
+				int ac5;
+				int ac6;
+				int b1;
+				int b2;
+				int mb;
+				int mc;
+				int md;
 } bmp180_eprom_t;
 
 /* Prototypes for helper functions */
@@ -132,6 +132,7 @@ void bmp180_read_eprom(void *_bmp);
 void *bmp180_init(int address, const char* i2c_device_filepath);
 void bmp180_close(void *_bmp);
 void bmp180_set_oss(void *_bmp, int oss);
+float bmp180_pressure(void *_bmp);
 float bmp180_temperature(void *_bmp);
 float bmp180_altitude(void *_bmp);
 void bmp180_dump_eprom(void *_bmp, bmp180_eprom_t *eprom);

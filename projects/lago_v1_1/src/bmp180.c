@@ -84,7 +84,7 @@ static int32_t bmp180_read_raw_pressure(void *_bmp, uint8_t oss)
  * @param bmp180 sensor
  * @return pressure
  */
-static long bmp180_pressure(void *_bmp) 
+float bmp180_pressure(void *_bmp) 
 {
 	bmp180_t* bmp = TO_BMP(_bmp);
 	long UT, UP, B6, B5, X1, X2, X3, B3, p;

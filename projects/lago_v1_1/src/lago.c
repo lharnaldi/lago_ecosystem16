@@ -71,8 +71,6 @@ long int mtd_dp = 0, mtd_cdp = 0, mtd_pulse_cnt = 0, mtd_pulse_pnt = 0;
 // for future implementations. For now, we just dump the lago-configs file
 //vector <string> configs_lines;
 int position;
-
-
 int main(int argc, char *argv[])
 {
 				int rc;
@@ -166,7 +164,6 @@ int main(int argc, char *argv[])
 								}else{
 												printf("Error! NO BMP device is present!\n");
 								}
-
 				}
 				else if (fGetGPS) { 
 								if (((dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET)>>4) & 0x1) == 1) { // No GPS is present
@@ -282,19 +279,15 @@ int wait_for_interrupt(int fd_int, void *dev_ptr)
 												close(fd_int);
 												exit(EXIT_FAILURE);
 								}
-				}
-
-				return ret;
+								}
+					return ret;
 }
 
 void *thread_isr(void *p) 
 {
 				int32_t g_tim, g_dat, g_lat, g_lon, g_alt, g_sat;
-				//loc_t gps_data;
-
 				//initialize GPS connection
 				gps_init();
-
 				while(1)
 								if (wait_for_interrupt(intc_fd, intc_ptr)){
 												//get GPS data
@@ -315,7 +308,6 @@ void *thread_isr(void *p)
 												dev_write(cfg_ptr,CFG_LONGITUDE_OFFSET, g_lon);
 												dev_write(cfg_ptr,CFG_ALTITUDE_OFFSET, g_alt);
 												dev_write(cfg_ptr,CFG_SATELLITE_OFFSET, g_sat);
-
 												//printf("%lf %lf\n", gps_data.latitude, gps_data.longitude);
 								}
 }
@@ -323,7 +315,6 @@ void *thread_isr(void *p)
 void *thread_isr_not_gps(void *p) 
 {
 				//int32_t g_tim, g_dat, g_lat, g_lon, g_alt, g_sat;
-
 				while(1)
 								if (wait_for_interrupt(intc_fd, intc_ptr)){
 												//write GPS data into registers
@@ -344,7 +335,7 @@ void *thread_isr_not_gps(void *p)
 													dev_write(cfg_ptr,CFG_SATELLITE_OFFSET, g_sat);
 												 */
 												//printf("%lf %lf\n", gps_data.latitude, gps_data.longitude);
-								}
+}
 }
 
 void show_usage(char *progname) 
@@ -391,7 +382,7 @@ void show_usage(char *progname)
 								//printf("\t-b <byte>\t\t\tValue to load into register\n");
 
 								printf("\n\n");
-				}
+}
 }
 
 //TODO: change this function to just strncpy
@@ -637,7 +628,7 @@ int parse_param(int argc, char *argv[])
 												return 0;
 								}
 
-								return 1;
+							return 1;
 				}
 				return 1;
 }
@@ -706,7 +697,7 @@ int new_file()
 								fileTime=timegm(fileDate);
 								fileDate=gmtime(&fileTime); // filling all fields with properly computed values (for new month/year)
 								if (falseGPS) {
-												snprintf(charCurrentFile,MAXCHRLEN,"%s_nogps_%04d_%02d_%02d_%02dh00.dat",charFile,fileDate->tm_year+1900, fileDate->tm_mon+1,fileDate->tm_mday,fileDate->tm_hour);
+										snprintf(charCurrentFile,MAXCHRLEN,"%s_nogps_%04d_%02d_%02d_%02dh00.dat",charFile,fileDate->tm_year+1900, fileDate->tm_mon+1,fileDate->tm_mday,fileDate->tm_hour);
 												snprintf(charCurrentMetaData,MAXCHRLEN,"%s_nogps_%04d_%02d_%02d_%02dh00.mtd",charFile,fileDate->tm_year+1900, fileDate->tm_mon+1,fileDate->tm_mday,fileDate->tm_hour);
 								} 
 								else {
@@ -894,8 +885,8 @@ int read_buffer(int pos, void *bmp)
 																																				if (fileDate->tm_sec==60 && fileDate->tm_min==59) { // new hour
 																																								if (!fToStdout)
 																																												new_file();
-																																				} 
-																																				else {
+																																			} 
+																																			else {
 																																								fileTime=timegm(fileDate);
 																																								fileDate=gmtime(&fileTime); // filling all fields with properly comupted values (for new month/year)
 																																				}
@@ -905,11 +896,11 @@ int read_buffer(int pos, void *bmp)
 																																								// new hour of data
 																																								if ((uint32_t)fileDate->tm_hour>((wo>>16)&0x000000FF)) { // new day
 																																												fileDate->tm_mday++;
-																																								}
-																																								fileDate->tm_hour=(wo>>16)&0x000000FF;
+																																							}
+																																							fileDate->tm_hour=(wo>>16)&0x000000FF;
 																																								if (!fToStdout)
 																																												new_file();
-																																				}
+																																			}
 																																				fileDate->tm_hour=(wo>>16)&0x000000FF;
 																																				fileDate->tm_min=(wo>>8)&0x000000FF;
 																																				fileDate->tm_sec=wo&0x000000FF;
@@ -941,12 +932,6 @@ int read_buffer(int pos, void *bmp)
 																																break;
 																																//FIXME: see if can add the FPGA interface in this stage
 																												case 0x1C: // Longitude, latitude, defined by other bits
-																																//	if (wo & 0x800000){ 
-																																//					v_temp = (wo|0xFF000000);
-																																//	}else{ 
-																																//					v_temp = (wo&0xEFFFFF);
-																																//	}
-
 																																switch(((wo)>>24) & 0x7) {
 																																				case 0:
 																																								gps_lat=((int32_t)(wo&0xFFFFFF)<<8>>8)/65536.0;
@@ -990,12 +975,12 @@ int read_buffer(int pos, void *bmp)
 																																fprintf(fhout,"# E @@@\n");
 																																fprintf(fhout,"# E 3 - unknown word from FPGA: %d %x\n",wo>>27,wo>>27);
 																																break;
-																								}
+																							}
 																				}
 																}
 												}
 												current=i;
-								}
+							}
 				}
 				return 1;
 }

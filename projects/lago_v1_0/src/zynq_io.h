@@ -133,6 +133,7 @@ int      xadc_init(void);
 int      mem_init(void);
 float    get_voltage(uint32_t offset);
 void     set_voltage(uint32_t offset, int32_t value);
+float    get_temp_AD592(uint32_t offset);
 int      init_system(void);
 int      enable_interrupt(void);
 int      disable_interrupt(void);

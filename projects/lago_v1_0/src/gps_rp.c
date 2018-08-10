@@ -79,7 +79,6 @@ void gps_off(void)
 
 int gps_print_data()
 {
-        //FIXME: see if this is necessary here
         gps_init();
 
         loc_t data;

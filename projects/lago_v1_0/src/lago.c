@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
 				sts_init();    
 				xadc_init();
 
-				//Check if it is the first time we access the PL 
+				//Check if it is the first time we access the PL
 				//This is for initial configuration
 				//default is MASTER mode, using false PPS
 				if (dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET) == 0) //first time access
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
 												printf("Error! NO BMP device is present!\n");
 								}
 				}
-				else if (fGetGPS) { 								//if ((dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET) && FGPS_EN_MASK) == 1) { // No GPS is present
+				else if (fGetGPS) { 
 								if (((dev_read(cfg_ptr, CFG_RESET_GRAL_OFFSET)>>4) & 0x1) == 1) { // No GPS is present
 												printf("No GPS device is present or enabled!!!\n");
 								}
@@ -831,7 +831,7 @@ int read_buffer(int pos, void *bmp)
 								readend=limit; // note: don't read after limit
 				}
 				if(current!=pos) {
-					
+
 								//printf("# # # # NEW BUFFER %d %d \n", pos, limit);
 								//offset = limit > 0 ? 0 : 4096*1024;
 								//limit = limit > 0 ? 0 : 512*1024;

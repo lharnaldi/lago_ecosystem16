@@ -37,6 +37,7 @@ typedef struct ldata
 int  main(int argc, char *argv[]);
 void signal_handler(int sig);
 int  wait_for_interrupt(int fd_int, void *dev_ptr);
+void *thread_isr_not_gps(void *p);
 void *thread_isr(void *p);  
 void show_usage(char *progname);
 void StrcpyS(char *szDst, size_t cchDst, const char *szSrc); 

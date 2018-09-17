@@ -722,6 +722,8 @@ int new_file()
 				fprintf(fhout,"# #   # x f <V>        : 125 MHz frequency\n");
 				fprintf(fhout,"# #   # x t <V>        : temperature value\n");
 				fprintf(fhout,"# #   # x p <V>        : pressure value\n");
+				fprintf(fhout,"# #   # x r1 <V>       : pulse rate at channel 1\n");
+				fprintf(fhout,"# #   # x r2 <V>       : pulse rate at channel 2\n");
 				fprintf(fhout,"# #   # x h <HH:MM:SS> <DD/MM/YYYY> <S> : GPS time (every new second, last number is seconds since EPOCH)\n");
 				fprintf(fhout,"# #   # x s <T> C <P> hPa <A> m : temperature <T>, pressure <P> and altitude (from pressure) <A>\n");
 				fprintf(fhout,"# #   # x g <LAT> <LON> <ALT>   : GPS data - latitude, longitude, altitude\n");

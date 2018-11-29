@@ -75,44 +75,45 @@
 #define STS_STATUS_OFFSET     0x0
 
 //XADC
-#define XADC_SRR_OFFSET          0x0
-#define XADC_SR_OFFSET           0x4
-#define XADC_AOSR_OFFSET         0x8
-#define XADC_CONVSTR_OFFSET      0xC
-#define XADC_SYSMONRR_OFFSET     0x10
-#define XADC_GIER_OFFSET         0x5C
-#define XADC_IPISR_OFFSET        0x60
-#define XADC_IPIER_OFFSET        0x68
-#define XADC_TEMPERATURE_OFFSET  0x200
-#define XADC_VCCINT_OFFSET       0x204
-#define XADC_VCCAUX_OFFSET       0x208
-#define XADC_VPVN_OFFSET         0x20C
-#define XADC_VREFP_OFFSET        0x210
-#define XADC_VREFN_OFFSET        0x214
-#define XADC_VBRAM_OFFSET        0x218
-#define XADC_UNDEF_OFFSET        0x21C
-#define XADC_SPLYOFF_OFFSET      0x220
-#define XADC_ADCOFF_OFFSET       0x224
-#define XADC_GAIN_ERR_OFFSET     0x228
-#define XADC_ZDC_SPLY_OFFSET     0x234
-#define XADC_ZDC_AUX_SPLY_OFFSET 0x238
-#define XADC_ZDC_MEM_SPLY_OFFSET 0x23C
-#define XADC_VAUX_PN_0_OFFSET    0x240
-#define XADC_VAUX_PN_1_OFFSET    0x244
-#define XADC_VAUX_PN_2_OFFSET    0x248
-#define XADC_VAUX_PN_3_OFFSET    0x24C
-#define XADC_VAUX_PN_4_OFFSET    0x250
-#define XADC_VAUX_PN_5_OFFSET    0x254
-#define XADC_VAUX_PN_6_OFFSET    0x258
-#define XADC_VAUX_PN_7_OFFSET    0x25C
-#define XADC_VAUX_PN_8_OFFSET    0x260
-#define XADC_VAUX_PN_9_OFFSET    0x264
-#define XADC_VAUX_PN_10_OFFSET   0x268
-#define XADC_VAUX_PN_11_OFFSET   0x26C
-#define XADC_VAUX_PN_12_OFFSET   0x270
-#define XADC_VAUX_PN_13_OFFSET   0x274
-#define XADC_VAUX_PN_14_OFFSET   0x278
-#define XADC_VAUX_PN_15_OFFSET   0x27C
+//See page 17 of PG091
+#define XADC_SRR_OFFSET          0x00   //Software reset register
+#define XADC_SR_OFFSET           0x04   //Status Register
+#define XADC_AOSR_OFFSET         0x08   //Alarm Out Status Register
+#define XADC_CONVSTR_OFFSET      0x0C   //CONVST Register
+#define XADC_SYSMONRR_OFFSET     0x10   //XADC Reset Register
+#define XADC_GIER_OFFSET         0x5C   //Global Interrupt Enable Register
+#define XADC_IPISR_OFFSET        0x60   //IP Interrupt Status Register
+#define XADC_IPIER_OFFSET        0x68   //IP Interrupt Enable Register
+#define XADC_TEMPERATURE_OFFSET  0x200  //Temperature
+#define XADC_VCCINT_OFFSET       0x204  //VCCINT
+#define XADC_VCCAUX_OFFSET       0x208  //VCCAUX
+#define XADC_VPVN_OFFSET         0x20C  //VP/VN
+#define XADC_VREFP_OFFSET        0x210  //VREFP
+#define XADC_VREFN_OFFSET        0x214  //VREFN
+#define XADC_VBRAM_OFFSET        0x218  //VBRAM
+#define XADC_UNDEF_OFFSET        0x21C  //Undefined
+#define XADC_SPLYOFF_OFFSET      0x220  //Supply Offset
+#define XADC_ADCOFF_OFFSET       0x224  //ADC Offset
+#define XADC_GAIN_ERR_OFFSET     0x228  //Gain Error
+#define XADC_ZDC_SPLY_OFFSET     0x234  //Zynq-7000 Device Core Supply
+#define XADC_ZDC_AUX_SPLY_OFFSET 0x238  //Zynq-7000 Device Core Aux Supply
+#define XADC_ZDC_MEM_SPLY_OFFSET 0x23C  //Zynq-7000 Device Core Memory Supply
+#define XADC_VAUX_PN_0_OFFSET    0x240  //VAUXP[0]/VAUXN[0]
+#define XADC_VAUX_PN_1_OFFSET    0x244  //VAUXP[1]/VAUXN[1]
+#define XADC_VAUX_PN_2_OFFSET    0x248  //VAUXP[2]/VAUXN[2]
+#define XADC_VAUX_PN_3_OFFSET    0x24C  //VAUXP[3]/VAUXN[3]
+#define XADC_VAUX_PN_4_OFFSET    0x250  //VAUXP[4]/VAUXN[4]
+#define XADC_VAUX_PN_5_OFFSET    0x254  //VAUXP[5]/VAUXN[5]
+#define XADC_VAUX_PN_6_OFFSET    0x258  //VAUXP[6]/VAUXN[6]
+#define XADC_VAUX_PN_7_OFFSET    0x25C  //VAUXP[7]/VAUXN[7]
+#define XADC_VAUX_PN_8_OFFSET    0x260  //VAUXP[8]/VAUXN[8]
+#define XADC_VAUX_PN_9_OFFSET    0x264  //VAUXP[9]/VAUXN[9]
+#define XADC_VAUX_PN_10_OFFSET   0x268  //VAUXP[10]/VAUXN[10]
+#define XADC_VAUX_PN_11_OFFSET   0x26C  //VAUXP[11]/VAUXN[11]
+#define XADC_VAUX_PN_12_OFFSET   0x270  //VAUXP[12]/VAUXN[12]
+#define XADC_VAUX_PN_13_OFFSET   0x274  //VAUXP[13]/VAUXN[13]
+#define XADC_VAUX_PN_14_OFFSET   0x278  //VAUXP[14]/VAUXN[14]
+#define XADC_VAUX_PN_15_OFFSET   0x27C  //VAUXP[15]/VAUXN[15]
 
 #define XADC_AI0_OFFSET XADC_VAUX_PN_8_OFFSET
 #define XADC_AI1_OFFSET XADC_VAUX_PN_0_OFFSET
@@ -120,6 +121,7 @@
 #define XADC_AI3_OFFSET XADC_VAUX_PN_9_OFFSET
 
 #define XADC_CONV_VAL 0.00171191993362 //(A_ip/2^12)*(34.99/4.99)
+#define XADC_RDIV_VAL 1.798     //voltage divisor in board (15k+16.983k)/16.983k = 1.88
 
 extern int intc_fd, cfg_fd, sts_fd, xadc_fd, mem_fd;
 extern void *intc_ptr, *cfg_ptr, *sts_ptr, *xadc_ptr, *mem_ptr;

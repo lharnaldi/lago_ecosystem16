@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 {
 				int rc;
 				//PT device
-				float t, p, alt;
+				float t, p, alt, volt;
 				char *i2c_device = "/dev/i2c-0";
 				int address = 0x77;
 
@@ -178,13 +178,16 @@ int main(int argc, char *argv[])
 								init_system();
 				}
 				else if (fGetXADC) {
-								printf("Reading XADC channels...\n");
-								printf("Voltage CH1: %.3f\n",get_voltage(XADC_AI0_OFFSET));
-								printf("Voltage CH2: %.3f\n",get_voltage(XADC_AI1_OFFSET));
-								printf("Voltage CH3: %.3f\n",get_voltage(XADC_AI2_OFFSET));
-								printf("Voltage CH4: %.3f\n",get_voltage(XADC_AI3_OFFSET));
-								printf("Base temperature CH1: %.1f ºC\n",get_temp_AD592(XADC_AI0_OFFSET));
-								printf("Base temperature CH2: %.1f ºC\n",get_temp_AD592(XADC_AI1_OFFSET));
+                printf("Reading XADC channels...\n");
+                printf("Voltage CH1: %.3f\n",get_voltage(XADC_AI0_OFFSET));
+                printf("Voltage CH2: %.3f\n",get_voltage(XADC_AI1_OFFSET));
+                volt = get_voltage(XADC_AI2_OFFSET);
+                printf("Voltage CH3: %.3f V (%.1f V)\n",volt, (volt/0.0031949));
+                volt = get_voltage(XADC_AI3_OFFSET);
+                printf("Voltage CH4: %.3f V (%.1f V)\n",volt, (volt/0.0031949));
+                printf("Base temperature CH1: %.1f ºC\n",get_temp_AD592(XADC_AI0_OFFSET));
+                printf("Base temperature CH2: %.1f ºC\n",get_temp_AD592(XADC_AI1_OFFSET));
+
 				}
 				else if (fToFile || fToStdout) {
 
@@ -727,6 +730,7 @@ int new_file()
 				fprintf(fhout,"# #   # x h <HH:MM:SS> <DD/MM/YYYY> <S> : GPS time (every new second, last number is seconds since EPOCH)\n");
 				fprintf(fhout,"# #   # x s <T> C <P> hPa <A> m : temperature <T>, pressure <P> and altitude (from pressure) <A>\n");
 				fprintf(fhout,"# #   # x g <LAT> <LON> <ALT>   : GPS data - latitude, longitude, altitude\n");
+				fprintf(fhout,"# #   # x v <HV1> <HV2>         : HV voltages for channels 1 and 2\n");
 				fprintf(fhout,"# #   # x b <B1> <B2> <B3>      : baselines (NOT IMPLEMENTED IN LAGO)\n");
 				fprintf(fhout,"# # In case of error, an unfinished line will be finished by # E @@@\n");
 				fprintf(fhout,"# # Followed by a line with # E <N> and the error message in human readable format, where <N> is the error code:\n");
@@ -915,6 +919,7 @@ int read_buffer(int pos, void *bmp)
 																																								fileDate->tm_mday, fileDate->tm_mon+1,fileDate->tm_year+1900,
 																																								(int)fileTime,wo&0x03FFFFFF
 																																			 );
+																																fprintf(fhout,"# x v %.1f %.1f\n",(get_voltage(XADC_AI2_OFFSET)/0.0031949),(get_voltage(XADC_AI3_OFFSET)/0.0031949));
 																																fprintf(fhout,"# p %u %.1f %.1f\n",hack++,get_temp_AD592(XADC_AI0_OFFSET),get_temp_AD592(XADC_AI1_OFFSET));
 																																if (hack%60==0) printf("\n");
 																																printf("rates %5d %5d, PPS %u        \r",r1,r2,hack);

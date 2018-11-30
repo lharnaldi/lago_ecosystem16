@@ -414,7 +414,10 @@ group_bd_cells Analog_Output [get_bd_cells cfg_dac_pwm_2] [get_bd_cells cfg_dac_
 #XADC related
 # Create xadc
 cell xilinx.com:ip:xadc_wiz:3.3 xadc_wiz_0 {
+	DCLK_FREQUENCY 125
+	ADC_CONVERSION_RATE 500
   XADC_STARUP_SELECTION channel_sequencer
+	CHANNEL_AVERAGING 64
   OT_ALARM false
   USER_TEMP_ALARM false
   VCCINT_ALARM false

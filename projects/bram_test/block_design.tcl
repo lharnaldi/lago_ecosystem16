@@ -59,11 +59,11 @@ cell xilinx.com:ip:xlslice:1.0 rst_cntr {
 }
 
 # Create xlslice. rst histogramer
-cell xilinx.com:ip:xlslice:1.0 rst_hist {
-  DIN_WIDTH 1024 DIN_FROM 1 DIN_TO 1
-} {
-  din cfg_0/cfg_data
-}
+#cell xilinx.com:ip:xlslice:1.0 rst_hist {
+#  DIN_WIDTH 1024 DIN_FROM 1 DIN_TO 1
+#} {
+#  din cfg_0/cfg_data
+#}
 
 # Create xlslice. rst bram reader
 cell xilinx.com:ip:xlslice:1.0 rst_bram_reader {
@@ -93,15 +93,6 @@ cell xilinx.com:ip:xlslice:1.0 slice_7 {
   din cfg_0/cfg_data
 }
 
-# Create axis_counter
-cell labdpr:user:axis_counter:1.0 cntr_1 {
-  AXIS_TDATA_WIDTH 16
-} {
-  cfg_data slice_6/dout
-  aclk ps_0/FCLK_CLK0
-  aresetn rst_cntr/dout
-}
-
 # Create blk_mem_gen
 cell xilinx.com:ip:blk_mem_gen:8.3 bram_0 {
   MEMORY_TYPE True_Dual_Port_RAM
@@ -113,17 +104,27 @@ cell xilinx.com:ip:blk_mem_gen:8.3 bram_0 {
   REGISTER_PORTB_OUTPUT_OF_MEMORY_PRIMITIVES false
 }
 
-# Create axis_histogram
-cell labdpr:user:axis_histogram:1.0 hist_0 {
-  BRAM_ADDR_WIDTH 14
-  BRAM_DATA_WIDTH 32
+# Create axis_counter
+cell labdpr:user:bram_counter:1.0 cntr_1 {
   AXIS_TDATA_WIDTH 16
 } {
-  S_AXIS cntr_1/M_AXIS
-  BRAM_PORTA bram_0/BRAM_PORTA
+  cfg_data slice_6/dout
   aclk ps_0/FCLK_CLK0
-  aresetn rst_hist/dout
+  aresetn rst_cntr/dout
+  BRAM_PORTA bram_0/BRAM_PORTA
 }
+
+# Create axis_histogram
+#cell labdpr:user:axis_histogram:1.0 hist_0 {
+#  BRAM_ADDR_WIDTH 14
+#  BRAM_DATA_WIDTH 32
+#  AXIS_TDATA_WIDTH 16
+#} {
+#  S_AXIS cntr_1/M_AXIS
+#  BRAM_PORTA bram_0/BRAM_PORTA
+#  aclk ps_0/FCLK_CLK0
+#  aresetn rst_hist/dout
+#}
 
 # Create axis_bram_reader
 cell labdpr:user:axis_bram_reader:1.0 reader_0 {

@@ -11,21 +11,21 @@ entity axis_histogram is
 								);
 				port ( 
 										 -- System signals
-										 aclk           : in std_logic;
-										 aresetn        : in std_logic;
+										 aclk              : in std_logic;
+										 aresetn           : in std_logic;
 
 										 -- Slave side
-										 s_axis_tready  : out std_logic;
-										 s_axis_tvalid  : in std_logic;
-										 s_axis_tdata   : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+										 s_axis_tready     : out std_logic;
+										 s_axis_tvalid     : in std_logic;
+										 s_axis_tdata      : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
 
 										 -- BRAM port
-										 bram_porta_clk   : out std_logic;
-										 bram_porta_rst   : out std_logic;
-										 bram_porta_addr  : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
-										 bram_porta_wrdata: out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
-										 bram_porta_rddata: in std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
-										 bram_porta_we    : out std_logic
+										 bram_porta_clk    : out std_logic;
+										 bram_porta_rst    : out std_logic;
+										 bram_porta_addr   : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
+										 bram_porta_wrdata : out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
+										 bram_porta_rddata : in std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
+										 bram_porta_we     : out std_logic
 						 );
 end axis_histogram;
 
@@ -41,11 +41,11 @@ architecture rtl of axis_histogram is
 );
 signal state_reg, state_next : state_t;
 
-signal addr_reg, addr_next : std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
-signal data_reg, data_next : std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
+signal addr_reg, addr_next     : std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
+signal data_reg, data_next     : std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
 signal tready_reg, tready_next : std_logic;
-signal wren_reg, wren_next : std_logic;
-signal wren_s              : std_logic;
+signal wren_reg, wren_next     : std_logic;
+signal wren_s                  : std_logic;
 
 begin
 
@@ -53,7 +53,8 @@ begin
 
 				bram_porta_clk    <= aclk;
 				bram_porta_rst    <= not aresetn;
-				bram_porta_addr   <= std_logic_vector(addr_reg) when wren_reg = '1' else s_axis_tdata(BRAM_ADDR_WIDTH-1 downto 0);
+				bram_porta_addr   <= addr_reg when (wren_reg = '1') else 
+														 s_axis_tdata(BRAM_ADDR_WIDTH-1 downto 0);
 				bram_porta_wrdata <= data_reg;
 				bram_porta_we     <= wren_reg;
 
@@ -76,7 +77,9 @@ begin
 								end if;
 				end process;
 
-				wren_s <= '1' when (unsigned(bram_porta_rddata) = X"FFFFFFFF") else '0';
+				wren_s <= '1' when (unsigned(bram_porta_rddata) = to_unsigned(1,bram_porta_rddata'length)) else 
+									'0';
+
 				--Next state logic
 				process(state_reg, addr_reg, s_axis_tvalid)
 				begin
@@ -94,7 +97,7 @@ begin
 																state_next    <= ST_WRITE_ZEROS;
 												when ST_WRITE_ZEROS =>
 																addr_next     <= std_logic_vector(unsigned(addr_reg) + 1);
-																if (unsigned(addr_reg) = "11111111111111") then
+																if (unsigned(addr_reg) = to_unsigned(1, addr_reg'length)) then
 																				tready_next <= '1';
 																				wren_next   <= '0';
 																				state_next  <= ST_READ_ADDR;

@@ -45,6 +45,7 @@ CORES = axi_axis_reader_v1_0 \
 				axis_variable_v1_0 \
 				axis_zero_crossing_det_v1_0 \
 				axis_zeroer_v1_0 \
+				bram_counter_v1_0 \
 				dc_removal_v1_0 \
 				dna_reader_v1_0 \
 				int_counter_v1_0 \

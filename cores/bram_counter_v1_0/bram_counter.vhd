@@ -5,7 +5,6 @@ use ieee.numeric_std.all;
 
 entity bram_counter is
 				generic (
-												AXIS_TDATA_WIDTH: natural := 16;
 												BRAM_DATA_WIDTH : natural := 32;
 												BRAM_ADDR_WIDTH : natural := 14
 								);

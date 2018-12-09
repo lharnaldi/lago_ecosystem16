@@ -42,7 +42,7 @@ architecture rtl of axis_bram_reader is
 				signal comp_s              : std_logic; 
 				signal tlast_s             : std_logic;
 				signal enbl_reg, enbl_next : std_logic;
-				--signal conf_reg, conf_next : std_logic;
+--signal conf_reg, conf_next : std_logic;
 
 begin
 
@@ -53,18 +53,19 @@ begin
 																addr_reg <= (others => '0');
 																data_reg <= (others => '0');
 																enbl_reg <= '0';
-																--conf_reg <= '0';
+												--conf_reg <= '0';
 												else 
 																addr_reg <= addr_next;
 																data_reg <= data_next;
 																enbl_reg <= enbl_next;
-																--conf_reg <= conf_next;
+												--conf_reg <= conf_next;
 												end if;
 								end if;
 				end process;
 
 				-- Next state logic
 				data_next <= cfg_data;
+
 				comp_s <= '1' when (unsigned(addr_reg) < unsigned(data_reg)) else 
 									'0';
 				tlast_s <= not comp_s;
@@ -72,7 +73,7 @@ begin
 				CONTINUOUS_G: if (CONTINUOUS = "TRUE") generate
 				begin
 								addr_next <= std_logic_vector(unsigned(addr_reg) + 1) when (m_axis_tready = '1') and (enbl_reg = '1') and (comp_s = '1') else
-														 (others => '0') when (m_axis_tready = '1' and enbl_reg = '1' and tlast_s = '1') else
+														 (others => '0') when (m_axis_tready = '1') and (enbl_reg = '1') and (comp_s = '0') else
 														 addr_reg;
 
 								enbl_next <= '1' when (enbl_reg = '0') and (comp_s = '1') else 
@@ -84,27 +85,26 @@ begin
 								addr_next <= std_logic_vector(unsigned(addr_reg) + 1) when (m_axis_tready = '1') and (enbl_reg = '1') and (comp_s = '1') else
 														 addr_reg;
 
-								enbl_next <= '1' when (enbl_reg = '0') and (comp_s = '1') else
-														 '0' when (m_axis_tready = '1') and (enbl_reg = '1') and (tlast_s = '1') else
+								enbl_next <= '1' when (m_axis_tready = '1') and (comp_s = '1') else
+														 '0' when (m_axis_tready = '1') and (comp_s = '0') else
 														 enbl_reg;
 
-								--conf_next <= '1' when (m_axis_tready = '1') and (enbl_reg = '1') and (tlast_s = '1') else
-								--						 '0' when (conf_reg = '1') and (m_axis_config_tready = '1') else
-								--						 conf_reg;
+				--conf_next <= '1' when (m_axis_tready = '1') and (enbl_reg = '1') and (tlast_s = '1') else
+				--						 '0' when (conf_reg = '1') and (m_axis_config_tready = '1') else
+				--						 conf_reg;
 				end generate;
 
 				sts_data <= addr_reg;
 
-				m_axis_tdata <= bram_porta_rddata;
+				m_axis_tdata  <= bram_porta_rddata;
 				m_axis_tvalid <= enbl_reg;
-				m_axis_tlast <= '1' when (enbl_reg = '1') and (tlast_s = '1') else 
-												'0';
+				m_axis_tlast  <= '1' when (enbl_reg = '1') and (tlast_s = '1') else 
+												 '0';
 
 				--m_axis_config_tvalid <= conf_reg;
 
 				bram_porta_clk <= aclk;
 				bram_porta_rst <= not aresetn;
-				bram_porta_addr <= addr_next when (m_axis_tready = '1') and (enbl_reg = '1') else 
-													 addr_reg;
+				bram_porta_addr <= addr_reg;
 
 end rtl;

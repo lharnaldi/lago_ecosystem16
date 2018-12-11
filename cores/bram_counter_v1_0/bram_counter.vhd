@@ -59,10 +59,10 @@ begin
 								end if;
 				end process;
 
-				wren_next <= '0' when (cntr_reg = unsigned(cfg_data)) else
+				wren_next <= '0' when (cntr_reg = unsigned(cfg_data)-1) else
 										 '1';
 
-				comp_next <= '0' when (cntr_reg = unsigned(cfg_data)) else 
+				comp_next <= '0' when (cntr_reg = unsigned(cfg_data)-1) else 
 										 '1';
 
 				addr_next <= addr_reg + 1 when (comp_reg = '1') else

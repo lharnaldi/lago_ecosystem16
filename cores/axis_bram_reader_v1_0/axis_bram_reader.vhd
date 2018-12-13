@@ -5,7 +5,6 @@ use ieee.numeric_std.all;
 
 entity axis_bram_reader is
 				generic (
-												CONTINUOUS        : string  := "FALSE";
 												BRAM_ADDR_WIDTH   : natural := 10;
 												BRAM_DATA_WIDTH   : natural := 32;
 												AXIS_TDATA_WIDTH  : natural := 32
@@ -72,9 +71,8 @@ begin
 										 (others => '0') when (comp_reg = '0') else
 										 addr_reg;
 
-				addr_dly_next <= addr_reg when (m_axis_tready = '1') and (comp_reg = '1') else
-												 (others => '0') when (comp_reg = '0') else
-												 addr_dly_reg;
+				addr_dly_next <= addr_reg;
+
 				--tvalid_next <= '1' when (tvalid_reg = '0') and (comp_reg = '1') else 
 				--							 '0' when 
 				--							 tvalid_reg;

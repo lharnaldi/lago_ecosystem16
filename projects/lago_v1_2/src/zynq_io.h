@@ -121,7 +121,8 @@
 #define XADC_AI3_OFFSET XADC_VAUX_PN_9_OFFSET
 
 #define XADC_CONV_VAL 0.00171191993362 //(A_ip/2^12)*(34.99/4.99)
-#define XADC_RDIV_VAL 1.798     //voltage divisor in board (15k+16.983k)/16.983k = 1.88
+#define XADC_RDIV_VAL 1.883236177     //voltage divisor in board (15k+16.983k)/16.983k = 1.88
+#define XADC_BASE_HVDIV 0.00294088    //voltage divisor in HV base board (100k/31.3Meg) = 3.194888179. The value I put here is the measured one.
 
 extern int intc_fd, cfg_fd, sts_fd, xadc_fd, mem_fd;
 extern void *intc_ptr, *cfg_ptr, *sts_ptr, *xadc_ptr, *mem_ptr;

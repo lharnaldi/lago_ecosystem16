@@ -182,9 +182,9 @@ int main(int argc, char *argv[])
                 printf("Voltage CH1: %.3f\n",get_voltage(XADC_AI0_OFFSET));
                 printf("Voltage CH2: %.3f\n",get_voltage(XADC_AI1_OFFSET));
                 volt = get_voltage(XADC_AI2_OFFSET);
-                printf("Voltage CH3: %.3f V (%.1f V)\n",volt, (volt/0.0031949));
+                printf("Voltage CH3: %.3f V (%.1f V)\n",volt, (volt*(XADC_RDIV_VAL/XADC_BASE_HVDIV)));
                 volt = get_voltage(XADC_AI3_OFFSET);
-                printf("Voltage CH4: %.3f V (%.1f V)\n",volt, (volt/0.0031949));
+                printf("Voltage CH4: %.3f V (%.1f V)\n",volt, (volt*(XADC_RDIV_VAL/XADC_BASE_HVDIV)));
                 printf("Base temperature CH1: %.1f ºC\n",get_temp_AD592(XADC_AI0_OFFSET));
                 printf("Base temperature CH2: %.1f ºC\n",get_temp_AD592(XADC_AI1_OFFSET));
 

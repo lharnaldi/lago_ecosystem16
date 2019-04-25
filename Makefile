@@ -52,8 +52,7 @@ CORES = axi_axis_reader_v1_0 \
 				pps_gen_v1_0 \
 				pps_gen_v1_1 \
 				pwm_gen_v1_0 \
-				ramp_gen_v1_0 \
-				chan16_v1_0
+				ramp_gen_v1_0 
 
 
 VIVADO = vivado -nolog -nojournal -mode batch

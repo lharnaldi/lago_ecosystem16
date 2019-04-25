@@ -77,7 +77,7 @@ begin
 								end if;
 				end process;
 
-				wren_s <= '1' when (unsigned(bram_porta_rddata) = to_unsigned(1,bram_porta_rddata'length)) else 
+				wren_s <= '1' when (bram_porta_rddata = "11111111111111") else 
 									'0';
 
 				--Next state logic
@@ -97,7 +97,7 @@ begin
 																state_next    <= ST_WRITE_ZEROS;
 												when ST_WRITE_ZEROS =>
 																addr_next     <= std_logic_vector(unsigned(addr_reg) + 1);
-																if (unsigned(addr_reg) = to_unsigned(1, addr_reg'length)) then
+																if (addr_reg = "11111111111111") then
 																				tready_next <= '1';
 																				wren_next   <= '0';
 																				state_next  <= ST_READ_ADDR;

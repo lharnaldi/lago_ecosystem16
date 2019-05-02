@@ -919,7 +919,7 @@ int read_buffer(int pos, void *bmp)
 																																								fileDate->tm_mday, fileDate->tm_mon+1,fileDate->tm_year+1900,
 																																								(int)fileTime,wo&0x03FFFFFF
 																																			 );
-																																fprintf(fhout,"# x v %.1f %.1f\n",(get_voltage(XADC_AI2_OFFSET)/0.0031949),(get_voltage(XADC_AI3_OFFSET)/0.0031949));
+																																fprintf(fhout,"# x v %.1f %.1f\n",(get_voltage(XADC_AI2_OFFSET)*(XADC_RDIV_VAL/XADC_BASE_HVDIV)),(get_voltage(XADC_AI3_OFFSET)*(XADC_RDIV_VAL/XADC_BASE_HVDIV)));
 																																fprintf(fhout,"# p %u %.1f %.1f\n",hack++,get_temp_AD592(XADC_AI0_OFFSET),get_temp_AD592(XADC_AI1_OFFSET));
 																																if (hack%60==0) printf("\n");
 																																printf("rates %5d %5d, PPS %u        \r",r1,r2,hack);

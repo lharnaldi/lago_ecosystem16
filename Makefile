@@ -121,6 +121,8 @@ $(LINUX_DIR): $(LINUX_TAR) $(RTL8188_TAR)
 	mkdir -p $@/drivers/net/wireless/realtek/rtl8188eu
 	tar -zxf $(RTL8188_TAR) --strip-components=1 --directory=$@/drivers/net/wireless/realtek/rtl8188eu
 	patch -d tmp -p 0 < patches/linux-xlnx-$(LINUX_TAG).patch
+	patch -d tmp -p 0 < patches/driver_rtl8188_Makefile.patch
+	patch -d tmp -p 0 < patches/driver_rtl8188_Kconfig.patch
 	cp patches/linux-lantiq.c $@/drivers/net/phy/lantiq.c
 
 $(DTREE_DIR): $(DTREE_TAR)

@@ -79,8 +79,8 @@ LINUX_CFLAGS = "-O2 -march=armv7-a -mcpu=cortex-a9 -mtune=cortex-a9 -mfpu=neon -
 UBOOT_CFLAGS = "-O2 -march=armv7-a -mcpu=cortex-a9 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 ARMHF_CFLAGS = "-O2 -march=armv7-a -mcpu=cortex-a9 -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 
-RTL_TAR = $(TEMP)/rtl8192cu.tgz
-RTL_URL = https://www.dropbox.com/sh/5fy49wae6xwxa8a/AABNwuLz3dPHK06vEDHmG8mfa/rtl8192cu/rtl8192cu.tgz?dl=1
+RTL8188_TAR = tmp/rtl8188EUS_linux_v5.2.2.4_25483.20171222.tar.gz
+RTL8188_URL = https://www.dropbox.com/s/scjfthb9dck99cy/rtl8188EUS_linux_v5.2.2.4_25483.20171222.tar.gz?dl=0
 
 .PRECIOUS: $(TEMP)/cores/% $(TEMP)/%.xpr $(TEMP)/%.hwdef $(TEMP)/%.bit $(TEMP)/%.fsbl/executable.elf $(TEMP)/%.tree/system.dts
 
@@ -102,9 +102,9 @@ $(DTREE_TAR):
 	mkdir -p $(@D)
 	curl -L $(DTREE_URL) -o $@
 
-$(RTL_TAR):
+$(RTL8188_TAR):
 	mkdir -p $(@D)
-	curl -L $(RTL_URL) -o $@
+	curl -L $(RTL8188_URL) -o $@
 
 $(UBOOT_DIR): $(UBOOT_TAR)
 	mkdir -p $@
@@ -115,10 +115,11 @@ $(UBOOT_DIR): $(UBOOT_TAR)
 	cp patches/zynq_red_pitaya.h $@/include/configs
 	cp patches/u-boot-lantiq.c $@/drivers/net/phy/lantiq.c
 
-$(LINUX_DIR): $(LINUX_TAR) $(RTL_TAR)
+$(LINUX_DIR): $(LINUX_TAR) $(RTL8188_TAR) 
 	mkdir -p $@
 	tar -zxf $< --strip-components=1 --directory=$@
-	tar -zxf $(RTL_TAR) --directory=$@/drivers/net/wireless/realtek
+	mkdir -p $@/drivers/net/wireless/realtek/rtl8188eu
+	tar -zxf $(RTL8188_TAR) --strip-components=1 --directory=$@/drivers/net/wireless/realtek/rtl8188eu
 	patch -d tmp -p 0 < patches/linux-xlnx-$(LINUX_TAG).patch
 	cp patches/linux-lantiq.c $@/drivers/net/phy/lantiq.c
 
@@ -131,7 +132,7 @@ uImage: $(LINUX_DIR)
 	make -C $< ARCH=arm xilinx_zynq_defconfig
 	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) \
 	  -j $(shell nproc 2> /dev/null || echo 1) \
-	  CROSS_COMPILE=arm-linux-gnueabihf- UIMAGE_LOADADDR=0x8000 uImage
+	  CROSS_COMPILE=arm-linux-gnueabihf- UIMAGE_LOADADDR=0x8000 uImage modules
 	cp $</arch/arm/boot/uImage $@
 
 $(TEMP)/u-boot.elf: $(UBOOT_DIR)

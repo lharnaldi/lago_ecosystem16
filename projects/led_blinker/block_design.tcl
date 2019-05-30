@@ -1,38 +1,40 @@
 source projects/base_system/block_design.tcl
 
+# Create xlconstant
+cell xilinx.com:ip:xlconstant const_0
+
 # Create proc_sys_reset
-cell xilinx.com:ip:proc_sys_reset:5.0 rst_0
+cell xilinx.com:ip:proc_sys_reset rst_0 {} {
+  ext_reset_in const_0/dout
+}
 
 # LED
 
 # Create c_counter_binary
-cell xilinx.com:ip:c_counter_binary:12.0 cntr_0 {
+cell xilinx.com:ip:c_counter_binary cntr_0 {
   Output_Width 32
 } {
   CLK pll_0/clk_out1
 }
 
-# Create xlslice
-cell xilinx.com:ip:xlslice:1.0 slice_0 {
-  DIN_WIDTH 32 DIN_FROM 26 DIN_TO 26 DOUT_WIDTH 1
+# Create port_slicer
+cell labdpr:user:port_slicer slice_0 {
+  DIN_WIDTH 32 DIN_FROM 26 DIN_TO 26
 } {
-  Din cntr_0/Q
-  Dout led_o
+  din cntr_0/Q
+  dout led_o
 }
 
 # STS
 
-# Create xlconstant
-cell xilinx.com:ip:xlconstant:1.1 const_0
-
 # Create dna_reader
-cell labdpr:user:dna_reader:1.0 dna_0 {} {
-  aclk ps_0/FCLK_CLK0
+cell labdpr:user:dna_reader dna_0 {} {
+  aclk pll_0/clk_out1
   aresetn rst_0/peripheral_aresetn
 }
 
 # Create xlconcat
-cell xilinx.com:ip:xlconcat:2.1 concat_0 {
+cell xilinx.com:ip:xlconcat concat_0 {
   NUM_PORTS 2
   IN0_WIDTH 32
   IN1_WIDTH 64
@@ -42,7 +44,7 @@ cell xilinx.com:ip:xlconcat:2.1 concat_0 {
 }
 
 # Create axi_sts_register
-cell labdpr:user:axi_sts_register:1.0 sts_0 {
+cell labdpr:user:axi_sts_register sts_0 {
   STS_DATA_WIDTH 96
   AXI_ADDR_WIDTH 32
   AXI_DATA_WIDTH 32

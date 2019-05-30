@@ -47,6 +47,8 @@ CORES = axi_axis_reader_v1_0 \
         dc_removal_v1_0 \
         dna_reader_v1_0 \
         int_counter_v1_0 \
+				port_selector_v1_0 \
+				port_slicer_v1_0 \
         pps_gen_v1_0 \
         pps_gen_v1_1 \
         pwm_gen_v1_0 \
@@ -160,7 +162,7 @@ devicetree.dtb: uImage tmp/$(NAME).tree/system.dts
 	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o devicetree.dtb \
 	  -i tmp/$(NAME).tree tmp/$(NAME).tree/system-top.dts
 
-tmp/cores/%: cores/%/core_config.tcl cores/%/*.v
+tmp/cores/%: cores/%/core_config.tcl cores/%/*.vhd
 	mkdir -p $(@D)
 	$(VIVADO) -source scripts/core.tcl -tclargs $* $(PART)
 

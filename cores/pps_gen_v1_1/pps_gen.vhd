@@ -23,6 +23,7 @@ port (
   pps_gps_led_o      : out std_logic;
   false_pps_led_o    : out std_logic;
   pps_sig_o          : out std_logic;
+  pps_counter_o      : out std_logic_vector(24-1 downto 0);
   int_o              : out std_logic
 );
 end pps_gen;
@@ -42,6 +43,7 @@ architecture rtl of pps_gen is
   signal one_clk_pps       : std_logic;
   signal pps_ibuf          : std_logic;
   signal rst_sig           : std_logic;
+	signal pps_counter_reg, pps_counter_next : std_logic_vector(24-1 downto 0);
 
 begin
 
@@ -66,6 +68,22 @@ begin
 
   pps_o           <= one_clk_pps;
   clk_cnt_pps_o   <= clk_cnt_pps;
+
+	--PPS counter
+	process(aclk)
+	begin
+					if (rising_edge(aclk)) then
+									if (rst_sig = '1') then
+													pps_counter_reg <= (others => '0');
+									else
+													pps_counter_reg <= pps_counter_next;
+									end if;
+					end if;
+	end process;
+	--next state
+	pps_counter_next <= std_logic_vector(unsigned(pps_counter_reg) + 1) when
+											(one_clk_pps = '1') else pps_counter_reg;
+	pps_counter_o <= pps_counter_reg;
 
   -- false PPS
   process(aclk)

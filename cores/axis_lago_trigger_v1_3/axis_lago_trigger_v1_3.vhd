@@ -22,6 +22,7 @@ entity axis_lago_trigger is
 										 subtrig_lvl_b_i    : in std_logic_vector(AXIS_TDATA_WIDTH/2-1 downto 0);
 										 pps_i              : in std_logic;
 										 clk_cnt_pps_i      : in std_logic_vector(27-1 downto 0);
+										 pps_counter_i      : in std_logic_vector(24-1 downto 0);
 										 temp_i             : in std_logic_vector(24-1 downto 0);
 										 pressure_i         : in std_logic_vector(24-1 downto 0);
 										 time_i             : in std_logic_vector(24-1 downto 0);
@@ -167,7 +168,9 @@ begin
 				array_pps_next(METADATA_ARRAY_LENGTH-2) <= "1" & "1000" & clk_cnt_pps_i             when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-2);
 				array_pps_next(METADATA_ARRAY_LENGTH-3) <= "1" & "1001" & "000" & temp_i            when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-3);
 				array_pps_next(METADATA_ARRAY_LENGTH-4) <= "1" & "1010" & "000" & pressure_i        when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-4);
-				array_pps_next(METADATA_ARRAY_LENGTH-5) <= "1" & "1011" & "000" & time_i            when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
+				--array_pps_next(METADATA_ARRAY_LENGTH-5) <= "1" & "1011" & "000" & time_i            when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
+				-- Este cambio lo hago para sincronizar las dos placas rp
+				array_pps_next(METADATA_ARRAY_LENGTH-5) <= "1" & "1011" & "000" & pps_counter_i     when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-5);
 				array_pps_next(METADATA_ARRAY_LENGTH-6) <= "1" & "1100" & "000" & latitude_i        when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-6);
 				array_pps_next(METADATA_ARRAY_LENGTH-7) <= "1" & "1100" & "001" & longitude_i       when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-7);
 				array_pps_next(METADATA_ARRAY_LENGTH-8) <= "1" & "1100" & "010" & altitude_i        when (pps_i = '1') else array_pps_reg(METADATA_ARRAY_LENGTH-8);

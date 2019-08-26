@@ -243,6 +243,7 @@ cell labdpr:user:axis_lago_trigger:1.3 trigger_0 {
   subtrig_lvl_b_i subtrig_lvl_b/dout
   pps_i pps_0/pps_o
   clk_cnt_pps_i pps_0/clk_cnt_pps_o
+  pps_counter_i pps_0/pps_counter_o
   temp_i reg_temp/dout
   pressure_i reg_pressure/dout
   time_i reg_time/dout

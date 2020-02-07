@@ -4,15 +4,6 @@ cell xilinx.com:ip:xlconstant const_1 {
   CONST_VAL 503316480
 }
 
-# Create axis_clock_converter
-cell xilinx.com:ip:axis_clock_converter fifo_0 {} {
-  S_AXIS /adc_0/M_AXIS
-  s_axis_aclk /pll_0/clk_out1
-  s_axis_aresetn /const_0/dout
-  m_axis_aclk /pll_0/clk_out1
-  m_axis_aresetn /reset_0/Dout
-}
-
 # Create xlconstant
 cell xilinx.com:ip:xlconstant const_2 {
   CONST_WIDTH 16
@@ -23,7 +14,7 @@ cell xilinx.com:ip:xlconstant const_2 {
 cell labdpr:user:axis_dc_removal dc_removal_0 {} {
   aclk /pll_0/clk_out1
   aresetn /reset_0/Dout
-  S_AXIS fifo_0/M_AXIS
+  S_AXIS /adc_0/M_AXIS
 	k1_i const_2/dout
 	k2_i const_2/dout
 }

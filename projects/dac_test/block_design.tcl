@@ -1,7 +1,7 @@
 source projects/packetizer_test/block_design.tcl
 
 # Create dds_compiler
-cell xilinx.com:ip:dds_compiler:6.0 dds_0 {
+cell xilinx.com:ip:dds_compiler dds_0 {
   DDS_CLOCK_RATE 125
   SPURIOUS_FREE_DYNAMIC_RANGE 84
   FREQUENCY_RESOLUTION 0.5
@@ -13,7 +13,7 @@ cell xilinx.com:ip:dds_compiler:6.0 dds_0 {
 }
 
 # Create axis_rp_dac
-cell labdpr:user:axis_rp_dac:1.0 dac_0 {} {
+cell labdpr:user:axis_rp_dac dac_0 {} {
   aclk pll_0/clk_out1
   ddr_clk pll_0/clk_out2
   locked pll_0/locked

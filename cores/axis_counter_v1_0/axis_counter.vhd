@@ -46,9 +46,9 @@ begin
 								end if;
 				end process;
 
-				tlast_next <= '1' when (cntr_reg = unsigned(cfg_data)-1) else '0';
+				tlast_next <= '1' when (cntr_reg = unsigned(cfg_data)-2) else '0';
 
-				comp_next <= '0' when (cntr_reg = unsigned(cfg_data)) else '1';
+				comp_next <= '0' when (cntr_reg = unsigned(cfg_data)-1) else '1';
 
 				cntr_next <= cntr_reg + 1 when ((comp_reg = '1') and (m_axis_tready = '1')) else
 										 (others => '0') when (comp_reg = '0') else --reset

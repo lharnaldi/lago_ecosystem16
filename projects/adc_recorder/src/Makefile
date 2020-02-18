@@ -4,7 +4,7 @@ ARCH=arm
 CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 
 ####
-PROG=counter_test
+PROG=adc_recorder
 EXTRA=
 
 all: $(PROG)

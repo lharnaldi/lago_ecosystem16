@@ -2,7 +2,7 @@
 # setup Xilinx Vivado FPGA tools
 ################################################################################
 
-. /opt/Xilinx/Vivado/2018.2/settings64.sh
+. /tools/Xilinx/Vivado/2018.3/settings64.sh
 
 ################################################################################
 # setup cross compiler toolchain

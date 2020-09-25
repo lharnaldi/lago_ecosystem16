@@ -51,84 +51,84 @@ int interrupted = 0;
 
 void signal_handler(int sig)
 {
-				interrupted = 1;
+	interrupted = 1;
 }
 
 inline void dev_write(void *dev_base, unsigned int offset, unsigned int value)
 {
-				*((volatile unsigned *)(dev_base + offset)) = value;
+	*((volatile unsigned *)(dev_base + offset)) = value;
 }
 
 inline unsigned int dev_read(void *dev_base, unsigned int offset)
 {
-				return *((volatile unsigned *)(dev_base + offset));
+	return *((volatile unsigned *)(dev_base + offset));
 }
 
 int wait_for_interrupt(int fd_int, void *dev_ptr) {
-				static unsigned int count = 0, bntd_flag = 0, bntu_flag = 0;
-				int flag_end=0;
-				int pending = 0;
-				int reenable = 1;
-				unsigned int reg;
-				unsigned int value;
-				uint32_t info = 1; /* unmask */
+	static unsigned int count = 0, bntd_flag = 0, bntu_flag = 0;
+	int flag_end=0;
+	int pending = 0;
+	int reenable = 1;
+	unsigned int reg;
+	unsigned int value;
+	uint32_t info = 1; /* unmask */
 
-				ssize_t nb = write(fd_int, &info, sizeof(info));
-				if (nb != (ssize_t)sizeof(info)) {
-								perror("write");
-								close(fd_int);
-								exit(EXIT_FAILURE);
-				}
+	ssize_t nb = write(fd_int, &info, sizeof(info));
+	if (nb != (ssize_t)sizeof(info)) {
+		perror("write");
+		close(fd_int);
+		exit(EXIT_FAILURE);
+	}
 
-				// block (timeout for poll) on the file waiting for an interrupt 
-				struct pollfd fds = {
-								.fd = fd_int,
-								.events = POLLIN,
-				};
+	// block (timeout for poll) on the file waiting for an interrupt 
+	struct pollfd fds = {
+		.fd = fd_int,
+		.events = POLLIN,
+	};
 
-				int ret = poll(&fds, 1, 8000);
-				printf("ret is : %d\n", ret);
-				if (ret >= 1) {
-								nb = read(fd_int, &info, sizeof(info));
-								if (nb == (ssize_t)sizeof(info)) {
-												/* Do something in response to the interrupt. */
-												value = dev_read(dev_ptr, XIL_AXI_INTC_IPR_OFFSET);
-												if ((value & 0x00000001) != 0) {
-																dev_write(dev_ptr, XIL_AXI_INTC_IAR_OFFSET, 1);
-																printf("Interrupt #%u!\n", info);
-												}
-								} else {
-												perror("poll()");
-												close(fd_int);
-												exit(EXIT_FAILURE);
-								}
-				}
+	int ret = poll(&fds, 1, 8000);
+	printf("ret is : %d\n", ret);
+	if (ret >= 1) {
+		nb = read(fd_int, &info, sizeof(info));
+		if (nb == (ssize_t)sizeof(info)) {
+			/* Do something in response to the interrupt. */
+			value = dev_read(dev_ptr, XIL_AXI_INTC_IPR_OFFSET);
+			if ((value & 0x00000001) != 0) {
+				dev_write(dev_ptr, XIL_AXI_INTC_IAR_OFFSET, 1);
+				printf("Interrupt #%u!\n", info);
+			}
+		} else {
+			perror("poll()");
+			close(fd_int);
+			exit(EXIT_FAILURE);
+		}
+	}
 
-				return ret;
+	return ret;
 }
 
 unsigned int get_memory_size(char *sysfs_path_file)
 {
-				FILE *size_fp;
-				unsigned int size;
+	FILE *size_fp;
+	unsigned int size;
 
-				// open the file that describes the memory range size that is based on the
-				// reg property of the node in the device tree
+	// open the file that describes the memory range size that is based on the
+	// reg property of the node in the device tree
 
-				size_fp = fopen(sysfs_path_file, "r");
+	size_fp = fopen(sysfs_path_file, "r");
 
-				if (!size_fp) {
-								printf("unable to open the uio size file\n");
-								exit(-1);
-				}
+	if (!size_fp) {
+		printf("unable to open the uio size file\n");
+		exit(-1);
+	}
 
-				// get the size which is an ASCII string such as 0xXXXXXXXX and then be stop
-				// using the file
+	// get the size which is an ASCII string such as 0xXXXXXXXX and then be stop
+	// using the file
 
-				fscanf(size_fp, "0x%08X", &size);
-				fclose(size_fp);
+	fscanf(size_fp, "0x%08X", &size);
+	fclose(size_fp);
 
-				return size;
+	return size;
 }
 
 //void *thread_isr(void *p) 
@@ -139,93 +139,93 @@ unsigned int get_memory_size(char *sysfs_path_file)
 
 int main(int argc, char *argv[])
 {
-				int fd;
-				char *uiod = "/dev/uio0";
-				void *dev_ptr;
-				int dev_size;
-				int ocm_size;
-				int i, p=0,a;
-				unsigned int val;
-				pthread_t t1;
+	int fd;
+	char *uiod = "/dev/uio0";
+	void *dev_ptr;
+	int dev_size;
+	int ocm_size;
+	int i, p=0,a;
+	unsigned int val;
+	pthread_t t1;
 
 
-				signal(SIGINT, signal_handler);
+	signal(SIGINT, signal_handler);
 
-				printf("INTC UIO int test.\n");
+	printf("INTC UIO int test.\n");
 
-				// open the UIO device file to allow access to the device in user space
+	// open the UIO device file to allow access to the device in user space
 
-				fd = open(uiod, O_RDWR);
-				if (fd < 1) {
-								printf("Invalid UIO device file:%s.\n", uiod);
-								return -1;
-				}
+	fd = open(uiod, O_RDWR);
+	if (fd < 1) {
+		printf("Invalid UIO device file:%s.\n", uiod);
+		return -1;
+	}
 
-				dev_size = get_memory_size("/sys/class/uio/uio0/maps/map0/size");
+	dev_size = get_memory_size("/sys/class/uio/uio0/maps/map0/size");
 
-				// mmap the INTC device into user space
+	// mmap the INTC device into user space
 
-				dev_ptr = mmap(NULL, dev_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-				if (dev_ptr == MAP_FAILED) {
-								printf("mmap call failure.\n");
-								return -1;
-				}
+	dev_ptr = mmap(NULL, dev_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+	if (dev_ptr == MAP_FAILED) {
+		printf("mmap call failure.\n");
+		return -1;
+	}
 
-				// steps to accept interrupts -> as pg. 26 of pg099-axi-intc.pdf
-				//1) Each bit in the IER corresponding to an interrupt must be set to 1.
-				dev_write(dev_ptr,XIL_AXI_INTC_IER_OFFSET, 1);
-				//2) There are two bits in the MER. The ME bit must be set to enable the
-				//interrupt request outputs.
-				dev_write(dev_ptr,XIL_AXI_INTC_MER_OFFSET, XIL_AXI_INTC_MER_ME_MASK | XIL_AXI_INTC_MER_HIE_MASK);
-				//				dev_write(dev_ptr,XIL_AXI_INTC_MER_OFFSET, XIL_AXI_INTC_MER_ME_MASK);
+	// steps to accept interrupts -> as pg. 26 of pg099-axi-intc.pdf
+	//1) Each bit in the IER corresponding to an interrupt must be set to 1.
+	dev_write(dev_ptr,XIL_AXI_INTC_IER_OFFSET, 1);
+	//2) There are two bits in the MER. The ME bit must be set to enable the
+	//interrupt request outputs.
+	dev_write(dev_ptr,XIL_AXI_INTC_MER_OFFSET, XIL_AXI_INTC_MER_ME_MASK | XIL_AXI_INTC_MER_HIE_MASK);
+	//				dev_write(dev_ptr,XIL_AXI_INTC_MER_OFFSET, XIL_AXI_INTC_MER_ME_MASK);
 
-				//The next block of code is to test interrupts by software
-				//3) Software testing can now proceed by writing a 1 to any bit position
-				//in the ISR that corresponds to an existing interrupt input.
-				//       dev_write(dev_ptr,XIL_AXI_INTC_ISR_OFFSET, 1);
+	//The next block of code is to test interrupts by software
+	//3) Software testing can now proceed by writing a 1 to any bit position
+	//in the ISR that corresponds to an existing interrupt input.
+	//       dev_write(dev_ptr,XIL_AXI_INTC_ISR_OFFSET, 1);
 
-				//        for(a=0; a<10; a++)
-				//        {
-				//         wait_for_interrupt(fd, dev_ptr);
-				//         dev_write(dev_ptr,XIL_AXI_INTC_ISR_OFFSET, 1); //regenerate interrupt
-				//        }
-				//
-				//
+	//        for(a=0; a<10; a++)
+	//        {
+	//         wait_for_interrupt(fd, dev_ptr);
+	//         dev_write(dev_ptr,XIL_AXI_INTC_ISR_OFFSET, 1); //regenerate interrupt
+	//        }
+	//
+	//
 
-				while(!interrupted) wait_for_interrupt(fd, dev_ptr);
+	while(!interrupted) wait_for_interrupt(fd, dev_ptr);
 
-				printf("\n\n\n");
-				printf("STS: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_ISR_OFFSET));
-				printf("IPR: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_IPR_OFFSET));
-				printf("IER: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_IER_OFFSET));
-				printf("IAR: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_IAR_OFFSET));
-				printf("SIE: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_SIE_OFFSET));
-				printf("CIE: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_CIE_OFFSET));
-				printf("IVR: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_IVR_OFFSET));
-				printf("MER: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_MER_OFFSET));
-				printf("IMR: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_IMR_OFFSET));
-				printf("ILR: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_ILR_OFFSET));
-				printf("IVAR: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_IVAR_OFFSET));
+	printf("\n\n\n");
+	printf("STS: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_ISR_OFFSET));
+	printf("IPR: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_IPR_OFFSET));
+	printf("IER: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_IER_OFFSET));
+	printf("IAR: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_IAR_OFFSET));
+	printf("SIE: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_SIE_OFFSET));
+	printf("CIE: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_CIE_OFFSET));
+	printf("IVR: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_IVR_OFFSET));
+	printf("MER: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_MER_OFFSET));
+	printf("IMR: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_IMR_OFFSET));
+	printf("ILR: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_ILR_OFFSET));
+	printf("IVAR: 0x%08d\n",dev_read(dev_ptr, XIL_AXI_INTC_IVAR_OFFSET));
 
-				//				dev_write(dev_ptr, INTC_TRI_OFFSET, 0);
-				//				dev_write(dev_ptr, INTC_TRI2_OFFSET, 0xF);
-				//
-				//				// enable the interrupts from the INTC
-				//
-				//				dev_write(dev_ptr, INTC_GLOBAL_IRQ, 0x80000000);
-				//				dev_write(dev_ptr, INTC_IRQ_CONTROL, 2);
-				//
-				//        pthread_create(&t1,NULL,thread_isr,NULL);
-				//				// wait for interrupts from the INTC
-				//
-				//				while (!interrupted) {
-				//								
-				//				}
-				//
-				//				// unmap the INTC device 
+	//				dev_write(dev_ptr, INTC_TRI_OFFSET, 0);
+	//				dev_write(dev_ptr, INTC_TRI2_OFFSET, 0xF);
+	//
+	//				// enable the interrupts from the INTC
+	//
+	//				dev_write(dev_ptr, INTC_GLOBAL_IRQ, 0x80000000);
+	//				dev_write(dev_ptr, INTC_IRQ_CONTROL, 2);
+	//
+	//        pthread_create(&t1,NULL,thread_isr,NULL);
+	//				// wait for interrupts from the INTC
+	//
+	//				while (!interrupted) {
+	//								
+	//				}
+	//
+	//				// unmap the INTC device 
 
-				munmap(dev_ptr, dev_size);
-				close(fd);
+	munmap(dev_ptr, dev_size);
+	close(fd);
 
-				return 0;
+	return 0;
 }

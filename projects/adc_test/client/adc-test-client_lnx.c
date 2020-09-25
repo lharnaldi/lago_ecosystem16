@@ -15,12 +15,16 @@ void error(const char *msg)
 
 int main(int argc, char *argv[])
 {
-	int sockfd, portno, n;
+	int sockfd, portno, n, i;
 	struct sockaddr_in serv_addr;
 	struct hostent *server;
+	int bytesReceived=0;
 
 	//char buffer[256];
-	char buffer[256*4096];
+	int32_t buffer[256*4096];
+	//int32_t bufferIn[256];
+  float bufferOut[256*4096];
+
 	if (argc < 3) {
 		fprintf(stderr,"usage %s hostname port\n", argv[0]);
 		exit(0);
@@ -46,12 +50,39 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	while(1)
-	{
+//	while(1)
+//  {
+//    bytesReceived=recv(sockfd, buffer, 256*4096, MSG_WAITALL);
+//    for(i = 0; i < bytesReceived; ++i)
+//    {
+//      bufferOut[i] = ((float)buffer[i]) / 2147483647.0;
+//    }
+//    //printf("%f\n",*bufferOut);
+//    //printf(bufferOut);
+//
+//    fwrite(bufferOut, 1, 256*4096, stdout);
+//    fflush(stdout);
+//  }
+
+	do
+    {
+        bytesReceived = recv(
+                sockfd,
+                buffer,
+                256*4096,
+                MSG_WAITALL);
+
+        for (i = 0; i < bytesReceived; ++i)
+            printf("%f\n", (float)buffer[i]/2147483647.0);
+    }
+    while(bytesReceived);
+
+	//while(1)
+	//{
 		//recv(sockfd, buffer, 256*4096, MSG_WAITALL);
-		n = read(sockfd,buffer,255*4096);
-		printf("%s\n",buffer);
-	}
+	//	n=read(sockfd,buffer,256*4096);
+	//	printf("%s\n",buffer);
+	//}
 
 	//    if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
 	//        error("ERROR connecting");

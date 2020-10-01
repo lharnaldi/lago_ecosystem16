@@ -26,7 +26,7 @@ cell labdpr:user:port_slicer slice_0 {
 # Create axi_cfg_register
 cell labdpr:user:axi_cfg_register cfg_0 {
   CFG_DATA_WIDTH 1024
-  AXI_ADDR_WIDTH 7
+  AXI_ADDR_WIDTH 32
   AXI_DATA_WIDTH 32
 }
 

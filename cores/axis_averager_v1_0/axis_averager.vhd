@@ -7,36 +7,42 @@ entity axis_averager is
   generic (
             AXIS_TDATA_WIDTH: natural := 32;
             BRAM_DATA_WIDTH : natural := 32;
-            BRAM_ADDR_WIDTH : natural := 14;
-            AVERAGER_WIDTH      : natural := 32
+            BRAM_ADDR_WIDTH : natural := 14; --16
+            AVERAGES_WIDTH  : natural := 32
           );
   port ( 
          -- System signals
          aclk              : in std_logic;
          aresetn           : in std_logic;
 
-  -- Averager specific ports
-  trig : in std_logic;
-  user_reset : in std_logic;
-  nsamples : in std_logic_vector(16-1 downto 0),
-  input  wire [AVERAGES_WIDTH-1:0] 	 naverages,
-  output wire 						 finished,
-  output wire [AVERAGES_WIDTH-1:0] 	 averages_out,
-         cfg_data          : in std_logic_vector(AVERAGER_WIDTH-1 downto 0);
-         sts_data          : out std_logic_vector(AVERAGER_WIDTH-1 downto 0);
-         
-         -- Slave side
+         -- Averager specific ports
+         trig_i            : in std_logic;
+         user_trig         : in std_logic;
+         nsamples          : in std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0); --16-1
+         naverages         : in std_logic_vector(AVERAGES_WIDTH-1 downto 0);
+         finished          : out std_logic;
+         averages_out      : out std_logic_vector(AVERAGES_WIDTH-1 downto 0);
+
+         -- Slave side     
          s_axis_tready     : out std_logic;
          s_axis_tvalid     : in std_logic;
          s_axis_tdata      : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
 
-         -- BRAM port
+         -- BRAM port A
          bram_porta_clk    : out std_logic;
          bram_porta_rst    : out std_logic;
          bram_porta_addr   : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
          bram_porta_wrdata : out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
          bram_porta_rddata : in std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
-         bram_porta_we     : out std_logic
+         bram_porta_we     : out std_logic;
+
+         -- BRAM port B
+         bram_portb_clk    : out std_logic;
+         bram_portb_rst    : out std_logic;
+         bram_portb_addr   : out std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
+         bram_portb_wrdata : out std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
+         bram_portb_rddata : in std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
+         bram_portb_we     : out std_logic
        );
 end axis_averager;
 
@@ -45,103 +51,138 @@ architecture rtl of axis_averager is
   type state_t is (
   ST_IDLE, 
   ST_WRITE_ZEROS, 
-  ST_READ_ADDR, 
-  ST_DELAY1, 
-  ST_INC_DATA, 
-  ST_DELAY2
+  ST_WAIT_TRIG, 
+  ST_MEASURE, 
+  ST_FINISH 
 );
-signal state_reg, state_next : state_t;
+signal state_reg, state_next      : state_t;
 
-signal cntr_reg, cntr_next     : unsigned(AVERAGER_WIDTH-1 downto 0);
-signal comp_reg, comp_next     : std_logic;
+signal addr_reg, addr_next        : std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
+signal data_reg, data_next        : std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
+signal tready_reg, tready_next    : std_logic;
+signal wren_reg, wren_next        : std_logic;
 
-signal addr_reg, addr_next     : std_logic_vector(BRAM_ADDR_WIDTH-1 downto 0);
-signal data_reg, data_next     : std_logic_vector(BRAM_DATA_WIDTH-1 downto 0);
-signal tready_reg, tready_next : std_logic;
-signal wren_reg, wren_next     : std_logic;
-signal wren_s                  : std_logic;
+signal averages_reg, averages_next: std_logic_vector(AVERAGES_WIDTH-1 downto 0);
+signal finished_reg, finished_next: std_logic;
+signal d_trig                     : std_logic;
+signal trigger                    : std_logic;  
 
 begin
 
-  sts_data          <= std_logic_vector(cntr_reg);
-  s_axis_tready     <= tready_reg;
+  --s_axis_tready     <= tready_reg;
+  s_axis_tready     <= '1'; 
+  finished          <= finished_reg;
+  averages_out      <= averages_reg;
 
   bram_porta_clk    <= aclk;
   bram_porta_rst    <= not aresetn;
-  bram_porta_addr   <= addr_reg when (wren_reg = '1') else 
-                       s_axis_tdata(BRAM_ADDR_WIDTH-1 downto 0);
+  bram_porta_addr   <= addr_reg;
   bram_porta_wrdata <= data_reg;
   bram_porta_we     <= wren_reg;
+
+  bram_portb_clk    <= aclk;
+  bram_portb_rst    <= not aresetn;
+  bram_portb_addr   <= std_logic_vector(unsigned(addr_reg)+1);
+  bram_portb_wrdata <= (others => '0');
+  bram_portb_we     <= '0';
+
+  process(aclk)
+  begin
+    if rising_edge(aclk) then
+      if (user_trig = '1') then
+        d_trig <= '0';
+      else 
+        d_trig <= trig_i;
+      end if;
+    end if;
+  end process;
+  trigger <= trig_i when (user_trig = '1') else
+             '0';
+  --trigger <= '1' when (trig_i = '1') and (d_trig = '0') else
+  --           '0';
 
   process(aclk)
   begin
     if rising_edge(aclk) then
       if (aresetn = '0') then
-        state_reg  <= ST_IDLE;
-        comp_reg   <= '0';
-        cntr_reg   <= (others => '0');
-        addr_reg   <= (others => '0');
-        data_reg   <= (others => '0');
-        tready_reg <= '0';
-        wren_reg   <= '0';
+        state_reg    <= ST_IDLE;
+        addr_reg     <= (others => '0');
+        data_reg     <= (others => '0');
+        averages_reg <= (others => '0');
+        wren_reg     <= '0';
+        tready_reg   <= '0';
+        finished_reg <= '0';
       else
-        state_reg  <= state_next;
-        comp_reg   <= comp_next;
-        cntr_reg   <= cntr_next;
-        addr_reg   <= addr_next;
-        data_reg   <= data_next;
-        tready_reg <= tready_next;
-        wren_reg   <= wren_next;
+        state_reg    <= state_next;
+        addr_reg     <= addr_next;
+        data_reg     <= data_next;
+        averages_reg <= averages_next;
+        wren_reg     <= wren_next;
+        tready_reg   <= tready_next;
+        finished_reg <= finished_next;
       end if;
     end if;
   end process;
 
-  comp_next <= '0' when (cntr_reg = unsigned(cfg_data)-1) else '1';
-
-  cntr_next <= cntr_reg + 1 when ((comp_reg = '1') and (tready_reg = '1')) else
-               --(others => '0') when (comp_reg = '0') else --reset
-               cntr_reg;
-  wren_s <= '1' when (bram_porta_rddata = (bram_porta_rddata'range => '1')) else 
-            '0';
-
   --Next state logic
-  process(state_reg, addr_reg, s_axis_tvalid, comp_reg)
+  process(state_reg, nsamples, trigger, naverages, addr_reg, s_axis_tvalid)
   begin
-    state_next  <= state_reg;  
-    addr_next   <= addr_reg;
-    data_next   <= data_reg;
-    tready_next <= tready_reg;
-    wren_next   <= wren_reg;
+    state_next    <= state_reg;  
+    addr_next     <= addr_reg;
+    data_next     <= data_reg;
+    averages_next <= averages_reg;
+    wren_next     <= wren_reg;
+    tready_next   <= tready_reg;
+    finished_next <= finished_reg;
 
     case state_reg is
-      when ST_IDLE =>
+      when ST_IDLE => -- Begin state
         addr_next     <= (others => '0');
         data_next     <= (others => '0');
+        averages_next <= (others => '0');
         wren_next     <= '1';
+        tready_next   <= '0';
+        finished_next <= '0';
         state_next    <= ST_WRITE_ZEROS;
-      when ST_WRITE_ZEROS =>
-        addr_next     <= std_logic_vector(unsigned(addr_reg) + 1);
-        if (addr_reg = (addr_reg'range => '1')) then
-          tready_next <= '1';
+
+      when ST_WRITE_ZEROS =>    -- Clear BRAM state
+        addr_next    <= std_logic_vector(unsigned(addr_reg) + 1);
+        if(unsigned(addr_reg) = unsigned(nsamples)-1) then -- clear until all the addresses are zero
           wren_next   <= '0';
-          state_next  <= ST_READ_ADDR;
+          state_next  <= ST_WAIT_TRIG;
         end if;
-      when ST_READ_ADDR => 
-        if (s_axis_tvalid = '1') and (comp_reg = '1') then
-          addr_next   <= s_axis_tdata(BRAM_ADDR_WIDTH-1 downto 0);
-          tready_next <= '0';
-          state_next  <= ST_DELAY1;
+
+      when ST_WAIT_TRIG => -- Wait for trigger
+        addr_next <= (others => '0');
+        if(trigger = '1') then
+          averages_next <= std_logic_vector(unsigned(averages_reg) + 1);
+          if (unsigned(averages_reg) = unsigned(naverages)) then
+            state_next  <= ST_FINISH;
+            tready_next <= '0';
+          else
+            state_next  <= ST_MEASURE;
+            tready_next <= '1';
+            wren_next <= '1';
+            data_next <= std_logic_vector(unsigned(bram_portb_rddata) + unsigned(s_axis_tdata));
+          end if;
         end if;
-      when ST_DELAY1 => 
-        state_next    <= ST_INC_DATA;
-      when ST_INC_DATA => 
-        data_next     <= std_logic_vector(unsigned(bram_porta_rddata) + 1);
-        wren_next     <= not wren_s; --(and bram_porta_rddata); 
-        state_next    <= ST_DELAY2;
-      when ST_DELAY2 => 
-        tready_next   <= '1';
-        wren_next     <= '0';
-        state_next    <= ST_READ_ADDR;
+
+      when ST_MEASURE => -- Measure
+          --data_next <= std_logic_vector(unsigned(bram_portb_rddata) + unsigned(s_axis_tdata(BRAM_DATA_WIDTH-1 downto 0)));
+        data_next <= std_logic_vector(unsigned(bram_portb_rddata) + unsigned(s_axis_tdata));
+        if(s_axis_tvalid = '1') then
+          addr_next <= std_logic_vector(unsigned(addr_reg) + 1);
+          wren_next <= '1';
+          if (unsigned(addr_reg) = unsigned(nsamples)-1) then
+            state_next  <= ST_WAIT_TRIG;
+            tready_next <= '0';
+            wren_next   <= '0';
+          end if;
+        else
+          wren_next <= '0';
+        end if;
+      when ST_FINISH => -- finished
+        finished_next <= '1';
     end case;
   end process;
 

@@ -5,33 +5,33 @@ use ieee.numeric_std.all;
 
 entity axis_trigger is
   generic (
-  AXIS_TDATA_WIDTH : natural := 32;
-  AXIS_TDATA_SIGNED : string := "FALSE"
-);
-port (
-  -- System signals
-  aclk: in std_logic;
+            AXIS_TDATA_WIDTH : natural := 32;
+            AXIS_TDATA_SIGNED : string := "FALSE"
+          );
+  port (
+         -- System signals
+         aclk         : in std_logic;
 
-  pol_data : in std_logic;
-  msk_data : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
-  lvl_data : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+         pol_data     : in std_logic;
+         msk_data     : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+         lvl_data     : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
 
-  trg_flag : out std_logic;
+         trg_flag     : out std_logic;
 
-  -- Slave side
-  s_axis_tready     : out std_logic;
-  s_axis_tdata      : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
-  s_axis_tvalid     : in std_logic
-);
+         -- Slave side
+         s_axis_tready: out std_logic;
+         s_axis_tdata : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+         s_axis_tvalid: in std_logic
+       );
 end axis_trigger;
 
 architecture rtl of axis_trigger is
 
   signal int_comp_reg : std_logic_vector(1 downto 0);
-  signal int_comp_wire : std_logic;
+  signal int_comp_wire: std_logic;
 
 begin
-    
+
   SIGNED_G: if (AXIS_TDATA_SIGNED = "TRUE") generate
     int_comp_wire <= '1' when signed(s_axis_tdata and msk_data) >= signed(lvl_data) else '0';
   end generate;
@@ -42,11 +42,11 @@ begin
 
   process(aclk)
   begin
-   if (rising_edge(aclk)) then
-    if (s_axis_tvalid = '1') then
-      int_comp_reg <= int_comp_reg(0) & int_comp_wire;
+    if (rising_edge(aclk)) then
+      if (s_axis_tvalid = '1') then
+        int_comp_reg <= int_comp_reg(0) & int_comp_wire;
+      end if;
     end if;
-   end if;
   end process;
 
   s_axis_tready <= '1';

@@ -69,8 +69,7 @@ signal trigger                    : std_logic;
 
 begin
 
-  --s_axis_tready     <= tready_reg;
-  s_axis_tready     <= '1'; 
+  s_axis_tready     <= tready_reg;
   finished          <= finished_reg;
   averages_out      <= averages_reg;
 

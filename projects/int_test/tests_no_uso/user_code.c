@@ -13,7 +13,14 @@ void *thread_isr(void *p)
     char buf[100];
     int fd;
     int a=0;
-    fd=open("/dev/gpioint",O_RDONLY);
+		char *gpioint = "/dev/gpioint";
+
+    fd=open(gpioint,O_RDONLY);
+		if (fd < 1) {
+                printf("Invalid GPIO device file:%s.\n", gpioint);
+                return -1;
+        }
+
  
     do
     {

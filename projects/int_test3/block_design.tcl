@@ -6,11 +6,16 @@ set_property -dict [list CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {50}] [get_bd_cells
 #Enable interrupts
 set_property -dict [list CONFIG.PCW_USE_FABRIC_INTERRUPT {1} CONFIG.PCW_IRQ_F2P_INTR {1}] [get_bd_cells ps_0]
 
+# Create xlconstant
+cell xilinx.com:ip:xlconstant const_0
+
 # Create proc_sys_reset
-cell xilinx.com:ip:proc_sys_reset:5.0 rst_0 
+cell xilinx.com:ip:proc_sys_reset rst_0 {} {
+  ext_reset_in const_0/dout
+}
 
 # Create axis_rp_adc
-cell labdpr:user:axis_rp_adc:1.0 adc_0 {} {
+cell labdpr:user:axis_rp_adc adc_0 {} {
   aclk pll_0/clk_out1
   adc_dat_a adc_dat_a_i
   adc_dat_b adc_dat_b_i
@@ -18,7 +23,7 @@ cell labdpr:user:axis_rp_adc:1.0 adc_0 {} {
 }
 
 # Create axis_rp_adc
-cell xilinx.com:ip:axi_timer:2.0 axi_timer_0 {
+cell xilinx.com:ip:axi_timer axi_timer_0 {
   enable_timer2 0
 } {
  interrupt ps_0/IRQ_F2P

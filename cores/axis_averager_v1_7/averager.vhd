@@ -124,7 +124,7 @@ begin
   )
   port map
   (
-    aclk    => aclk,
+    clk     => aclk,
     we      => wren_reg,
     addr_a  => addr_dly_reg,
     addr_b  => addr_reg, 

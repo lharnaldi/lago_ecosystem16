@@ -1,0 +1,17 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity clock_mux is
+  port (
+  clk_a : in std_logic;
+  clk_b : in std_logic;
+  clk_o : out std_logic;
+  sel   : in std_logic
+);
+end clock_mux;
+architecture rtl of clock_mux is
+begin
+
+
+end rtl;

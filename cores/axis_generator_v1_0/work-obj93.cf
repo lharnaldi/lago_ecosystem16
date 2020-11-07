@@ -1,0 +1,4 @@
+v 4
+file . "axis_generator.vhd" "66f0a21d12dcb5b4d5022fdce64755866b40ed14" "20201106141817.984":
+  entity axi_stream_generator at 1( 0) + 0 on 11;
+  architecture example of axi_stream_generator at 47( 1537) + 0 on 12;

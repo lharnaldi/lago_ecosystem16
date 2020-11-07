@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -33,6 +34,8 @@ int main(int argc, char *argv[])
   uint32_t freqMin = 50000;
   uint32_t freqMax = 50000000;
   int yes = 1;
+	clock_t time_begin;
+  double time_spent;
 
   if((file = open("/dev/mem", O_RDWR)) < 0)
   {
@@ -89,6 +92,8 @@ int main(int argc, char *argv[])
 
     signal(SIGINT, signal_handler);
 
+		time_begin = clock();
+		fprintf(stderr,"DAQ initialised at %d samples measured in %f s\n", time_begin);
     /* enter normal operating mode */
     *((uint32_t *)(cfg + 0)) |= 15;
 

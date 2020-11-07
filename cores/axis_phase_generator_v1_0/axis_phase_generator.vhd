@@ -49,7 +49,7 @@ begin
                    int_enbl_reg;
 
   --m_axis_tdata  <= ((AXIS_TDATA_WIDTH-PHASE_WIDTH-1) downto 0  => int_cntr_reg(PHASE_WIDTH-1)) & int_cntr_reg;
-  m_axis_tdata  <= std_logic_vector(resize(int_cntr_reg, m_axis_tdata'length));
+  m_axis_tdata  <= std_logic_vector(resize(unsigned(int_cntr_reg), m_axis_tdata'length));
   m_axis_tvalid <= int_enbl_reg;
 end rtl;
 

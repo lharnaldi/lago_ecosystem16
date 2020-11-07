@@ -17,12 +17,6 @@
 #define STS_BASEADDR  0x40002000
 #define STS_HIGHADDR  0x40002FFF
 
-#define RAM_BASEADDR 0x40003000
-#define RAM_HIGHADDR 0x40003FFF
-
-//#define RAM_BASEADDR 0x1E000000
-////#define RAM_HIGHADDR 0x40003FFF
-
 #define XADC_BASEADDR 0x40003000
 #define XADC_HIGHADDR 0x40003FFF
 
@@ -41,33 +35,27 @@
 #define XIL_AXI_INTC_MER_ME_MASK 0x00000001
 #define XIL_AXI_INTC_MER_HIE_MASK 0x00000002
 
-//old assignments
+//CFG
+#define CFG_RESET_GRAL_OFFSET    0x0
 #define CFG_NSAMPLES_OFFSET      0x4
 #define CFG_TRLVL_1_OFFSET       0x8
 #define CFG_TRLVL_2_OFFSET       0xC
 #define CFG_STRLVL_1_OFFSET      0x10
-
-//CFG
-#define CFG_RESET_GRAL_OFFSET     0x0
-#define CFG_PHASE_INC_OFFSET      0x4
-#define CFG_SAMPLE_RATE_OFFSET    0x8
-#define CFG_AMPL_OFFSET           0xC
-#define CFG_PHASE_INC_TSIG_OFFSET 0x10 //phase increment for test signal
-#define CFG_STRLVL_2_OFFSET       0x14
-#define CFG_TEMPERATURE_OFFSET    0x18
-#define CFG_PRESSURE_OFFSET       0x1C
-#define CFG_TIME_OFFSET           0x20
-#define CFG_DATE_OFFSET           0x24
-#define CFG_LATITUDE_OFFSET       0x28
-#define CFG_LONGITUDE_OFFSET      0x2C
-#define CFG_ALTITUDE_OFFSET       0x30
-#define CFG_SATELLITE_OFFSET      0x34
-#define CFG_TR_SCAL_A_OFFSET      0x38
-#define CFG_TR_SCAL_B_OFFSET      0x3C
-#define CFG_HV1_OFFSET            0x4C //DAC_PWM3
-#define CFG_HV2_OFFSET            0x48 //DAC_PWM2
-#define CFG_HV3_OFFSET            0x40 //DAC_PWM0
-#define CFG_HV4_OFFSET            0x44 //DAC_PWM1
+#define CFG_STRLVL_2_OFFSET      0x14
+#define CFG_TEMPERATURE_OFFSET   0x18
+#define CFG_PRESSURE_OFFSET      0x1C
+#define CFG_TIME_OFFSET          0x20
+#define CFG_DATE_OFFSET          0x24
+#define CFG_LATITUDE_OFFSET      0x28
+#define CFG_LONGITUDE_OFFSET     0x2C
+#define CFG_ALTITUDE_OFFSET      0x30
+#define CFG_SATELLITE_OFFSET     0x34
+#define CFG_TR_SCAL_A_OFFSET     0x38
+#define CFG_TR_SCAL_B_OFFSET     0x3C
+#define CFG_HV1_OFFSET           0x4C //DAC_PWM3
+#define CFG_HV2_OFFSET           0x48 //DAC_PWM2
+#define CFG_HV3_OFFSET           0x40 //DAC_PWM0
+#define CFG_HV4_OFFSET           0x44 //DAC_PWM1
 
 //CFG Slow DAC
 #define CFG_DAC_PWM0_OFFSET 0x40

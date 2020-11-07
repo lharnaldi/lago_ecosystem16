@@ -383,3 +383,6 @@ set_property range 4K [get_bd_addr_segs {ps_0/Data/SEG_xadc_wiz_0_Reg}]
 set_property offset 0x40003000 [get_bd_addr_segs {ps_0/Data/SEG_xadc_wiz_0_Reg}]
 
 assign_bd_address [get_bd_addr_segs ps_0/S_AXI_HP0/HP0_DDR_LOWOCM]
+
+group_bd_cells PS7 [get_bd_cells rst_0] [get_bd_cells rst_1] [get_bd_cells pll_0] [get_bd_cells const_0] [get_bd_cells ps_0] [get_bd_cells ps_0_axi_periph]
+

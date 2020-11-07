@@ -57,8 +57,6 @@ int main(int argc, char**argv)
     {
       bufferOut[i] = ((float)bufferIn[i]) / 2147483647.0;
     }
-		//printf("%f\n",*bufferOut);
-		//printf(bufferOut);
 
     fwrite(bufferOut, 1, 1024, stdout);
     fflush(stdout);

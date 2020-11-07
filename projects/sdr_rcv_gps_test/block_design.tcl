@@ -48,9 +48,29 @@ delete_bd_objs [get_bd_ports exp_p_tri_io]
 delete_bd_objs [get_bd_ports exp_n_tri_io]
 
 # Create input port
-create_bd_port -dir I -from 7 -to 7 exp_n_tri_io
-create_bd_port -dir O -from 7 -to 7 exp_p_tri_io
-create_bd_port -dir I -from 0 -to 0 ext_resetn
+create_bd_port -dir I -from 0 -to 0 ext_int
+
+# Create axi_intc
+cell xilinx.com:ip:axi_intc intc_0 {
+  C_IRQ_IS_LEVEL 0
+  C_IRQ_CONNECTION 1
+  C_S_AXI_ACLK_FREQ_MHZ 125
+  C_PROCESSOR_CLK_FREQ_MHZ 125
+} {
+  s_axi_aclk pll_0/clk_out1
+  s_axi_aresetn rst_0/peripheral_aresetn
+  intr ext_int
+  irq ps_0/IRQ_F2P
+}
+
+# Create all required interconnections
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
+  Master /ps_0/M_AXI_GP0
+  Clk Auto
+} [get_bd_intf_pins intc_0/s_axi]
+
+set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_intc_0_Reg]
+set_property OFFSET 0x40000000 [get_bd_addr_segs ps_0/Data/SEG_intc_0_Reg]
 
 # ADC
 
@@ -77,15 +97,6 @@ cell labdpr:user:port_slicer slice_0 {
   dout led_o
 }
 
-# Create axi_intc
-cell xilinx.com:ip:axi_intc axi_intc_0 {
-  C_IRQ_CONNECTION 1
-  C_S_AXI_ACLK_FREQ_MHZ 125.0
-  C_PROCESSOR_CLK_FREQ_MHZ 125.0
-} {
-  irq ps_0/IRQ_F2P
-}
-
 # Create axi_cfg_register
 cell labdpr:user:axi_cfg_register cfg_0 {
   CFG_DATA_WIDTH 160
@@ -100,7 +111,7 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
 } [get_bd_intf_pins cfg_0/S_AXI]
 
 set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
-set_property OFFSET 0x40000000 [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
+set_property OFFSET 0x40001000 [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
 
 # Create port_slicer
 #cell labdpr:user:port_slicer slice_1 {
@@ -204,16 +215,6 @@ cell xilinx.com:ip:cordic cordic_test {
   aclk pll_0/clk_out1
 }
 
-# Create clk_wiz
-cell xilinx.com:ip:clk_wiz pll_test {
-  PRIM_IN_FREQ.VALUE_SRC USER
-  PRIM_IN_FREQ 125.0
-  CLKOUT1_USED true
-  CLKOUT1_REQUESTED_OUT_FREQ 250.0
-} {
-  clk_in1 pll_0/clk_out1
-}
-
 # DAC
 
 # Create axis_red_pitaya_dac
@@ -223,7 +224,7 @@ cell labdpr:user:axis_rp_dac dac_test {
   aclk pll_0/clk_out1
   ddr_clk pll_0/clk_out2
   wrt_clk pll_0/clk_out3
-  locked pll_test/locked
+  locked pll_0/locked
   S_AXIS cordic_test/M_AXIS_DOUT
   dac_clk dac_clk_o
   dac_rst dac_rst_o
@@ -443,7 +444,7 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
 } [get_bd_intf_pins reader_0/S_AXI]
 
 set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_reader_0_reg0]
-set_property OFFSET 0x40002000 [get_bd_addr_segs ps_0/Data/SEG_reader_0_reg0]
+set_property OFFSET 0x40003000 [get_bd_addr_segs ps_0/Data/SEG_reader_0_reg0]
 
 # Create axi_sts_register
 cell labdpr:user:axi_sts_register sts_0 {
@@ -461,10 +462,8 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
 } [get_bd_intf_pins sts_0/S_AXI]
 
 set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_sts_0_reg0]
-set_property OFFSET 0x40001000 [get_bd_addr_segs ps_0/Data/SEG_sts_0_reg0]
+set_property OFFSET 0x40002000 [get_bd_addr_segs ps_0/Data/SEG_sts_0_reg0]
 
 group_bd_cells PS7 [get_bd_cells rst_0] [get_bd_cells pll_0] [get_bd_cells const_0] [get_bd_cells ps_0] [get_bd_cells ps_0_axi_periph]
 group_bd_cells SIG_GEN [get_bd_cells slice_8] [get_bd_cells phase_test] [get_bd_cells dac_test] [get_bd_cells subset_test] [get_bd_cells const_test] [get_bd_cells slice_7] [get_bd_cells cordic_test] [get_bd_cells pll_test]
-group_bd_cells ACQ [get_bd_cells fir_0] [get_bd_cells rate_0] [get_bd_cells
-rate_1] [get_bd_cells adc_0] [get_bd_cells bcast_0] [get_bd_cells pktzr_0]
-[get_bd_cells subset_0] [get_bd_cells pktzr_1] [get_bd_cells cic_0] [get_bd_cells slice_3] [get_bd_cells cordic_0] [get_bd_cells cic_1] [get_bd_cells comb_0] [get_bd_cells writer_0] [get_bd_cells bram_0] [get_bd_cells slice_6] [get_bd_cells slice_4] [get_bd_cells phase_0] [get_bd_cells slice_5] get_bd_cells reader_0]
+group_bd_cells ACQ [get_bd_cells fir_0] [get_bd_cells rate_0] [get_bd_cells rate_1] [get_bd_cells adc_0] [get_bd_cells bcast_0] [get_bd_cells pktzr_0] [get_bd_cells subset_0] [get_bd_cells pktzr_1] [get_bd_cells cic_0] [get_bd_cells slice_3] [get_bd_cells cordic_0] [get_bd_cells cic_1] [get_bd_cells comb_0] [get_bd_cells writer_0] [get_bd_cells bram_0] [get_bd_cells slice_6] [get_bd_cells slice_4] [get_bd_cells phase_0] [get_bd_cells slice_5] get_bd_cells reader_0]

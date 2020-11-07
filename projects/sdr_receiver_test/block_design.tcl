@@ -84,11 +84,11 @@ set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
 set_property OFFSET 0x40000000 [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
 
 # Create port_slicer
-cell labdpr:user:port_slicer slice_1 {
-  DIN_WIDTH 160 DIN_FROM 0 DIN_TO 0
-} {
-  din cfg_0/cfg_data
-}
+#cell labdpr:user:port_slicer slice_1 {
+#  DIN_WIDTH 160 DIN_FROM 0 DIN_TO 0
+#} {
+#  din cfg_0/cfg_data
+#}
 
 # Create port_slicer
 cell labdpr:user:port_slicer slice_2 {
@@ -443,3 +443,9 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
 
 set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_sts_0_reg0]
 set_property OFFSET 0x40001000 [get_bd_addr_segs ps_0/Data/SEG_sts_0_reg0]
+
+group_bd_cells PS7 [get_bd_cells rst_0] [get_bd_cells pll_0] [get_bd_cells const_0] [get_bd_cells ps_0] [get_bd_cells ps_0_axi_periph]
+group_bd_cells SIG_GEN [get_bd_cells slice_8] [get_bd_cells phase_test] [get_bd_cells dac_test] [get_bd_cells subset_test] [get_bd_cells const_test] [get_bd_cells slice_7] [get_bd_cells cordic_test] [get_bd_cells pll_test]
+group_bd_cells ACQ [get_bd_cells fir_0] [get_bd_cells rate_0] [get_bd_cells
+rate_1] [get_bd_cells adc_0] [get_bd_cells bcast_0] [get_bd_cells pktzr_0]
+[get_bd_cells subset_0] [get_bd_cells pktzr_1] [get_bd_cells cic_0] [get_bd_cells slice_3] [get_bd_cells cordic_0] [get_bd_cells cic_1] [get_bd_cells comb_0] [get_bd_cells writer_0] [get_bd_cells bram_0] [get_bd_cells slice_6] [get_bd_cells slice_4] [get_bd_cells phase_0] [get_bd_cells slice_5] get_bd_cells reader_0]

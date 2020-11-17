@@ -31,7 +31,7 @@ begin
         if (we = '1') then
           ram(to_integer(unsigned(addr))) <= din;
         end if;
-        addr_reg <= addr_next;
+        addr_reg <= addr;
       end if;
   end process;
 

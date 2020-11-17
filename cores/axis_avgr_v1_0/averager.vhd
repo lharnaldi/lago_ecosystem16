@@ -7,11 +7,10 @@ use unisim.vcomponents.all;
 
 entity averager is
   generic (
-            AXIS_TDATA_WIDTH: natural := 128; -- ADC data width x8
-            AXI_DATA_WIDTH  : natural := 32;  -- AXI data width
-            ADC_DATA_WIDTH  : natural := 16;  -- ADC data width
-            MEM_ADDR_WIDTH  : natural := 10; -- Max 2**16
-            AVERAGES_WIDTH  : natural := 32   -- Width of the averages counter 2^AVERAGES_WIDTH
+            IN_DATA_WIDTH  : natural := 128; -- ADC data width x8
+            OUT_DATA_WIDTH : natural := 32;  -- AXI data width
+            ADC_DATA_WIDTH : natural := 16;  -- ADC data width
+            MEM_DEPTH      : natural := 10   -- Max 2**16
           );
   port ( 
          -- System signals
@@ -20,25 +19,26 @@ entity averager is
 
          -- Averager specific ports
          start             : in std_logic;
+         restart           : in std_logic;
          mode              : in std_logic; --0- (default) avg scope, 1-avg nsamples to one value
          trig_i            : in std_logic;
          --nsamples Must be power of 2. Minimum is 8 and maximum is 2^AW
-         nsamples          : in std_logic_vector(MEM_ADDR_WIDTH-1 downto 0); 
-         naverages         : in std_logic_vector(AVERAGES_WIDTH-1 downto 0);
+         nsamples          : in std_logic_vector(32-1 downto 0); 
+         naverages         : in std_logic_vector(32-1 downto 0);
          done              : out std_logic;
-         averages_out      : out std_logic_vector(AVERAGES_WIDTH-1 downto 0);
+         averages_out      : out std_logic_vector(32-1 downto 0);
          -- BRAM PORTA. Reading port
          bram_porta_clk    : in std_logic;
-         bram_porta_rst    : in std_logic;
-         bram_porta_wrdata : in std_logic_vector(AXI_DATA_WIDTH-1 downto 0);
+         --bram_porta_rst    : in std_logic;
+         bram_porta_wrdata : in std_logic_vector(OUT_DATA_WIDTH-1 downto 0);
          bram_porta_we     : in std_logic;
-         bram_porta_addr   : in std_logic_vector(MEM_ADDR_WIDTH-1 downto 0);
-         bram_porta_rddata : out std_logic_vector(AXI_DATA_WIDTH-1 downto 0);
+         bram_porta_addr   : in std_logic_vector(OUT_DATA_WIDTH-1 downto 0);
+         bram_porta_rddata : out std_logic_vector(OUT_DATA_WIDTH-1 downto 0);
 
          -- Slave side     
          s_axis_tready     : out std_logic;
          s_axis_tvalid     : in std_logic;
-         s_axis_tdata      : in std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0)
+         s_axis_tdata      : in std_logic_vector(IN_DATA_WIDTH-1 downto 0)
        );
 end averager;
 
@@ -56,8 +56,8 @@ architecture rtl of averager is
     return m;
   end log2c;
 
-  constant RATIO    : natural := AXIS_TDATA_WIDTH/ADC_DATA_WIDTH;
-  constant MEM_DEPTH: natural := 2**MEM_ADDR_WIDTH;
+  constant RATIO          : natural := IN_DATA_WIDTH/ADC_DATA_WIDTH;
+  constant MEM_ADDR_WIDTH : natural := log2c(MEM_DEPTH);
 
   type state_t is (
   ST_IDLE, 
@@ -72,18 +72,15 @@ signal state_reg, state_next      : state_t;
 
 signal addr_reg, addr_next        : std_logic_vector(log2c(MEM_DEPTH/RATIO)-1 downto 0);
 signal addr_dly_reg, addr_dly_next: std_logic_vector(log2c(MEM_DEPTH/RATIO)-1 downto 0);
-signal data_reg, data_next        : std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+signal data_reg, data_next        : std_logic_vector(IN_DATA_WIDTH-1 downto 0);
 signal tready_reg, tready_next    : std_logic;
-signal wren                       : std_logic;
 
-signal averages_reg, averages_next: std_logic_vector(AVERAGES_WIDTH-1 downto 0);
+signal averages_reg, averages_next: std_logic_vector(32-1 downto 0);
 signal done_reg, done_next        : std_logic;
---signal trig_s                     : std_logic;  
-signal dout_b_s                   : std_logic_vector(AXIS_TDATA_WIDTH-1 downto 0);
+signal dout_b_s                   : std_logic_vector(IN_DATA_WIDTH-1 downto 0);
 signal addr_s                     : std_logic_vector(log2c(MEM_DEPTH)-1 downto 0);
 signal brama_clk, bramb_clk       : std_logic;  
-signal brama_rst, bramb_rst       : std_logic;  
-signal web_s                      : std_logic;  
+--signal brama_rst, bramb_rst       : std_logic;  
 signal bramb_out                  : std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
 signal dinb_reg, dinb_next        : std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
 signal addrb_s                    : std_logic_vector(log2c(MEM_DEPTH)-1 downto 0);
@@ -105,23 +102,24 @@ begin
   done              <= done_reg;
   averages_out      <= averages_reg;
   addr_dly_next     <= addr_reg;
-  addr_s            <= bram_porta_addr when (done_reg = '1') else 
+  addr_s            <= std_logic_vector(resize(unsigned(unsigned(bram_porta_addr)-1),addrb_s'length)) when (done_reg = '1') else 
                        std_logic_vector(resize(unsigned(unsigned(averages_reg)-1),addrb_s'length));
   web               <= wren_reg when (mode = '0') else '0';
-  bram_porta_rddata <= std_logic_vector(resize(unsigned(bramb_out),bram_porta_rddata'length)) when (done_reg = '1') else (others => '0');
-  brama_rst         <= bram_porta_rst when (done_reg = '1') and (mode = '0') else
-                       aresetn;
+  --bram_porta_rddata <= std_logic_vector(resize(unsigned(bramb_out),bram_porta_rddata'length)) when (done_reg = '1') else (others => '0');
+  bram_porta_rddata <= std_logic_vector(resize(signed(bramb_out),bram_porta_rddata'length));
+  --  brama_rst         <= bram_porta_rst when (done_reg = '1') and (mode = '0') else
+  --                       aresetn;
 
-   -- DP RAM
+  -- DP RAM
   dp_ram_i : entity work.dp_ram_sync
   generic map
   (
     ADDR_WIDTH  => log2c(MEM_DEPTH/RATIO),
-    DATA_WIDTH  => AXIS_TDATA_WIDTH
+    DATA_WIDTH  => IN_DATA_WIDTH
   )
   port map
   (
-    clk     => brama_clk,
+    clk     => aclk, --brama_clk,
     we      => wren_reg,
     addr_a  => addr_dly_reg,
     addr_b  => addr_reg, 
@@ -139,7 +137,7 @@ begin
     INIT_RAM    => '1',
     WIDTHA      => ADC_DATA_WIDTH, 
     ADDRWIDTHA  => log2c(MEM_DEPTH),
-    WIDTHB      => AXIS_TDATA_WIDTH,
+    WIDTHB      => IN_DATA_WIDTH,
     ADDRWIDTHB  => log2c(MEM_DEPTH/RATIO)
   )
   port map
@@ -153,7 +151,7 @@ begin
     doA         => bramb_out,
 
     --portB same as portA in dp_ram
-    clkB        => brama_clk,
+    clkB        => aclk, --brama_clk,
     enB         => '1',
     weB         => web, --wren_reg,
     addrB       => addr_dly_reg,
@@ -191,7 +189,7 @@ begin
   end process;
 
   --Next state logic
-  process(state_reg, start, mode, trig_i, nsamples, naverages, addr_reg, s_axis_tvalid)
+  process(state_reg, start, mode, trig_i, restart, nsamples, naverages, addr_reg, s_axis_tvalid)
     variable dinbv : std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
   begin
     state_next    <= state_reg;  
@@ -225,7 +223,7 @@ begin
         wren_next     <= '1';
         wrenb_next     <= '1';
         addr_next <= std_logic_vector(unsigned(addr_reg) + 1);
-        if(unsigned(addr_reg) = unsigned(nsamples)/(AXIS_TDATA_WIDTH/ADC_DATA_WIDTH)) then 
+        if(unsigned(addr_reg) = unsigned(nsamples)/(IN_DATA_WIDTH/ADC_DATA_WIDTH)) then 
           wren_next  <= '0';
           wrenb_next  <= '0';
           addr_next  <= (others => '0');
@@ -246,14 +244,14 @@ begin
         end if;
 
       when ST_AVG_SCOPE => -- Measure
-        ASSIGN_G: for I in 0 to (AXIS_TDATA_WIDTH/ADC_DATA_WIDTH)-1 loop
-          data_next(AXIS_TDATA_WIDTH-1-I*ADC_DATA_WIDTH downto AXIS_TDATA_WIDTH-(I+1)*ADC_DATA_WIDTH) <= 
-          std_logic_vector(unsigned(dout_b_s(AXIS_TDATA_WIDTH-1-I*ADC_DATA_WIDTH downto AXIS_TDATA_WIDTH-(I+1)*ADC_DATA_WIDTH)) + 
-          unsigned(s_axis_tdata(AXIS_TDATA_WIDTH-1-I*ADC_DATA_WIDTH downto AXIS_TDATA_WIDTH-(I+1)*ADC_DATA_WIDTH)));
+        ASSIGN_G: for I in 0 to (IN_DATA_WIDTH/ADC_DATA_WIDTH)-1 loop
+          data_next(IN_DATA_WIDTH-1-I*ADC_DATA_WIDTH downto IN_DATA_WIDTH-(I+1)*ADC_DATA_WIDTH) <= 
+          std_logic_vector(signed(dout_b_s(IN_DATA_WIDTH-1-I*ADC_DATA_WIDTH downto IN_DATA_WIDTH-(I+1)*ADC_DATA_WIDTH)) + 
+          signed(s_axis_tdata(IN_DATA_WIDTH-1-I*ADC_DATA_WIDTH downto IN_DATA_WIDTH-(I+1)*ADC_DATA_WIDTH)));
         end loop;
         wren_next    <= '1';
         addr_next   <= std_logic_vector(unsigned(addr_reg) + 1);
-        if (unsigned(addr_reg) = unsigned(nsamples)/(AXIS_TDATA_WIDTH/ADC_DATA_WIDTH)) then
+        if (unsigned(addr_reg) = unsigned(nsamples)/(IN_DATA_WIDTH/ADC_DATA_WIDTH)) then
           averages_next <= std_logic_vector(unsigned(averages_reg) + 1);
           addr_next   <= (others => '0');
           tready_next <= '0';
@@ -266,21 +264,21 @@ begin
         end if;
 
       when ST_AVG_N1 => -- N to 1 average
-        ASSIGN_N: for I in 0 to (AXIS_TDATA_WIDTH/ADC_DATA_WIDTH)-1 loop
-          data_next(AXIS_TDATA_WIDTH-1-I*ADC_DATA_WIDTH downto AXIS_TDATA_WIDTH-(I+1)*ADC_DATA_WIDTH) <= 
-          std_logic_vector(unsigned(data_reg(AXIS_TDATA_WIDTH-1-I*ADC_DATA_WIDTH downto AXIS_TDATA_WIDTH-(I+1)*ADC_DATA_WIDTH)) + 
-          unsigned(s_axis_tdata(AXIS_TDATA_WIDTH-1-I*ADC_DATA_WIDTH downto AXIS_TDATA_WIDTH-(I+1)*ADC_DATA_WIDTH)));
+        ASSIGN_N: for I in 0 to (IN_DATA_WIDTH/ADC_DATA_WIDTH)-1 loop
+          data_next(IN_DATA_WIDTH-1-I*ADC_DATA_WIDTH downto IN_DATA_WIDTH-(I+1)*ADC_DATA_WIDTH) <= 
+          std_logic_vector(signed(data_reg(IN_DATA_WIDTH-1-I*ADC_DATA_WIDTH downto IN_DATA_WIDTH-(I+1)*ADC_DATA_WIDTH)) + 
+          signed(s_axis_tdata(IN_DATA_WIDTH-1-I*ADC_DATA_WIDTH downto IN_DATA_WIDTH-(I+1)*ADC_DATA_WIDTH)));
         end loop;
         wren_next    <= '1';
         addr_next <= std_logic_vector(unsigned(addr_reg) + 1);
-        if (unsigned(addr_reg) = unsigned(nsamples)/(AXIS_TDATA_WIDTH/ADC_DATA_WIDTH)) then
+        if (unsigned(addr_reg) = unsigned(nsamples)/(IN_DATA_WIDTH/ADC_DATA_WIDTH)) then
           averages_next <= std_logic_vector(unsigned(averages_reg) + 1);
           addr_next   <= (others => '0');
           tready_next <= '0';
           wren_next <= '0';
-          ASSIGN_AVG: for K in 0 to (AXIS_TDATA_WIDTH/ADC_DATA_WIDTH)-1 loop
+          ASSIGN_AVG: for K in 0 to (IN_DATA_WIDTH/ADC_DATA_WIDTH)-1 loop
             dinbv := 
-            std_logic_vector(unsigned(dinbv) + unsigned(data_reg(AXIS_TDATA_WIDTH-1-K*ADC_DATA_WIDTH downto AXIS_TDATA_WIDTH-(K+1)*ADC_DATA_WIDTH)));
+            std_logic_vector(signed(dinbv) + signed(data_reg(IN_DATA_WIDTH-1-K*ADC_DATA_WIDTH downto IN_DATA_WIDTH-(K+1)*ADC_DATA_WIDTH)));
           end loop;
           dinb_next <= dinbv;
           wrenb_next   <= '1';
@@ -299,6 +297,9 @@ begin
       when ST_FINISH => -- done
         wrenb_next <= '0';
         done_next <= '1';
+        if restart = '1' then
+          state_next <= ST_IDLE;
+        end if;
     end case;
   end process;
 

@@ -83,7 +83,7 @@ begin
 
   --port a is wr port (slave)
   --port b is rd port (master)
-  dp_ram_i: entity work.dp_ram 
+  dp_ram_i: entity work.tdp_bram 
   generic map(
                AWIDTH       => AWIDTH,
                DWIDTH       => AXIS_TDATA_WIDTH

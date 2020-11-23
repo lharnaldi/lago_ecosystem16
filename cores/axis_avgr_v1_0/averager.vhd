@@ -60,6 +60,7 @@ architecture rtl of averager is
   constant MEM_ADDR_WIDTH : natural := log2c(MEM_DEPTH);
 
   type state_t is (
+--  ST_WRITE_ZEROS, 
   ST_IDLE, 
   ST_WRITE_ZEROS, 
   ST_WAIT_TRIG, 
@@ -111,22 +112,25 @@ begin
   --                       aresetn;
 
   -- DP RAM
-  dp_ram_i : entity work.dp_ram_sync
-  generic map
-  (
-    ADDR_WIDTH  => log2c(MEM_DEPTH/RATIO),
-    DATA_WIDTH  => IN_DATA_WIDTH
-  )
-  port map
-  (
-    clk     => aclk, --brama_clk,
-    we      => wren_reg,
-    addr_a  => addr_dly_reg,
-    addr_b  => addr_reg, 
-    din_a   => data_reg,
-    dout_a  => open,
-    dout_b  => dout_b_s
-  );
+  tdp_ram_i : entity work.tdp_bram
+  generic map(
+               AWIDTH       => log2c(MEM_DEPTH/RATIO),
+               DWIDTH       => IN_DATA_WIDTH
+             )
+  port map(
+            clka    => aclk,
+            clkb    => aclk,
+            ena     => '1',
+            enb     => '1',
+            wea     => wren_reg,
+            web     => '0',
+            addra   => addr_dly_reg,
+            addrb   => addr_reg,
+            dia     => data_reg,
+            dib     => (others => '0'),
+            doa     => open,
+            dob     => dout_b_s
+          );
 
   -- ASYMMETRIC RAM
   -- Port A -> AXI IF
@@ -134,7 +138,6 @@ begin
   ram_asy : entity work.asym_ram_tdp
   generic map
   (
-    INIT_RAM    => '1',
     WIDTHA      => ADC_DATA_WIDTH, 
     ADDRWIDTHA  => log2c(MEM_DEPTH),
     WIDTHB      => IN_DATA_WIDTH,
@@ -143,20 +146,20 @@ begin
   port map
   (
     --portA same as op_ram
-    clkA        => brama_clk,
-    enA         => '1',
-    weA         => wrenb_reg,
-    addrA       => addr_s,
-    diA         => dinb_reg,
-    doA         => bramb_out,
+    clka        => brama_clk,
+    ena         => '1',
+    wea         => wrenb_reg,
+    addra       => addr_s,
+    dia         => dinb_reg,
+    doa         => bramb_out,
 
     --portB same as portA in dp_ram
-    clkB        => aclk, --brama_clk,
-    enB         => '1',
-    weB         => web, --wren_reg,
-    addrB       => addr_dly_reg,
-    diB         => data_reg,
-    doB         => open
+    clkb        => aclk, --brama_clk,
+    enb         => '1',
+    web         => web, --wren_reg,
+    addrb       => addr_dly_reg,
+    dib         => data_reg,
+    dob         => open
   );
 
   process(aclk)
@@ -164,6 +167,7 @@ begin
     if rising_edge(aclk) then
       if (aresetn = '0') then
         state_reg    <= ST_IDLE;
+        --state_reg    <= ST_WRITE_ZEROS;
         addr_reg     <= (others => '0');
         addr_dly_reg <= (others => '0');
         data_reg     <= (others => '0');
@@ -190,7 +194,7 @@ begin
 
   --Next state logic
   process(state_reg, start, mode, trig_i, restart, nsamples, naverages, addr_reg, s_axis_tvalid)
-    variable dinbv : std_logic_vector(ADC_DATA_WIDTH-1 downto 0);
+    variable dinbv : std_logic_vector(ADC_DATA_WIDTH-1 downto 0) := (others => '0');
   begin
     state_next    <= state_reg;  
     addr_next     <= addr_reg;
@@ -204,6 +208,17 @@ begin
     dinbv         := (others => '0');
 
     case state_reg is
+      --when ST_WRITE_ZEROS =>    -- Clear BRAM state one time case
+      --  wren_next     <= '1';
+      --  wrenb_next     <= '1';
+      --  addr_next <= std_logic_vector(unsigned(addr_reg) + 1);
+      --  if(unsigned(addr_reg) = unsigned(nsamples)/(IN_DATA_WIDTH/ADC_DATA_WIDTH)) then 
+      --    wren_next  <= '0';
+      --    wrenb_next  <= '0';
+      --    addr_next  <= (others => '0');
+      --    state_next <= ST_IDLE;
+      --  end if;
+
       when ST_IDLE => -- Start
         addr_next     <= (others => '0');
         data_next     <= (others => '0');
@@ -215,6 +230,7 @@ begin
         dinb_next     <= (others => '0');
         if start = '1' then
           state_next  <= ST_WRITE_ZEROS;
+          --state_next  <= ST_WAIT_TRIG;
         else
           state_next  <= ST_IDLE;
         end if;
@@ -223,7 +239,8 @@ begin
         wren_next     <= '1';
         wrenb_next     <= '1';
         addr_next <= std_logic_vector(unsigned(addr_reg) + 1);
-        if(unsigned(addr_reg) = unsigned(nsamples)/(IN_DATA_WIDTH/ADC_DATA_WIDTH)) then 
+        --if(unsigned(addr_reg) = unsigned(nsamples)/(IN_DATA_WIDTH/ADC_DATA_WIDTH)) then 
+        if(unsigned(addr_reg) = unsigned(nsamples)/RATIO) then 
           wren_next  <= '0';
           wrenb_next  <= '0';
           addr_next  <= (others => '0');
@@ -244,14 +261,16 @@ begin
         end if;
 
       when ST_AVG_SCOPE => -- Measure
-        ASSIGN_G: for I in 0 to (IN_DATA_WIDTH/ADC_DATA_WIDTH)-1 loop
+        --ASSIGN_G: for I in 0 to (IN_DATA_WIDTH/ADC_DATA_WIDTH)-1 loop
+        ASSIGN_G: for I in 0 to RATIO-1 loop
           data_next(IN_DATA_WIDTH-1-I*ADC_DATA_WIDTH downto IN_DATA_WIDTH-(I+1)*ADC_DATA_WIDTH) <= 
           std_logic_vector(signed(dout_b_s(IN_DATA_WIDTH-1-I*ADC_DATA_WIDTH downto IN_DATA_WIDTH-(I+1)*ADC_DATA_WIDTH)) + 
           signed(s_axis_tdata(IN_DATA_WIDTH-1-I*ADC_DATA_WIDTH downto IN_DATA_WIDTH-(I+1)*ADC_DATA_WIDTH)));
         end loop;
         wren_next    <= '1';
         addr_next   <= std_logic_vector(unsigned(addr_reg) + 1);
-        if (unsigned(addr_reg) = unsigned(nsamples)/(IN_DATA_WIDTH/ADC_DATA_WIDTH)) then
+        --if (unsigned(addr_reg) = unsigned(nsamples)/(IN_DATA_WIDTH/ADC_DATA_WIDTH)) then
+        if (unsigned(addr_reg) = unsigned(nsamples)/RATIO) then
           averages_next <= std_logic_vector(unsigned(averages_reg) + 1);
           addr_next   <= (others => '0');
           tready_next <= '0';
@@ -264,19 +283,22 @@ begin
         end if;
 
       when ST_AVG_N1 => -- N to 1 average
-        ASSIGN_N: for I in 0 to (IN_DATA_WIDTH/ADC_DATA_WIDTH)-1 loop
+        --ASSIGN_N: for I in 0 to (IN_DATA_WIDTH/ADC_DATA_WIDTH)-1 loop
+        ASSIGN_N: for I in 0 to RATIO-1 loop
           data_next(IN_DATA_WIDTH-1-I*ADC_DATA_WIDTH downto IN_DATA_WIDTH-(I+1)*ADC_DATA_WIDTH) <= 
           std_logic_vector(signed(data_reg(IN_DATA_WIDTH-1-I*ADC_DATA_WIDTH downto IN_DATA_WIDTH-(I+1)*ADC_DATA_WIDTH)) + 
           signed(s_axis_tdata(IN_DATA_WIDTH-1-I*ADC_DATA_WIDTH downto IN_DATA_WIDTH-(I+1)*ADC_DATA_WIDTH)));
         end loop;
         wren_next    <= '1';
         addr_next <= std_logic_vector(unsigned(addr_reg) + 1);
-        if (unsigned(addr_reg) = unsigned(nsamples)/(IN_DATA_WIDTH/ADC_DATA_WIDTH)) then
+        --if (unsigned(addr_reg) = unsigned(nsamples)/(IN_DATA_WIDTH/ADC_DATA_WIDTH)) then
+        if (unsigned(addr_reg) = unsigned(nsamples)/RATIO) then
           averages_next <= std_logic_vector(unsigned(averages_reg) + 1);
           addr_next   <= (others => '0');
           tready_next <= '0';
           wren_next <= '0';
-          ASSIGN_AVG: for K in 0 to (IN_DATA_WIDTH/ADC_DATA_WIDTH)-1 loop
+          --ASSIGN_AVG: for K in 0 to (IN_DATA_WIDTH/ADC_DATA_WIDTH)-1 loop
+          ASSIGN_AVG: for K in 0 to RATIO-1 loop
             dinbv := 
             std_logic_vector(signed(dinbv) + signed(data_reg(IN_DATA_WIDTH-1-K*ADC_DATA_WIDTH downto IN_DATA_WIDTH-(K+1)*ADC_DATA_WIDTH)));
           end loop;
@@ -296,8 +318,10 @@ begin
 
       when ST_FINISH => -- done
         wrenb_next <= '0';
-        done_next <= '1';
+        done_next  <= '1';
         if restart = '1' then
+          --wren_next <= '1';
+          --data_next <= (others => '0');
           state_next <= ST_IDLE;
         end if;
     end case;

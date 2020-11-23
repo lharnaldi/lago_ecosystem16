@@ -1,8 +1,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
+use ieee.numeric_std.all;
 
-entity dp_ram is
+entity tdp_bram is
   generic (
             AWIDTH       : integer := 16;
             DWIDTH       : integer := 16
@@ -21,9 +21,9 @@ entity dp_ram is
          doa     : out std_logic_vector (DWIDTH-1 downto 0);
          dob     : out std_logic_vector (DWIDTH-1 downto 0)
        );
-end dp_ram;
+end tdp_bram;
 
-architecture rtl of dp_ram is
+architecture rtl of tdp_bram is
 
   type ram_t is array (2**AWIDTH-1 downto 0) of std_logic_vector (DWIDTH-1 downto 0);
   shared variable ram : ram_t;
@@ -35,9 +35,9 @@ begin
   begin
     if rising_edge(clka) then
       if (ena = '1') then
-        doa <= ram(conv_integer(addra));
+        doa <= ram(to_integer(unsigned(addra)));
         if (wea = '1') then
-          ram(conv_integer(addra)) := dia;
+          ram(to_integer(unsigned(addra))) := dia;
         end if;
       end if;
     end if;
@@ -48,9 +48,9 @@ begin
   begin
     if rising_edge(clkb) then
       if (enb = '1') then
-        dob <= ram(conv_integer(addrb));
+        dob <= ram(to_integer(unsigned(addrb)));
         if (web = '1') then
-          ram(conv_integer(addrb)) := dib;
+          ram(to_integer(unsigned(addrb))) := dib;
         end if;
       end if;
     end if;

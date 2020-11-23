@@ -11,7 +11,7 @@ entity axis_averager is
           );
   port ( 
          start             : in std_logic;
-         restart           : in std_logic;
+         --restart           : in std_logic;
          trig_i            : in std_logic;
          send_data         : in std_logic;
          done              : out std_logic;
@@ -63,7 +63,8 @@ architecture rtl of axis_averager is
   signal done_sync             : std_logic;
   signal send_sync             : std_logic;
   signal start_sync            : std_logic;
-  signal restart_sync          : std_logic;
+--  signal restart_sync          : std_logic;
+  signal restart_s             : std_logic;
   signal trig_en_s             : std_logic;
   signal mode_s                : std_logic;
 
@@ -97,13 +98,13 @@ begin
           );
 
   --lets synchronize the restart signal
-  sync_restart: entity work.sync
-  port map(
-            clk      => s_axis_aclk,
-            reset    => s_axis_aresetn,
-            in_async => restart,
-            out_sync => restart_sync
-          );
+--  sync_restart: entity work.sync
+--  port map(
+--            clk      => s_axis_aclk,
+--            reset    => s_axis_aresetn,
+--            in_async => restart,
+--            out_sync => restart_sync
+--          );
 
   --lets synchronize the done signal
   sync_done: entity work.sync
@@ -150,7 +151,7 @@ begin
             aclk              => s_axis_aclk,
             aresetn           => s_axis_aresetn,
             start             => start_sync,
-            restart           => restart_sync,
+            restart           => restart_s,
             mode              => mode_s, --0- (default) avg scope, 1-avg nsamples to one value
             trig_i            => trig_i,
             nsamples          => nsamples_s,
@@ -177,7 +178,7 @@ begin
   rd_cfg_word <= nsamples_s when (mode_s = '0') else 
                  naverages_s;
 
-  --lets synchronize the restart signal
+  --lets synchronize the done signal
   sync_mdone: entity work.sync
   port map(
             clk      => m_axis_aclk,
@@ -186,7 +187,7 @@ begin
             out_sync => done_sync
           );
 
-  --lets synchronize the restart signal
+  --lets synchronize the send_data signal
   sync_send: entity work.sync
   port map(
             clk      => m_axis_aclk,
@@ -210,6 +211,7 @@ begin
             sts_data        => open,
             done            => done_sync,
             send            => send_sync,
+            restart_o       => restart_s,
 
             m_axis_tready     => m_axis_tready,
             m_axis_tdata      => m_axis_tdata,

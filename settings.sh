@@ -17,6 +17,7 @@ export LC_ALL="en_US.UTF-8"
 ################################################################################
 
 . /tools/Xilinx/Vivado/2018.3/settings64.sh
+#. /tools/Xilinx/Vivado/2019.2/settings64.sh
 
 ################################################################################
 # setup cross compiler toolchain

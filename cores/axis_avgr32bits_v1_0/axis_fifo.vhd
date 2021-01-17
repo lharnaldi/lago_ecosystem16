@@ -5,6 +5,7 @@ use ieee.numeric_std.all;
 entity axis_fifo is
   generic(
            AXIS_TDATA_WIDTH : natural := 32;
+           AWIDTH           : natural := 4;
            FIFO_DEPTH       : natural := 16
          --           AWIDTH           : natural := 2
          );
@@ -27,19 +28,19 @@ entity axis_fifo is
 end axis_fifo;
 
 architecture rtl of axis_fifo is
-  function log2c(n: integer) return integer is
-    variable m, p: integer;
-  begin
-    m := 0;
-    p := 1;
-    while p < n loop
-      m := m + 1;
-      p := p * 2;
-    end loop;
-    return m;
-  end log2c;
+  --function log2c(n: integer) return integer is
+  --  variable m, p: integer;
+  --begin
+  --  m := 0;
+  --  p := 1;
+  --  while p < n loop
+  --    m := m + 1;
+  --    p := p * 2;
+  --  end loop;
+  --  return m;
+  --end log2c;
 
-  constant AWIDTH : natural := log2c(FIFO_DEPTH);
+  --constant AWIDTH : natural := log2c(FIFO_DEPTH);
 
   signal s_tready_reg, s_tready_next : std_logic;
   signal m_tvalid_reg, m_tvalid_next : std_logic;
@@ -63,7 +64,7 @@ begin
   end process;
   --next state logic
   s_tready_next <= '1' when (full_s = '0') else '0'; 
-  we_s          <= '1' when (full_s = '0') and (s_axis_tvalid = '1') else '0';
+  we_s          <= '1' when (s_tready_reg = '1') and (s_axis_tvalid = '1') else '0';
 
   m_axis_tvalid <= m_tvalid_reg;
   --master port registers
@@ -79,7 +80,7 @@ begin
   end process;
   --next state logic
   m_tvalid_next <= '1' when (empty_s = '0') else '0';
-  rd_s          <= '1' when (empty_s = '0') and (m_axis_tready = '1') else '0';
+  rd_s          <= '1' when (m_tvalid_reg = '1') and (m_axis_tready = '1') else '0';
 
   --port a is wr port (slave)
   --port b is rd port (master)
@@ -94,11 +95,11 @@ begin
             ena     => '1',
             enb     => '1',
             wea     => we_s,
-            web     => '0',
+            --web     => '0',
             addra   => w_addr_s,
             addrb   => r_addr_s,
-            dia     => s_axis_tdata,
-            dib     => (others => '0'),
+            dia    => s_axis_tdata,
+            --dib     => (others => '0'),
             doa     => open,
             dob     => m_axis_tdata
           );

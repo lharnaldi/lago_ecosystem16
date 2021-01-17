@@ -8,6 +8,7 @@ set_property DESCRIPTION $display_name $core
 core_parameter S_AXIS_TDATA_WIDTH {S_AXIS TDATA WIDTH} {Width of the S_AXIS data bus.}
 core_parameter M_AXIS_TDATA_WIDTH {M_AXIS TDATA WIDTH} {Width of the M_AXI data bus.}
 core_parameter ADC_DATA_WIDTH {ADC DATA WIDTH} {Width of the ADC data.}
+core_parameter MEM_AWIDTH {MEMORY ADDR WIDTH} {Address width of the data memory.}
 core_parameter MEM_DEPTH {MEMORY DEPTH} {Depth of the data memory.}
 
 set bus [ipx::get_bus_interfaces -of_objects $core s_axis_cfg]

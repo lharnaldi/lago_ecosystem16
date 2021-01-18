@@ -26,8 +26,6 @@ entity averager is
          naverages         : in std_logic_vector(32-1 downto 0);
          done              : out std_logic;
          averages_out      : out std_logic_vector(32-1 downto 0);
-         --asy_addra_o       : out std_logic_vector(MEM_AWIDTH-1 downto 0);
-         --asy_wea_o         : out std_logic;
          tdp_ena_o         : out std_logic;            
          op_we_o           : out std_logic;            
          op_addr_o         : out std_logic_vector(MEM_AWIDTH-1 downto 0);
@@ -35,9 +33,6 @@ entity averager is
 
          -- BRAM PORTA. Reading port
          bram_porta_clk    : in std_logic;
-         --bram_porta_rst    : in std_logic;
-         --bram_porta_wrdata : in std_logic_vector(OUT_DATA_WIDTH-1 downto 0);
-         --bram_porta_we     : in std_logic;
          bram_porta_addr   : in std_logic_vector(MEM_AWIDTH-1 downto 0);
          bram_porta_rddata : out std_logic_vector(OUT_DATA_WIDTH-1 downto 0);
 
@@ -63,16 +58,13 @@ architecture rtl of averager is
   end log2c;
 
   constant RATIO          : natural := IN_DATA_WIDTH/ADC_DATA_WIDTH;
-  --constant MEM_ADDR_WIDTH : natural := log2c(MEM_DEPTH);
 
   type state_t is (
   ST_IDLE, 
-  ST_WRITE_ZEROS, 
   ST_WAIT_TRIG, 
   ST_AVG_SCOPE,
   ST_AVG_N1,
   ST_WRITE_AVG,
-  ST_DLY,
   ST_FINISH 
 );
 signal state_reg, state_next      : state_t;
@@ -81,38 +73,28 @@ signal sdp_we_reg, sdp_we_next       : std_logic;
 signal sdp_addra_reg, sdp_addra_next : unsigned(log2c(MEM_DEPTH/RATIO)-1 downto 0);
 signal sdp_addrb_reg, sdp_addrb_next : unsigned(log2c(MEM_DEPTH/RATIO)-1 downto 0);
 signal sdp_di_reg, sdp_di_next       : std_logic_vector(2*IN_DATA_WIDTH-1 downto 0);
-signal sdp_doa   : std_logic_vector(2*IN_DATA_WIDTH-1 downto 0);
-signal sdp_addrb : unsigned(log2c(MEM_DEPTH/RATIO)-1 downto 0); 
-signal sdp_dob   : std_logic_vector(2*IN_DATA_WIDTH-1 downto 0);
+signal sdp_doa, sdp_dob              : std_logic_vector(2*IN_DATA_WIDTH-1 downto 0);
 
-signal op_addr   : std_logic_vector(MEM_AWIDTH-1 downto 0);
 signal op_addr_reg, op_addr_next     : unsigned(MEM_AWIDTH-1 downto 0);
-signal op_din_reg, op_din_next: std_logic_vector(2*ADC_DATA_WIDTH-1 downto 0);
-signal op_we_reg, op_we_next  : std_logic := '0';
+signal op_din_reg, op_din_next       : std_logic_vector(2*ADC_DATA_WIDTH-1 downto 0);
+signal op_we_reg, op_we_next         : std_logic := '0';
 signal op_do     : std_logic_vector(2*ADC_DATA_WIDTH-1 downto 0);
---signal op_en     : std_logic := '0';
 signal tdp_ena   : std_logic := '0';
 signal tdp_enb   : std_logic := '0';
 
 signal asy_enb   : std_logic := '0';
 signal asy_ena   : std_logic := '0';
 signal asy_web   : std_logic := '0';
---signal asy_addra : std_logic_vector(MEM_AWIDTH-1 downto 0) := (others => '0');
 signal asy_doa   : std_logic_vector(2*ADC_DATA_WIDTH-1 downto 0);
 signal asy_dib   : std_logic_vector(2*IN_DATA_WIDTH-1 downto 0);
---signal asy_dob   : std_logic_vector(2*IN_DATA_WIDTH-1 downto 0);
 
 signal asy_pa_addr_reg, asy_pa_addr_next : unsigned(log2c(MEM_DEPTH/RATIO)-1 downto 0);
 signal asy_pa_di_reg, asy_pa_di_next     : std_logic_vector(2*IN_DATA_WIDTH-1 downto 0);
 
 signal tready_reg, tready_next    : std_logic;
 
-signal averages_reg, averages_next: unsigned(32-1 downto 0);
+signal averages_reg, averages_next: unsigned(2*ADC_DATA_WIDTH-1 downto 0);
 signal done_reg, done_next        : std_logic;
-signal brama_clk, bramb_clk       : std_logic;  
-
-signal tready_s                   : std_logic;
---signal not_done                   : std_logic := '0';
 
 begin
 
@@ -145,7 +127,7 @@ begin
             dia   => op_din_reg,
             doa   => open,
             dob   => op_do
-       );
+          );
   tdp_ena <= '1' when mode = '1' and done_reg = '0' else '0';
   tdp_enb <= '1' when mode = '1' and done_reg = '1' else '0';
 
@@ -186,7 +168,7 @@ begin
     enA         => asy_ena,
     weA         => '0', 
     addrA       => bram_porta_addr,
-    diA         => (others => '0'), --op_din_reg, 
+    diA         => (others => '0'), 
     doA         => asy_doa, 
 
     --portB same as portA in dp_ram
@@ -195,7 +177,7 @@ begin
     weB         => sdp_we_reg,
     addrB       => std_logic_vector(sdp_addra_reg),
     diB         => sdp_di_reg,
-    doB         => open --asy_dob
+    doB         => open 
   );
   asy_ena <= '1' when mode = '0' and done_reg = '1' else '0';
   asy_enb <= '1' when mode = '0' and done_reg = '0' else '0';
@@ -260,6 +242,7 @@ begin
         READOUT_State_Mon <= "000"; --state mon
         sdp_addrb_next    <= (others => '0');
         sdp_di_next       <= (others => '0');
+        sdp_we_next       <= '1';
         asy_pa_addr_next  <= (others => '0');
         asy_pa_di_next    <= (others => '0');
         averages_next     <= (others => '0');
@@ -268,23 +251,13 @@ begin
         done_next         <= '0';
         dinbv             := (others => '0');
         if start = '1' then
-          state_next  <= ST_WRITE_ZEROS;
+          state_next  <= ST_WAIT_TRIG;
         else
           state_next  <= ST_IDLE;
         end if;
 
-      when ST_WRITE_ZEROS =>    -- Clear BRAM state one time case
-        READOUT_State_Mon <= "001"; --state mon
-        sdp_we_next <= '1';
-        sdp_addrb_next <= sdp_addrb_reg + 1;
-        if(sdp_addrb_reg = (unsigned(nsamples)/RATIO)-1) then 
-          sdp_addrb_next <= (others => '0');
-          state_next <= ST_WAIT_TRIG;
-        end if;
-
       when ST_WAIT_TRIG => -- Wait for trigger
-        READOUT_State_Mon <= "010"; --state mon
-        --asy_pa_di_next <= (others => '0');
+        READOUT_State_Mon <= "001"; --state mon
         dinbv         := (others => '0');
         if(trig_i = '1') and (s_axis_tvalid = '1') then
           tready_next  <= '1';
@@ -298,7 +271,7 @@ begin
         end if;
 
       when ST_AVG_SCOPE => -- Measure
-        READOUT_State_Mon <= "011"; --state mon
+        READOUT_State_Mon <= "010"; --state mon
         sdp_we_next <= '1';
         sdp_addrb_next <= sdp_addrb_reg + 1;
         ASSIGN_G1: for I in 0 to RATIO-1 loop
@@ -318,7 +291,7 @@ begin
         end if;
 
       when ST_AVG_N1 => -- N to 1 average
-        READOUT_State_Mon <= "100"; --state mon
+        READOUT_State_Mon <= "011"; --state mon
         asy_pa_addr_next <= asy_pa_addr_reg + 1;
         ASSIGN_N: for I in 0 to RATIO-1 loop
           asy_pa_di_next(2*IN_DATA_WIDTH-1-I*2*ADC_DATA_WIDTH downto 2*IN_DATA_WIDTH-(I+1)*2*ADC_DATA_WIDTH) <= 
@@ -329,41 +302,28 @@ begin
           asy_pa_addr_next <= (others => '0');
           averages_next <= averages_reg + 1;
           tready_next   <= '0';
-          if (averages_reg = unsigned(naverages)-1) then
-            state_next  <= ST_DLY;
-          else
             state_next  <= ST_WRITE_AVG;
-          end if;
         end if;
 
       when ST_WRITE_AVG => -- write bramb
-        READOUT_State_Mon <= "101"; --state mon
-          ASSIGN_AVG1: for K in 0 to RATIO-1 loop
-            dinbv := 
-            std_logic_vector(signed(dinbv) + signed(asy_pa_di_reg(2*IN_DATA_WIDTH-1-K*2*ADC_DATA_WIDTH downto
-            2*IN_DATA_WIDTH-(K+1)*2*ADC_DATA_WIDTH)));
-          end loop;
-          op_din_next <= dinbv;
-          op_we_next <= '1';
+        READOUT_State_Mon <= "100"; --state mon
+        ASSIGN_AVG1: for K in 0 to RATIO-1 loop
+          dinbv := 
+          std_logic_vector(signed(dinbv) + signed(asy_pa_di_reg(2*IN_DATA_WIDTH-1-K*2*ADC_DATA_WIDTH downto
+          2*IN_DATA_WIDTH-(K+1)*2*ADC_DATA_WIDTH)));
+        end loop;
+        op_din_next <= dinbv;
+        op_we_next <= '1';
         asy_pa_di_next <= (others => '0');
         op_addr_next <= op_addr_reg + 1;
-        state_next <= ST_WAIT_TRIG;
-
-      when ST_DLY => -- delay
-        READOUT_State_Mon <= "110"; --state mon
-          ASSIGN_AVG2: for K in 0 to RATIO-1 loop
-            dinbv := 
-            std_logic_vector(signed(dinbv) + signed(asy_pa_di_reg(2*IN_DATA_WIDTH-1-K*2*ADC_DATA_WIDTH downto
-            2*IN_DATA_WIDTH-(K+1)*2*ADC_DATA_WIDTH)));
-          end loop;
-          op_din_next <= dinbv;
-          op_we_next <= '1';
-        asy_pa_di_next <= (others => '0');
-        op_addr_next <= op_addr_reg + 1;
+          if (averages_reg = unsigned(naverages)) then
         state_next <= ST_FINISH;
+      else
+        state_next <= ST_WAIT_TRIG;
+      end if;
 
       when ST_FINISH => -- done
-        READOUT_State_Mon <= "111"; --state mon
+        READOUT_State_Mon <= "101"; --state mon
         done_next  <= '1';
         if restart = '1' then
           state_next <= ST_IDLE;

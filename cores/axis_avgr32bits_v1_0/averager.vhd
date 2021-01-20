@@ -247,6 +247,7 @@ begin
         asy_pa_di_next    <= (others => '0');
         averages_next     <= (others => '0');
         op_addr_next      <= (others => '1');
+        op_din_next       <= (others => '0');
         tready_next       <= '0';
         done_next         <= '0';
         dinbv             := (others => '0');
@@ -302,7 +303,7 @@ begin
           asy_pa_addr_next <= (others => '0');
           averages_next <= averages_reg + 1;
           tready_next   <= '0';
-            state_next  <= ST_WRITE_AVG;
+          state_next  <= ST_WRITE_AVG;
         end if;
 
       when ST_WRITE_AVG => -- write bramb
@@ -316,11 +317,11 @@ begin
         op_we_next <= '1';
         asy_pa_di_next <= (others => '0');
         op_addr_next <= op_addr_reg + 1;
-          if (averages_reg = unsigned(naverages)) then
-        state_next <= ST_FINISH;
-      else
-        state_next <= ST_WAIT_TRIG;
-      end if;
+        if (averages_reg = unsigned(naverages)) then
+          state_next <= ST_FINISH;
+        else
+          state_next <= ST_WAIT_TRIG;
+        end if;
 
       when ST_FINISH => -- done
         READOUT_State_Mon <= "101"; --state mon

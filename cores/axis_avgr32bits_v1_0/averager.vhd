@@ -65,7 +65,8 @@ architecture rtl of averager is
   ST_AVG_SCOPE,
   ST_AVG_N1,
   ST_WRITE_AVG,
-  ST_FINISH 
+  ST_FINISH,
+ 	ST_WRITE_ZEROS
 );
 signal state_reg, state_next      : state_t;
 
@@ -132,26 +133,28 @@ begin
   tdp_enb <= '1' when mode = '1' and done_reg = '1' else '0';
 
   -- DP RAM
-  sdp_ram_i : entity work.sdp_ram_oc
+  sdp_ram_i : entity work.tdp_bram 
   generic map(
                AWIDTH       => log2c(MEM_DEPTH/RATIO),
                DWIDTH       => 2*IN_DATA_WIDTH
              )
   port map(
-            clk   => aclk,
+            clka   => aclk,
+            clkb   => aclk,
             ena   => '1',
             enb   => '1',
             wea   => sdp_we_reg,
             addra => std_logic_vector(sdp_addra_reg),
             addrb => std_logic_vector(sdp_addrb_reg),
             dia   => sdp_di_reg,
+						doa   => open,
             dob   => sdp_dob
           );
 
   -- ASYMMETRIC RAM
   -- Port A -> AXI IF
   -- Port B -> same as WIDER BRAM
-  ram_asy : entity work.asym_ram_tdp_write_first
+  ram_asy : entity work.asym_ram_sdp_write_wider
   generic map
   (
     WIDTHA      => 2*ADC_DATA_WIDTH, 
@@ -166,9 +169,9 @@ begin
     --portA same as op_ram
     clkA        => bram_porta_clk,
     enA         => asy_ena,
-    weA         => '0', 
+    --weA         => '0', 
     addrA       => bram_porta_addr,
-    diA         => (others => '0'), 
+    --diA         => (others => '0'), 
     doA         => asy_doa, 
 
     --portB same as portA in dp_ram
@@ -176,8 +179,8 @@ begin
     enB         => asy_enb,
     weB         => sdp_we_reg,
     addrB       => std_logic_vector(sdp_addra_reg),
-    diB         => sdp_di_reg,
-    doB         => open 
+    diB         => sdp_di_reg
+    --doB         => open 
   );
   asy_ena <= '1' when mode = '0' and done_reg = '1' else '0';
   asy_enb <= '1' when mode = '0' and done_reg = '0' else '0';
@@ -226,9 +229,9 @@ begin
   begin
     state_next    <= state_reg;  
     sdp_addrb_next<= sdp_addrb_reg;
-    sdp_di_next   <= sdp_di_reg; --(others => '0');
+    sdp_di_next   <= (others => '0');
     asy_pa_addr_next<= asy_pa_addr_reg;
-    asy_pa_di_next  <= asy_pa_di_reg; --(others => '0');
+    asy_pa_di_next  <= (others => '0');
     sdp_we_next   <= '0';
     op_we_next    <= '0';
     op_din_next   <= op_din_reg; 
@@ -327,8 +330,21 @@ begin
         READOUT_State_Mon <= "101"; --state mon
         done_next  <= '1';
         if restart = '1' then
-          state_next <= ST_IDLE;
+					sdp_addrb_next <= (others => '0');
+					sdp_we_next <= '1';
+          state_next <= ST_WRITE_ZEROS;
         end if;
+
+      when ST_WRITE_ZEROS => -- reset BRAM
+			  READOUT_State_Mon <= "110"; --state mon
+					sdp_we_next <= '1';
+					sdp_addrb_next <= sdp_addrb_reg + 1;
+					if(sdp_addrb_reg = (unsigned(nsamples)/RATIO)-1) then
+									sdp_addrb_next <= (others => '0');
+									state_next <= ST_IDLE;
+					end if;
+
+
     end case;
   end process;
 

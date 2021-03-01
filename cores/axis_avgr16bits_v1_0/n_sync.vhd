@@ -14,8 +14,13 @@ entity n_sync is
 end n_sync;
 
 architecture two_ff_arch of n_sync is
-  signal meta_reg, sync_reg  : std_logic_vector(N-1 downto 0);
-  signal meta_next, sync_next: std_logic_vector(N-1 downto 0);
+  signal meta_reg, meta_next  : std_logic_vector(N-1 downto 0);
+  signal sync_reg, sync_next: std_logic_vector(N-1 downto 0);
+
+  attribute ASYNC_REG : string;
+  attribute ASYNC_REG of meta_reg: signal is "TRUE";
+  attribute ASYNC_REG of sync_reg: signal is "TRUE";
+
 begin
 
   -- two registers

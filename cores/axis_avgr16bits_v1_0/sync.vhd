@@ -12,8 +12,12 @@ entity sync is
 end sync;
 
 architecture two_ff_arch of sync is
-  signal meta_reg, sync_reg  : std_logic;
-  signal meta_next, sync_next: std_logic;
+  signal meta_reg, meta_next : std_logic;
+  signal sync_reg, sync_next: std_logic;
+
+  attribute ASYNC_REG : string;
+  attribute ASYNC_REG of meta_reg: signal is "TRUE";
+  attribute ASYNC_REG of sync_reg: signal is "TRUE";
 begin
 
   -- two registers

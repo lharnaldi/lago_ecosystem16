@@ -16,7 +16,8 @@ export LC_ALL="en_US.UTF-8"
 # setup Xilinx Vivado FPGA tools
 ################################################################################
 
-. /tools/Xilinx/Vivado/2018.3/settings64.sh
+. /tools/Xilinx/SDK/2018.3/settings64.sh
+#. /tools/Xilinx/Vivado/2018.3/settings64.sh
 #. /tools/Xilinx/Vivado/2019.2/settings64.sh
 
 ################################################################################

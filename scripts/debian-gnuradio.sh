@@ -6,11 +6,14 @@ root_dir=`mktemp -d /tmp/ROOT.XXXXXXXXXX`
 linux_dir=tmp/linux-5.4
 linux_ver=5.4.108-xilinx
 
-root_tar=ubuntu-base-14.04.5-base-armhf.tar.gz
-root_url=http://cdimage.ubuntu.com/ubuntu-base/releases/14.04/release/$root_tar
+# Choose mirror automatically, depending the geographic and network location
+mirror=http://deb.debian.org/debian
 
-passwd=escondido
-timezone=America/Argentina/Mendoza
+distro=stretch
+arch=armhf
+
+passwd=changeme
+timezone=Europe/Brussels
 
 # Create partitions
 
@@ -36,11 +39,9 @@ mount $root_dev $root_dir
 cp boot.bin devicetree.dtb uImage $boot_dir
 cp uEnv-ext4.txt $boot_dir/uEnv.txt
 
-# Copy Ubuntu Core to the root file system
+# Install Debian base system to the root file system
 
-test -f $root_tar || curl -L $root_url -o $root_tar
-
-tar -zxf $root_tar --directory=$root_dir
+debootstrap --foreign --arch $arch $distro $root_dir $mirror
 
 # Install Linux modules
 
@@ -65,6 +66,17 @@ export LC_ALL=C
 
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
+/debootstrap/debootstrap --second-stage
+
+cat <<- EOF_CAT > /etc/apt/sources.list
+deb $mirror $distro main contrib non-free
+deb-src $mirror $distro main contrib non-free
+deb $mirror $distro-updates main contrib non-free
+deb-src $mirror $distro-updates main contrib non-free
+deb http://security.debian.org/debian-security $distro/updates main contrib non-free
+deb-src http://security.debian.org/debian-security $distro/updates main contrib non-free
+EOF_CAT
+
 cat <<- EOF_CAT > etc/apt/apt.conf.d/99norecommends
 APT::Install-Recommends "0";
 APT::Install-Suggests "0";
@@ -77,43 +89,46 @@ cat <<- EOF_CAT > etc/fstab
 /dev/mmcblk0p1  /boot           vfat    defaults            0       2
 EOF_CAT
 
+echo red-pitaya > etc/hostname
+
+apt-get update
+apt-get -y upgrade
+
+apt-get -y install locales
+
+sed -i "/^# en_US.UTF-8 UTF-8$/s/^# //" etc/locale.gen
+locale-gen
+update-locale LANG=en_US.UTF-8
+
+ln -sf /usr/share/zoneinfo/$timezone etc/localtime
+dpkg-reconfigure --frontend=noninteractive tzdata
+
+apt-get -y install openssh-server ca-certificates ntp ntpdate fake-hwclock \
+  usbutils psmisc lsof parted curl vim wpasupplicant hostapd isc-dhcp-server \
+  iw firmware-realtek firmware-ralink firmware-atheros firmware-brcm80211 \
+  build-essential libasound2-dev libconfig-dev libfftw3-dev subversion git \
+  alsa-utils gnuradio python-numpy python-gtk2 python-urwid python-serial \
+  python-alsaaudio xauth xterm parallel ifplugd ntfs-3g net-tools less
+
+sed -i 's/^#PermitRootLogin.*/PermitRootLogin yes/' etc/ssh/sshd_config
+
 cat <<- EOF_CAT >> etc/securetty
 
 # Serial Console for Xilinx Zynq-7000
 ttyPS0
 EOF_CAT
 
-sed 's/tty1/ttyPS0/g; s/38400/115200/' etc/init/tty1.conf > etc/init/ttyPS0.conf
+touch etc/udev/rules.d/80-net-setup-link.rules
 
-echo red-pitaya > etc/hostname
-
-sed -i '/^# deb .* universe$/s/^# //' etc/apt/sources.list
-
-sed -i '/### END INIT INFO/aexit 0' /etc/init.d/udev
-apt-get update
-apt-get -y upgrade
-sed -i '/### END INIT INFO/{n;d}' /etc/init.d/udev
-
-apt-get -y install locales
-
-locale-gen en_US.UTF-8
-update-locale LANG=en_US.UTF-8
-
-echo $timezone > etc/timezone
-dpkg-reconfigure --frontend=noninteractive tzdata
-
-apt-get -y install openssh-server ca-certificates ntp usbutils psmisc lsof \
-  parted curl less vim man-db iw wpasupplicant linux-firmware ntfs-3g
-
-sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' etc/ssh/sshd_config
-
-apt-get -y install hostapd isc-dhcp-server iptables
-
-touch etc/udev/rules.d/75-persistent-net-generator.rules
-
-cat <<- EOF_CAT >> etc/network/interfaces.d/eth0
-allow-hotplug eth0
+cat <<- EOF_CAT > etc/network/interfaces.d/eth0
 iface eth0 inet dhcp
+EOF_CAT
+
+cat <<- EOF_CAT > etc/default/ifplugd
+INTERFACES="eth0"
+HOTPLUG_INTERFACES=""
+ARGS="-q -f -u0 -d10 -w -I"
+SUSPEND_ACTION="stop"
 EOF_CAT
 
 cat <<- EOF_CAT > etc/network/interfaces.d/wlan0
@@ -147,6 +162,10 @@ EOF_CAT
 
 cat <<- EOF_CAT > etc/default/hostapd
 DAEMON_CONF=/etc/hostapd/hostapd.conf
+EOF_CAT
+
+cat <<- EOF_CAT > etc/default/isc-dhcp-server
+INTERFACESv4=wlan0
 EOF_CAT
 
 cat <<- EOF_CAT > etc/dhcp/dhcpd.conf

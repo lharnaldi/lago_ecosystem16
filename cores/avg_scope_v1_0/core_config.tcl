@@ -1,12 +1,12 @@
-set display_name {AXI4-Stream Averager 32 bits v1.0}
+set display_name {Average scope v1.0}
 
 set core [ipx::current_core]
 
 set_property DISPLAY_NAME $display_name $core
 set_property DESCRIPTION $display_name $core
 
-core_parameter S_AXIS_DWIDTH {S_AXIS TDATA WIDTH} {Width of the S_AXIS data bus.}
-core_parameter M_AXIS_DWIDTH {M_AXIS TDATA WIDTH} {Width of the M_AXI data bus.}
+core_parameter I_DWIDTH {S_AXIS TDATA WIDTH} {Width of the S_AXIS data bus.}
+core_parameter O_DWIDTH {M_AXIS TDATA WIDTH} {Width of the M_AXI data bus.}
 core_parameter ADC_DWIDTH {ADC DATA WIDTH} {Width of the ADC data.}
 core_parameter MEM_AWIDTH {MEMORY ADDR WIDTH} {Address width of the data memory.}
 core_parameter MEM_DEPTH {MEMORY DEPTH} {Depth of the data memory.}

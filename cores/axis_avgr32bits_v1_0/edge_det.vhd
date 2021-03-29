@@ -4,7 +4,7 @@ use ieee.std_logic_1164.all;
 entity edge_det is
   port(
         aclk   : in std_logic;
-        areset : in std_logic;
+        aresetn: in std_logic;
         sig_i  : in std_logic;
         sig_o  : out std_logic
       );
@@ -18,7 +18,7 @@ begin
   process(aclk)
   begin
     if rising_edge(aclk) then
-      if (areset='0') then
+      if (aresetn='0') then
         state_reg <= zero;
       else
         state_reg <= state_next;

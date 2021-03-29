@@ -1,0 +1,16 @@
+v 4
+file . "bram_reader.vhd" "3ece4bc36d19a5b9c808318060fc18d59666210e" "20210220193432.507":
+  entity bram_reader at 1( 0) + 0 on 47;
+  architecture rtl of bram_reader at 38( 1218) + 0 on 48;
+file . "sync.vhd" "184577d8e44c81cf7a74455d695693fdd1c7cd64" "20210219141036.674":
+  entity sync at 1( 0) + 0 on 25;
+  architecture two_ff_arch of sync at 14( 247) + 0 on 26;
+file . "tdp_ram_pip.vhd" "8f48fd0cd5ed4a0f0b3069c8ec18af8d6fd2f1ff" "20210220193432.497":
+  entity tdp_ram_pip at 3( 87) + 0 on 43;
+  architecture rtl of tdp_ram_pip at 30( 948) + 0 on 44;
+file . "asym_ram_sdp_write_wider.vhd" "bbddda52562fe874945f6942ad60102edc9940c9" "20210220193432.501":
+  entity asym_ram_sdp_write_wider at 6( 101) + 0 on 45;
+  architecture behavioral of asym_ram_sdp_write_wider at 36( 1007) + 0 on 46;
+file . "avg_scope.vhd" "6a5b40e807bfe502097ffc1a7a8e6366010172d7" "20210220193432.513":
+  entity avg_scope at 1( 0) + 0 on 49;
+  architecture rtl of avg_scope at 45( 1582) + 0 on 50;

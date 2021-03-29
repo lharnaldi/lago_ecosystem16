@@ -19,6 +19,7 @@ CORES = axi_axis_reader_v1_0 \
         axi_time_trig_gen_v1_0 \
         axis_adpll_v1_0 \
         axis_avgr_v1_0 \
+        axis_avgr16bits_v1_0 \
         axis_avgr32bits_v1_0 \
         axis_bram_reader_v1_0 \
         axis_bram_writer_v1_0 \
@@ -53,6 +54,8 @@ CORES = axi_axis_reader_v1_0 \
         axis_variable_v1_0 \
         axis_zero_crossing_det_v1_0 \
         axis_zeroer_v1_0 \
+        avg_scope_v1_0 \
+        avg_ntoone_v1_0 \
         bram_counter_v1_0 \
         bram_selector_v1_0 \
         dc_removal_v1_0 \

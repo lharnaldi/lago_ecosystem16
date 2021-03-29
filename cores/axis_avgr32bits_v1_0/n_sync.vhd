@@ -6,23 +6,28 @@ entity n_sync is
            N : natural
          );
   port(
-        clk      : in std_logic;
-        reset    : in std_logic;
+        aclk     : in std_logic;
+        aresetn  : in std_logic;
         in_async : in std_logic_vector(N-1 downto 0);
         out_sync : out std_logic_vector(N-1 downto 0)
       );
 end n_sync;
 
 architecture two_ff_arch of n_sync is
-  signal meta_reg, sync_reg  : std_logic_vector(N-1 downto 0);
-  signal meta_next, sync_next: std_logic_vector(N-1 downto 0);
+  signal meta_reg, meta_next  : std_logic_vector(N-1 downto 0);
+  signal sync_reg, sync_next: std_logic_vector(N-1 downto 0);
+
+  attribute ASYNC_REG : string;
+  attribute ASYNC_REG of meta_reg: signal is "TRUE";
+  attribute ASYNC_REG of sync_reg: signal is "TRUE";
+
 begin
 
   -- two registers
-  process(clk)
+  process(aclk)
   begin
-    if rising_edge(clk) then
-      if (reset='0') then
+    if rising_edge(aclk) then
+      if (aresetn='0') then
         meta_reg <= (others=>'0');
         sync_reg <= (others=>'0');
       else

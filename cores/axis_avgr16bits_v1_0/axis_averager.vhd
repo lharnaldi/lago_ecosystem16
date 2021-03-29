@@ -106,6 +106,10 @@ begin
   naverages_s <= s_axis_cfg_reg_sync(48-1 downto 32);
   nsamples_s  <= s_axis_cfg_reg_sync(16-1 downto 0);
 
+  --mode_s      <= s_axis_cfg_reg_sync(32); 
+  --naverages_s <= s_axis_cfg_reg_sync(32-1 downto 16);
+  --nsamples_s  <= s_axis_cfg_reg_sync(16-1 downto 0);
+
   --signals for debug
   --mode_o      <= s_axis_cfg_reg_sync(64-1); 
   --naverages_o <= s_axis_cfg_reg_sync(48-1 downto 32);

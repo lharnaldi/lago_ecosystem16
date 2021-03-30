@@ -88,8 +88,8 @@ signal bram_rddata : std_logic_vector(O_DWIDTH-1 downto 0);
 
 begin
 
-  en_s <= cfg_data_i(32-1); --mode=1 enables this block
-  naverages_s <= '0' & cfg_data_i(32-2 downto 16);
+  en_s <= cfg_data_i(32); --mode=1 enables this block
+  naverages_s <= cfg_data_i(32-1 downto 16);
   nsamples_s <= cfg_data_i(16-1 downto 0);
 
   s_axis_tready <= tready_s;

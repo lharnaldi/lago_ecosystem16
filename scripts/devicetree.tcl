@@ -13,15 +13,15 @@ set tree_path tmp/$project_name.tree
 file mkdir $hard_path
 file copy -force tmp/$project_name.hwdef $hard_path/$project_name.hdf
 
-hsi set_repo_path $repo_path
+set_repo_path $repo_path
 
-hsi open_hw_design $hard_path/$project_name.hdf
-hsi create_sw_design -proc $proc_name -os device_tree devicetree
+open_hw_design $hard_path/$project_name.hdf
+create_sw_design -proc $proc_name -os device_tree devicetree
 
-hsi set_property CONFIG.kernel_version {2020.2} [hsi get_os]
-hsi set_property CONFIG.bootargs $boot_args [hsi get_os]
+set_property CONFIG.kernel_version {2018.3} [get_os]
+set_property CONFIG.bootargs $boot_args [get_os]
 
-hsi generate_target -dir $tree_path
+generate_bsp -dir $tree_path
 
-hsi close_sw_design [hsi current_sw_design]
-hsi close_hw_design [hsi current_hw_design]
+close_sw_design [current_sw_design]
+close_hw_design [current_hw_design]

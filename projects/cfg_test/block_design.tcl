@@ -17,8 +17,7 @@ cell xilinx.com:ip:c_counter_binary cntr_0 {
 
 # Create port_slicer
 cell labdpr:user:port_slicer slice_0 {
-  DIN_FROM 26
-  DIN_TO 26
+  DIN_FROM 26 DIN_TO 26
 } {
   din cntr_0/Q
 }
@@ -26,18 +25,11 @@ cell labdpr:user:port_slicer slice_0 {
 # Create axi_cfg_register
 cell labdpr:user:axi_cfg_register cfg_0 {
   CFG_DATA_WIDTH 1024
-  AXI_ADDR_WIDTH 32
+  AXI_ADDR_WIDTH 7
   AXI_DATA_WIDTH 32
 }
 
-# Create all required interconnections
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
-  Master /ps_0/M_AXI_GP0
-  Clk Auto
-} [get_bd_intf_pins cfg_0/S_AXI]
-
-set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
-set_property OFFSET 0x40001000 [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
+addr 0x40000000 4K cfg_0/S_AXI /ps_0/M_AXI_GP0
 
 # Create port_slicer
 cell labdpr:user:port_slicer slice_1 {

@@ -236,6 +236,7 @@ cell labdpr:user:port_slicer gpsen {
 # Create proc_sys_reset
 cell xilinx.com:ip:proc_sys_reset rst_1 {} {
   slowest_sync_clk pll_0/clk_out1
+  dcm_locked pll_0/locked
   ext_reset_in ext_resetn
 }
 

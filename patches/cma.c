@@ -24,7 +24,7 @@ static long cma_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 
   if(cmd != CMA_ALLOC) return -ENOTTY;
 
-  rc = copy_from_user(&buffer, (char *)arg, sizeof(buffer));
+  rc = copy_from_user(&buffer, (void __user *)arg, sizeof(buffer));
   if(rc) return rc;
 
   cma_free();
@@ -36,13 +36,12 @@ static long cma_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
   {
     rc = PTR_ERR(cpu_addr);
     if(rc == 0) rc = -ENOMEM;
-    dma_size = 0;
     cpu_addr = NULL;
     return rc;
   }
 
   buffer = dma_addr;
-  return copy_to_user((char *)arg, &buffer, sizeof(buffer));
+  return copy_to_user((void __user *)arg, &buffer, sizeof(buffer));
 }
 
 static int cma_mmap(struct file *file, struct vm_area_struct *vma)
@@ -79,9 +78,7 @@ static int __init cma_init(void)
 
   dma_device = cma_device.this_device;
 
-  dma_device->archdata.dma_coherent = true;
-  set_dma_ops(dma_device, &arm_coherent_dma_ops);
-  dma_device->archdata.dma_ops_setup = true;
+  dma_device->dma_ops = &arm_coherent_dma_ops;
   dma_device->coherent_dma_mask = DMA_BIT_MASK(32);
 
   return 0;

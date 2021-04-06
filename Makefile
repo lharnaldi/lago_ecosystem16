@@ -12,71 +12,72 @@ NAME = led_blinker
 PART = xc7z010clg400-1
 PROC = ps7_cortexa9_0
 
-CORES = axi_axis_reader_v1_0 \
-        axi_axis_writer_v1_0 \
-        axi_bram_reader_v1_0 \
-        axi_cfg_register_v1_0 \
-        axi_time_trig_gen_v1_0 \
-        axis_adpll_v1_0 \
-        axis_avgr_v1_0 \
-        axis_avgr16bits_v1_0 \
-        axis_avgr32bits_v1_0 \
-        axis_bram_reader_v1_0 \
-        axis_bram_writer_v1_0 \
-        axis_constant_v1_0 \
-        axis_counter_v1_0 \
-        axis_dc_removal_v1_0 \
-        axis_decimator_v1_0 \
-        axis_fifo_v1_0 \
-        axis_generator_v1_0 \
-        axis_gpio_reader_i_v1_0 \
-        axis_gpio_reader_v1_0 \
-        axis_histogram_v1_0 \
-        axis_histogram_v1_1 \
-        axis_interpolator_v1_0 \
-        axis_lago_trigger_v1_0 \
-        axis_lago_trigger_v1_1 \
-        axis_lago_trigger_v1_2 \
-        axis_lago_trigger_v1_3 \
-        axis_lfsr_v1_0 \
-        axis_lpf_v1_0 \
-        axis_oscilloscope_v1_0 \
-        axis_packetizer_v1_0 \
-        axis_phase_generator_v1_0 \
-        axis_ram_writer_v1_0 \
-        axis_rp_adc_v1_0 \
-        axis_rp_dac_v1_0 \
-        axis_rp_dac_v2_0 \
-        axis_tlast_gen_v1_0 \
-        axis_trigger_v1_0 \
-        axi_sts_register_v1_0 \
-        axis_validator_v1_0 \
-        axis_variable_v1_0 \
-        axis_zero_crossing_det_v1_0 \
-        axis_zeroer_v1_0 \
-        avg_scope_v1_0 \
-        avg_ntoone_v1_0 \
-        bram_counter_v1_0 \
-        bram_selector_v1_0 \
-        dc_removal_v1_0 \
-        dna_reader_v1_0 \
-        int_counter_v1_0 \
+CORES = avg_ntoone_v1_0 \
+				avg_scope32_v1_0 \
+				avg_scope_v1_0 \
+				axi_axis_reader_v1_0 \
+				axi_axis_writer_v1_0 \
+				axi_bram_reader_v1_0 \
+				axi_cfg_register_v1_0 \
+				axi_sts_register_v1_0 \
+				axi_time_trig_gen_v1_0 \
+				axis_adpll_v1_0 \
+				axis_avgr16bits_v1_0 \
+				axis_avgr32bits_v1_0 \
+				axis_avgr_v1_0 \
+				axis_bram_reader_v1_0 \
+				axis_bram_writer_v1_0 \
+				axis_constant_v1_0 \
+				axis_counter_v1_0 \
+				axis_dc_removal_v1_0 \
+				axis_decimator_v1_0 \
+				axis_fifo_v1_0 \
+				axis_generator_v1_0 \
+				axis_gpio_reader_i_v1_0 \
+				axis_gpio_reader_v1_0 \
+				axis_histogram_v1_0 \
+				axis_histogram_v1_1 \
+				axis_interpolator_v1_0 \
+				axis_lago_trigger_v1_0 \
+				axis_lago_trigger_v1_1 \
+				axis_lago_trigger_v1_2 \
+				axis_lago_trigger_v1_3 \
+				axis_lfsr_v1_0 \
+				axis_lpf_v1_0 \
+				axis_oscilloscope_v1_0 \
+				axis_packetizer_v1_0 \
+				axis_phase_generator_v1_0 \
+				axis_ram_writer_v1_0 \
+				axis_rp_adc_v1_0 \
+				axis_rp_dac_v1_0 \
+				axis_rp_dac_v2_0 \
+				axis_tlast_gen_v1_0 \
+				axis_trigger_v1_0 \
+				axis_validator_v1_0 \
+				axis_variable_v1_0 \
+				axis_zero_crossing_det_v1_0 \
+				axis_zeroer_v1_0 \
+				bram_counter_v1_0 \
+				bram_selector_v1_0 \
+				dc_removal_v1_0 \
+				dna_reader_v1_0 \
+				int_counter_v1_0 \
 				port_selector_v1_0 \
 				port_slicer_v1_0 \
-        pps_gen_v1_0 \
-        pps_gen_v1_1 \
-        pwm_gen_v1_0 \
-        ramp_gen_v1_0 \
-        selector_v1_0 \
+				pps_gen_v1_0 \
+				pps_gen_v1_1 \
+				pwm_gen_v1_0 \
+				ramp_gen_v1_0 \
+				selector_v1_0 \
 				time_trig_gen_v1_0 
 
 VIVADO = vivado -nolog -nojournal -mode batch
-HSI = hsi -nolog -nojournal -mode batch
+XSCT = xsct
 RM = rm -rf
 
-UBOOT_TAG = xilinx-v2018.3
-LINUX_TAG = 4.14
-DTREE_TAG = xilinx-v2018.3
+UBOOT_TAG = xilinx-v2020.2
+LINUX_TAG = 5.4
+DTREE_TAG = xilinx-v2020.2
 
 UBOOT_DIR = tmp/u-boot-xlnx-$(UBOOT_TAG)
 LINUX_DIR = tmp/linux-$(LINUX_TAG)
@@ -87,22 +88,20 @@ LINUX_TAR = tmp/linux-$(LINUX_TAG).tar.xz
 DTREE_TAR = tmp/device-tree-xlnx-$(DTREE_TAG).tar.gz
 
 UBOOT_URL = https://github.com/Xilinx/u-boot-xlnx/archive/$(UBOOT_TAG).tar.gz
-LINUX_URL = https://cdn.kernel.org/pub/linux/kernel/v4.x/linux-$(LINUX_TAG).122.tar.xz
+LINUX_URL = https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-$(LINUX_TAG).108.tar.xz
 DTREE_URL = https://github.com/Xilinx/device-tree-xlnx/archive/$(DTREE_TAG).tar.gz
 
 LINUX_CFLAGS = "-O2 -march=armv7-a -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
-UBOOT_CFLAGS = "-O2 -march=armv7-a -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
-ARMHF_CFLAGS = "-O2 -march=armv7-a -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 
-RTL8188_TAR = tmp/rtl8188eu-v4.1.8_9499.tar.gz
-RTL8188_URL = https://github.com/lwfinger/rtl8188eu/archive/v4.1.8_9499.tar.gz
+RTL8188_TAR = tmp/rtl8188eu-v5.2.2.4.tar.gz
+RTL8188_URL = https://github.com/lwfinger/rtl8188eu/archive/v5.2.2.4.tar.gz
 
 RTL8192_TAR = tmp/rtl8192cu-fixes-master.tar.gz
 RTL8192_URL = https://github.com/pvaret/rtl8192cu-fixes/archive/master.tar.gz
 
-.PRECIOUS: tmp/cores/% tmp/%.xpr tmp/%.hwdef tmp/%.bit tmp/%.fsbl/executable.elf tmp/%.tree/system-top.dts
+.PRECIOUS: tmp/cores/% tmp/%.xpr tmp/%.xsa tmp/%.bit tmp/%.fsbl/executable.elf tmp/%.tree/system-top.dts
 
-all: boot.bin uImage devicetree.dtb
+all: tmp/$(NAME).bit boot.bin uImage devicetree.dtb
 
 cores: $(addprefix tmp/cores/, $(CORES))
 
@@ -136,7 +135,6 @@ $(UBOOT_DIR): $(UBOOT_TAR)
 	patch -d tmp -p 0 < patches/u-boot-xlnx-$(UBOOT_TAG).patch
 	cp patches/zynq_red_pitaya_defconfig $@/configs
 	cp patches/zynq-red-pitaya.dts $@/arch/arm/dts
-	cp patches/zynq_red_pitaya.h $@/include/configs
 	cp patches/u-boot-lantiq.c $@/drivers/net/phy/lantiq.c
 
 $(LINUX_DIR): $(LINUX_TAR) $(RTL8188_TAR) $(RTL8192_TAR)
@@ -147,6 +145,8 @@ $(LINUX_DIR): $(LINUX_TAR) $(RTL8188_TAR) $(RTL8192_TAR)
 	tar -zxf $(RTL8188_TAR) --strip-components=1 --directory=$@/drivers/net/wireless/realtek/rtl8188eu
 	tar -zxf $(RTL8192_TAR) --strip-components=1 --directory=$@/drivers/net/wireless/realtek/rtl8192cu
 	patch -d tmp -p 0 < patches/linux-$(LINUX_TAG).patch
+	cp patches/cma.c $@/drivers/misc
+	cp patches/zynq_ocm.c $@/arch/arm/mach-zynq
 	cp patches/xilinx_devcfg.c $@/drivers/char
 	cp patches/xilinx_zynq_defconfig $@/arch/arm/configs
 
@@ -158,25 +158,24 @@ uImage: $(LINUX_DIR)
 	make -C $< mrproper
 	make -C $< ARCH=arm xilinx_zynq_defconfig
 	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) \
-	  -j $(shell nproc 2> /dev/null || echo 1) \
-	  CROSS_COMPILE=arm-linux-gnueabihf- UIMAGE_LOADADDR=0x8000 uImage modules
+		-j $(shell nproc 2> /dev/null || echo 1) \
+		CROSS_COMPILE=arm-linux-gnueabihf- UIMAGE_LOADADDR=0x8000 \
+		uImage modules
 	cp $</arch/arm/boot/uImage $@
 
-tmp/u-boot.elf: $(UBOOT_DIR)
+$(UBOOT_DIR)/u-boot.bin: $(UBOOT_DIR)
 	mkdir -p $(@D)
 	make -C $< mrproper
 	make -C $< ARCH=arm zynq_red_pitaya_defconfig
-	make -C $< ARCH=arm CFLAGS=$(UBOOT_CFLAGS) \
-	  CROSS_COMPILE=arm-linux-gnueabihf- all
-	cp $</u-boot $@
+	make -C $< ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- all
 
-boot.bin: tmp/$(NAME).fsbl/executable.elf tmp/$(NAME).bit tmp/u-boot.elf
-	echo "img:{[bootloader] $^}" > tmp/boot.bif
+boot.bin: tmp/$(NAME).fsbl/executable.elf $(UBOOT_DIR)/u-boot.bin
+	echo "img:{[bootloader] tmp/$(NAME).fsbl/executable.elf [load=0x4000000,startup=0x4000000] $(UBOOT_DIR)/u-boot.bin}" > tmp/boot.bif
 	bootgen -image tmp/boot.bif -w -o i $@
 
 devicetree.dtb: uImage tmp/$(NAME).tree/system-top.dts
 	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o devicetree.dtb \
-	  -i tmp/$(NAME).tree tmp/$(NAME).tree/system-top.dts
+		-i tmp/$(NAME).tree tmp/$(NAME).tree/system-top.dts
 
 tmp/cores/%: cores/%/core_config.tcl cores/%/*.vhd
 	mkdir -p $(@D)
@@ -186,7 +185,7 @@ tmp/%.xpr: projects/% $(addprefix tmp/cores/, $(CORES))
 	mkdir -p $(@D)
 	$(VIVADO) -source scripts/project.tcl -tclargs $* $(PART)
 
-tmp/%.hwdef: tmp/%.xpr
+tmp/%.xsa: tmp/%.xpr
 	mkdir -p $(@D)
 	$(VIVADO) -source scripts/hwdef.tcl -tclargs $*
 
@@ -194,13 +193,13 @@ tmp/%.bit: tmp/%.xpr
 	mkdir -p $(@D)
 	$(VIVADO) -source scripts/bitstream.tcl -tclargs $*
 
-tmp/%.fsbl/executable.elf: tmp/%.hwdef
+tmp/%.fsbl/executable.elf: tmp/%.xsa
 	mkdir -p $(@D)
-	$(HSI) -source scripts/fsbl.tcl -tclargs $* $(PROC)
-#
-tmp/%.tree/system-top.dts: tmp/%.hwdef $(DTREE_DIR)
+	$(XSCT) scripts/fsbl.tcl $* $(PROC)
+
+tmp/%.tree/system-top.dts: tmp/%.xsa $(DTREE_DIR)
 	mkdir -p $(@D)
-	$(HSI) -source scripts/devicetree.tcl -tclargs $* $(PROC) $(DTREE_DIR)
+	$(XSCT) scripts/devicetree.tcl $* $(PROC) $(DTREE_DIR)
 	sed -i 's|#include|/include/|' $@
 	patch -d $(@D) < patches/devicetree.patch
 

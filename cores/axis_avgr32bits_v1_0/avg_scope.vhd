@@ -21,17 +21,7 @@ entity avg_scope is
          en_i           : in std_logic;
          naverages_i    : in std_logic_vector(ADC_DWIDTH-1 downto 0);
          nsamples_i     : in std_logic_vector(ADC_DWIDTH-1 downto 0);
-
-         --bram_en_o      : out std_logic;
-         --bram_addr_o    : out std_logic_vector(MEM_AWIDTH-1 downto 0);
-         --bram_rddata_o  : out std_logic_vector(O_DWIDTH-1 downto 0);
-         --bram_en_oo      : out std_logic;
-         --bram_addr_oo    : out std_logic_vector(MEM_AWIDTH-1 downto 0);
-         --bram_rddata_oo  : out std_logic_vector(O_DWIDTH-1 downto 0);
-         --avg_o          : out std_logic_vector(O_DWIDTH-1 downto 0);
-
-         --tdp_addra_o    : out std_logic_vector(11-1 downto 0);
-         --tdp_addrb_o    : out std_logic_vector(11-1 downto 0);
+         --avg_o          : out std_logic_vector(16-1 downto 0);
 
          s_axis_cfg_aclk    : in std_logic;
          s_axis_cfg_aresetn : in std_logic;
@@ -79,141 +69,119 @@ architecture rtl of avg_scope is
   ST_WR_ZEROS
 );
 signal state_reg, state_next      : state_t;
---signal state_mon_reg, state_mon_next : std_logic_vector(3 downto 0);
 
 signal rstb_s   : std_logic;
 signal tdp_wea  : std_logic;
-signal tdp_addra_reg, tdp_addra_next : unsigned(log2c(MEM_DEPTH/RATIO)-1 downto 0);
-signal tdp_dia  : std_logic_vector(2*I_DWIDTH-1 downto 0);
+signal tdp_addra_reg, tdp_addra_next : unsigned(MEM_AWIDTH-1 downto 0);
 signal tdp_enb  : std_logic;
-signal tdp_addrb_reg, tdp_addrb_next : unsigned(log2c(MEM_DEPTH/RATIO)-1 downto 0);
-signal tdp_doa, tdp_dob              : std_logic_vector(2*I_DWIDTH-1 downto 0);
-signal addrb_s                       : std_logic_vector(log2c(MEM_DEPTH/RATIO)-1 downto 0);
+signal tdp_addrb_reg, tdp_addrb_next : unsigned(MEM_AWIDTH-1 downto 0);
+signal addrb_s                       : std_logic_vector(MEM_AWIDTH-1 downto 0);
 
-signal asy_rsta  : std_logic;
-signal asy_ena   : std_logic;
-signal asy_enb   : std_logic;
-signal asy_web   : std_logic;
-signal asy_doa   : std_logic_vector(ADC_DWIDTH-1 downto 0);
 
 signal done_s, tready_s : std_logic;
-signal avg_reg, avg_next: unsigned(ADC_DWIDTH-1 downto 0);
-signal restart_s, restart_os : std_logic;
+signal avg_reg, avg_next       : unsigned(ADC_DWIDTH-1 downto 0);
+signal en_s, restart_s         : std_logic;
+signal start_sync, trig_sync, send_sync, restart_sync  : std_logic;
 
 signal bram_clk  : std_logic;
 signal bram_rst  : std_logic;
 signal bram_en   : std_logic;
 signal bram_addr : std_logic_vector(MEM_AWIDTH-1 downto 0);
-signal bram_rddata : std_logic_vector(O_DWIDTH-1 downto 0);
-signal nsamples_b  : std_logic_vector(O_DWIDTH-1 downto 0);
+signal bram_rddata : std_logic_vector(2*I_DWIDTH-1 downto 0);
+
+type vect_t is array (0 to RATIO-1) of std_logic_vector(O_DWIDTH-1 downto 0);
+signal in_reg, in_next : vect_t;
+signal tdp_dia, tdp_doa, tdp_dob, bram_rddata_s : vect_t;
+signal tvalid_reg, tvalid_next : std_logic;
+signal reader_cfg              : std_logic_vector(16-1 downto 0);
 
 begin
 
-  --state_mon <= state_mon_reg;
-  --tdp_addra_o <= std_logic_vector(tdp_addra_reg);
-  --tdp_addrb_o <= std_logic_vector(tdp_addrb_reg);
+  --en_s <= not cfg_data_i(32); --mode=0 enables this block
+  --naverages_s <= cfg_data_i(32-1 downto 16);
+  --nsamples_s <= cfg_data_i(16-1 downto 0);
 
   s_axis_tready <= tready_s;
   --avg_o         <= std_logic_vector(avg_reg);
   done_o <= done_s;
 
   -- TDP RAM
+  -- input assignment 
+  process(s_axis_tvalid, s_axis_tdata)
+  begin
+    if (s_axis_tvalid = '1') then
+      for k in 0 to RATIO-1  loop
+        in_next(k) <= std_logic_vector(resize(signed(s_axis_tdata(I_DWIDTH-1-k*ADC_DWIDTH downto I_DWIDTH-(k+1)*ADC_DWIDTH)),O_DWIDTH));
+      end loop;
+    else
+      for k in 0 to RATIO-1 loop
+        in_next(k) <= in_reg(k);
+      end loop;
+    end if;
+  end process;
+
+  BRAM_CALC_inst: for j in 0 to RATIO-1 generate
   tdp_ram_i : entity work.tdp_ram_pip
   generic map(
-               AWIDTH       => log2c(MEM_DEPTH/RATIO),
-               DWIDTH       => 2*I_DWIDTH
+               AWIDTH       => MEM_AWIDTH, 
+               DWIDTH       => O_DWIDTH
              )
   port map(
             clka  => s_axis_aclk,
             --rsta  => rsta_s,
             wea   => tdp_wea,
             addra => std_logic_vector(tdp_addra_reg),
-            dia   => tdp_dia,
+            dia   => tdp_dia(j),
 
             clkb  => s_axis_aclk,
             rstb  => rstb_s,
             enb   => tdp_enb, --'1',
             addrb => std_logic_vector(tdp_addrb_reg),
-            dob   => tdp_dob
+            dob   => tdp_dob(j)
           );
+end generate;
 
-  -- ASYMMETRIC RAM
-  -- Port A -> AXI IF
-  -- Port B -> same as WIDER BRAM
-  asy_ram_i : entity work.asym_ram_sdp_write_wider
-  generic map
-  (
-    WIDTHA      => O_DWIDTH,
-    SIZEA       => MEM_DEPTH,
-    ADDRWIDTHA  => MEM_AWIDTH,
-    WIDTHB      => 2*I_DWIDTH,
-    SIZEB       => (MEM_DEPTH/RATIO),
-    ADDRWIDTHB  => log2c(MEM_DEPTH/RATIO)
-  )
-  port map
-  (
-    clkA        => bram_clk,
-    rstA        => bram_rst,
-    enA         => bram_en, 
-    addrA       => bram_addr, 
-    doA         => bram_rddata, 
+  BRAM_OUT_inst: for j in 0 to RATIO-1 generate
+  tdp_ram_i : entity work.tdp_ram_pip
+  generic map(
+               AWIDTH       => MEM_AWIDTH, 
+               DWIDTH       => O_DWIDTH
+             )
+  port map(
+            clka  => s_axis_aclk,
+            wea   => tdp_wea,
+            addra => std_logic_vector(tdp_addra_reg),
+            dia   => tdp_dia(j),
 
-    --portB same as portA in tdp_ram
-    clkB        => s_axis_aclk,
-    weB         => tdp_wea,
-    addrB       => std_logic_vector(tdp_addra_reg),
-    diB         => tdp_dia
-  );
+            clkb  => bram_clk,   
+            rstb  => bram_rst,  
+            enb   => bram_en,  
+            addrb => bram_addr, 
+            dob   => bram_rddata_s(j)
+          );
+end generate;
 
-  --debug signals
-  --lets synchronize the en signal
-  --sync_bram_en: entity work.sync
-  --port map(
-  --          aclk     => s_axis_aclk,
-  --          aresetn  => s_axis_aresetn,
-  --          in_async => bram_en,
-  --          out_sync => bram_en_o
-  --        );
-  --bram_en_oo <= bram_en;
-
-  --lets synchronize the addr signal
-  --sync_bram_addr: entity work.n_sync
-  --generic map(
-  --             N => MEM_AWIDTH
-  --           )
-  --port map(
-  --          aclk     => s_axis_aclk,
-  --          aresetn  => s_axis_aresetn,
-  --          in_async => bram_addr,
-  --          out_sync => bram_addr_o
-  --        );
-  --bram_addr_oo <= bram_addr;
-
-  ----lets synchronize the en signal
-  --sync_bram_rddata: entity work.n_sync
-  --generic map(
-  --             N => O_DWIDTH
-  --           )
-  --port map(
-  --          aclk     => s_axis_aclk,
-  --          aresetn  => s_axis_aresetn,
-  --          in_async => bram_rddata,
-  --          out_sync => bram_rddata_o
-  --        );
-  --bram_rddata_oo <= bram_rddata;
+process(bram_rddata_s)
+begin
+  for k in 0 to RATIO-1 loop
+    bram_rddata(2*I_DWIDTH-1-k*O_DWIDTH downto 2*I_DWIDTH-(k+1)*O_DWIDTH) <= bram_rddata_s(RATIO-1-k);
+  end loop;
+end process;
 
   process(s_axis_aclk)
   begin
     if rising_edge(s_axis_aclk) then
       if (s_axis_aresetn = '0') then
         state_reg     <= ST_IDLE;
-        --state_mon_reg <= (others => '0');
+        in_reg        <= (others => (others => '0'));
+        tvalid_reg    <= '0';
         tdp_addra_reg <= (others => '0');
         tdp_addrb_reg <= (others => '0');
         avg_reg       <= (others => '0');
       else
         state_reg     <= state_next;
-        --state_mon_reg <= state_mon_next;
+        in_reg        <= in_next;
+        tvalid_reg    <= tvalid_next;
         tdp_addra_reg <= tdp_addra_next;
         tdp_addrb_reg <= tdp_addrb_next;
         avg_reg       <= avg_next;
@@ -221,24 +189,20 @@ begin
     end if;
   end process;
 
-  --tdp_addra_next <= tdp_addrb_reg;
+  tvalid_next <= s_axis_tvalid; -- one clk delay
 
   --Next state logic
-  --process(state_reg, state_mon_reg, en_i, start_i, trig_i, nsamples_i, naverages_i,
-  process(state_reg, en_i, start_i, trig_i, nsamples_i, naverages_i,
-    tdp_addra_reg, tdp_addrb_reg, tdp_dia, tdp_dob, s_axis_tvalid, s_axis_tdata,
+  process(state_reg, en_i, start_i, trig_i, nsamples_i, naverages_i, 
+    tdp_addra_reg, tdp_addrb_reg, tdp_dia, tvalid_reg, 
     avg_reg, m_axis_tready, restart_os)
   begin
     state_next    <= state_reg;
-    --state_mon_next<= state_mon_reg;
     rstb_s        <= '0';
     tdp_wea       <= '0';
     tdp_addra_next<= tdp_addra_reg;
-    tdp_dia       <= (others => '0'); 
+    tdp_dia       <= (others => (others => '0')); 
     tdp_enb       <= '0';
     tdp_addrb_next<= tdp_addrb_reg;
-    asy_rsta      <= '1';
-    asy_ena       <= '0';
     tready_s      <= '0';
     avg_next      <= avg_reg;
     done_s        <= '0';
@@ -251,40 +215,33 @@ begin
         avg_next       <= (others => '0');
         if en_i = '1' and start_i = '1' then
           state_next  <= ST_WAIT_TRIG;
-          --state_mon_next <= "0001"; 
         else
           state_next  <= ST_IDLE;
-          --state_mon_next <= (others => '0'); 
         end if;
 
       when ST_WAIT_TRIG => -- Wait for trigger
         if(trig_i = '1') then
           state_next  <= ST_EN_TDPB;
-          --state_mon_next <= "0010"; 
         else
           state_next <= ST_WAIT_TRIG;
-          --state_mon_next <= "0001"; 
         end if;
 
       when ST_EN_TDPB =>
-        if (s_axis_tvalid = '1') then
+        if (tvalid_reg = '1') then
           tdp_enb        <= '1';
           tdp_addrb_next <= tdp_addrb_reg + 1;
           state_next     <= ST_AVG_SCOPE;
-          --state_mon_next <= "0011"; 
         end if;
 
       when ST_AVG_SCOPE => -- Measure
-        if (s_axis_tvalid = '1') then
+        if (tvalid_reg = '1') then
           tready_s <= '1';
           tdp_enb  <= '1';
           tdp_wea  <= '1';
           tdp_addra_next <= tdp_addra_reg + 1;
           tdp_addrb_next <= tdp_addrb_reg + 1;
           ASSIGN_G1: for I in 0 to RATIO-1 loop
-            tdp_dia(2*I_DWIDTH-1-I*2*ADC_DWIDTH downto 2*I_DWIDTH-(I+1)*2*ADC_DWIDTH) <=
-            std_logic_vector(signed(tdp_dob(2*I_DWIDTH-1-I*2*ADC_DWIDTH downto 2*I_DWIDTH-(I+1)*2*ADC_DWIDTH)) +
-            resize(signed(s_axis_tdata(I_DWIDTH-1-I*ADC_DWIDTH downto I_DWIDTH-((I+1)*ADC_DWIDTH))),O_DWIDTH));
+            tdp_dia(I) <= std_logic_vector(signed(tdp_dob(I)) + signed(in_reg(I)));
           end loop;
           if(tdp_addra_reg = (unsigned(nsamples_i)/RATIO)-1) then
             tdp_addra_next <= (others => '0');
@@ -292,30 +249,26 @@ begin
             avg_next <= avg_reg + 1;
             if (avg_reg = unsigned(naverages_i)-1) then
               state_next  <= ST_FINISH;
-              --state_mon_next <= "0100"; 
             else
               state_next  <= ST_WAIT_TRIG;
-              --state_mon_next <= "0001"; 
             end if;
           end if;
         else 
           state_next <= ST_AVG_SCOPE;
-          --state_mon_next <= "0011"; 
         end if;
 
       when ST_FINISH => 
         done_s    <= '1';
         if restart_os = '1' then
           state_next <= ST_WR_ZEROS;
-          --state_mon_next <= "0101";
         end if;
 
       when ST_WR_ZEROS => 
+        state_mon <= "0101";
         tdp_wea   <= '1';
         tdp_addra_next <= tdp_addra_reg + 1; 
         if (tdp_addra_reg = (unsigned(nsamples_i)/RATIO)-1) then
           state_next <= ST_IDLE;
-          --state_mon_next <= (others => '0');
         end if;
 
     end case;
@@ -330,17 +283,17 @@ begin
             sig_o    => restart_os
           );
 
-  nsamples_b <= (31 downto 16 => '0') & nsamples_i;
+  reader_cfg <= std_logic_vector(unsigned(nsamples_i)/RATIO);
   reader_i: entity work.bram_reader 
   generic map(
             MEM_DEPTH   => MEM_DEPTH,
             MEM_AWIDTH  => MEM_AWIDTH,
+            DRATIO      => RATIO,
             AXIS_DWIDTH => O_DWIDTH
           )
   port map(
 
-         cfg_data_i     => nsamples_b,
-         --cfg_data_i     => nsamples_i,
+         cfg_data_i     => reader_cfg, --nsamples_s,
          --sts_data_o     => open,
          done_i         => done_s,
          send_i         => send_i, 

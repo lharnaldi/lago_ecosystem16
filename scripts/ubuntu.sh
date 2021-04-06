@@ -3,8 +3,8 @@ device=$1
 boot_dir=`mktemp -d /tmp/BOOT.XXXXXXXXXX`
 root_dir=`mktemp -d /tmp/ROOT.XXXXXXXXXX`
 
-linux_dir=tmp/linux-4.14
-linux_ver=4.14.101-xilinx
+linux_dir=tmp/linux-5.4
+linux_ver=5.4.108-xilinx
 
 root_tar=ubuntu-base-14.04.5-base-armhf.tar.gz
 root_url=http://cdimage.ubuntu.com/ubuntu-base/releases/14.04/release/$root_tar
@@ -143,6 +143,10 @@ wpa_passphrase=RedPitaya
 wpa_key_mgmt=WPA-PSK
 wpa_pairwise=CCMP
 rsn_pairwise=CCMP
+EOF_CAT
+
+cat <<- EOF_CAT > etc/default/hostapd
+DAEMON_CONF=/etc/hostapd/hostapd.conf
 EOF_CAT
 
 cat <<- EOF_CAT > etc/dhcp/dhcpd.conf

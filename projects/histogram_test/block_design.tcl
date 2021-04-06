@@ -1,41 +1,41 @@
 source projects/cfg_test/block_design.tcl
 
-# Create xlslice. rst counter
+# Create port_slicer rst counter
 cell labdpr:user:port_slicer rst_cntr {
   DIN_WIDTH 1024 DIN_FROM 0 DIN_TO 0
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice. rst histogramer
+# Create port_slicer. rst histogramer
 cell labdpr:user:port_slicer rst_hist {
   DIN_WIDTH 1024 DIN_FROM 1 DIN_TO 1
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice. rst bram reader
+# Create port_slicer. rst bram reader
 cell labdpr:user:port_slicer rst_bram_reader {
   DIN_WIDTH 1024 DIN_FROM 2 DIN_TO 2
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice. rst conv and writer
+# Create port_slicer. rst conv and writer
 cell labdpr:user:port_slicer rst_conv_writer {
   DIN_WIDTH 1024 DIN_FROM 3 DIN_TO 3
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice
+# Create port_slicer
 cell labdpr:user:port_slicer slice_6 {
   DIN_WIDTH 1024 DIN_FROM 63 DIN_TO 32
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice
+# Create port_slicer
 cell labdpr:user:port_slicer slice_7 {
   DIN_WIDTH 1024 DIN_FROM 95 DIN_TO 64
 } {
@@ -99,7 +99,7 @@ cell xilinx.com:ip:axis_dwidth_converter conv_0 {
 }
 
 # Create xlconstant
-cell xilinx.com:ip:xlconstant const_0 {
+cell xilinx.com:ip:xlconstant const_1 {
   CONST_WIDTH 32
   CONST_VAL 503316480
 }
@@ -108,7 +108,7 @@ cell xilinx.com:ip:xlconstant const_0 {
 cell labdpr:user:axis_ram_writer writer_0 {} {
   S_AXIS conv_0/M_AXIS
   M_AXI ps_0/S_AXI_HP0
-  cfg_data const_0/dout
+  cfg_data const_1/dout
   aclk pll_0/clk_out1
   aresetn rst_conv_writer/dout
 }

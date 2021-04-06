@@ -5,9 +5,11 @@ gcc -O3 adc-test-server.c -o adc-test-server
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sched.h>
 #include <fcntl.h>
 #include <math.h>
 #include <sys/mman.h>
@@ -19,6 +21,8 @@ gcc -O3 adc-test-server.c -o adc-test-server
 
 #define TCP_PORT 1001
 
+#define CMA_ALLOC _IOWR('Z', 0, uint32_t)
+
 int interrupted = 0;
 
 void signal_handler(int sig)
@@ -28,125 +32,133 @@ void signal_handler(int sig)
 
 int main ()
 {
-  pid_t pid;
-  int pipefd[2], mmapfd, sockServer, sockClient;
+  int fd, sock_server, sock_client;
   int position, limit, offset;
-  void *cfg, *sts, *ram, *buf;
-  char *name;
+  volatile uint32_t *rx_addr, *rx_cntr;
+  volatile uint16_t *rx_rate;
+  volatile uint8_t *rx_rst;
+  volatile void *cfg, *sts, *ram;
+  cpu_set_t mask;
+  struct sched_param param;
   struct sockaddr_in addr;
-  int yes = 1, buffer = 0;
+  uint32_t size;
+  int yes = 1;
 
-  name = "/dev/mem";
-  if((mmapfd = open(name, O_RDWR)) < 0)
+  memset(&param, 0, sizeof(param));
+  param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+  sched_setscheduler(0, SCHED_FIFO, &param);
+
+  CPU_ZERO(&mask);
+  CPU_SET(1, &mask);
+  sched_setaffinity(0, sizeof(cpu_set_t), &mask);
+
+  if((fd = open("/dev/mem", O_RDWR)) < 0)
   {
     perror("open");
-    return 1;
+    return EXIT_FAILURE;
   }
 
-  cfg = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_READ|PROT_WRITE, MAP_SHARED, mmapfd, 0x40000000);
-  sts = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_READ|PROT_WRITE, MAP_SHARED, mmapfd, 0x40001000);
-  ram = mmap(NULL, 2048*sysconf(_SC_PAGESIZE), PROT_READ|PROT_WRITE, MAP_SHARED, mmapfd, 0x1E000000);
-  buf = mmap(NULL, 2048*sysconf(_SC_PAGESIZE), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+  sts = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0x40000000);
+  cfg = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0x40001000);
 
-  limit = 512*1024;
+  close(fd);
 
-  /* create a pipe */
-  pipe(pipefd);
-
-  pid = fork();
-  if(pid == 0)
+  if((fd = open("/dev/cma", O_RDWR)) < 0)
   {
-    /* child process */
-
-    close(pipefd[0]);
-
-    while(1)
-    {
-      /* read ram writer position */
-      position = *((uint32_t *)(sts + 0));
-
-      /* send 4 MB if ready, otherwise sleep 1 ms */
-      if((limit > 0 && position > limit) || (limit == 0 && position < 512*1024))
-      {
-        offset = limit > 0 ? 0 : 4096*1024;
-        limit = limit > 0 ? 0 : 512*1024;
-        memcpy(buf + offset, ram + offset, 4096*1024);
-        write(pipefd[1], &buffer, sizeof(buffer));
-      }
-      else
-      {
-        usleep(1000);
-      }
-    }
+    perror("open");
+    return EXIT_FAILURE;
   }
-  else if(pid > 0)
+
+  size = 128*sysconf(_SC_PAGESIZE);
+
+  if(ioctl(fd, CMA_ALLOC, &size) < 0)
   {
-    /* parent process */
+    perror("ioctl");
+    return EXIT_FAILURE;
+  }
 
-    close(pipefd[1]);
+  ram = mmap(NULL, 128*sysconf(_SC_PAGESIZE), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
 
-    if((sockServer = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+  rx_rst = (uint8_t *)(cfg + 0);
+  rx_rate = (uint16_t *)(cfg + 2);
+  rx_addr = (uint32_t *)(cfg + 4);
+
+  rx_cntr = (uint32_t *)(sts + 12);
+
+  *rx_addr = size;
+
+  if((sock_server = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+  {
+    perror("socket");
+    return EXIT_FAILURE;
+  }
+
+  setsockopt(sock_server, SOL_SOCKET, SO_REUSEADDR, (void *)&yes, sizeof(yes));
+
+  /* setup listening address */
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_family = AF_INET;
+  addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  addr.sin_port = htons(TCP_PORT);
+
+  if(bind(sock_server, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+  {
+    perror("bind");
+    return EXIT_FAILURE;
+  }
+
+  listen(sock_server, 1024);
+
+  while(!interrupted)
+  {
+    /* enter reset mode */
+    *rx_rst &= ~1;
+    usleep(100);
+    *rx_rst &= ~2;
+    /* set default sample rate */
+    *rx_rate = 4;
+
+    if((sock_client = accept(sock_server, NULL, NULL)) < 0)
     {
-      perror("socket");
-      return 1;
+      perror("accept");
+      return EXIT_FAILURE;
     }
 
-    setsockopt(sockServer, SOL_SOCKET, SO_REUSEADDR, (void *)&yes , sizeof(yes));
+    signal(SIGINT, signal_handler);
 
-    /* setup listening address */
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = htons(TCP_PORT);
+    /* enter normal operating mode */
+    *rx_rst |= 3;
 
-    if(bind(sockServer, (struct sockaddr *)&addr, sizeof(addr)) < 0)
-    {
-      perror("bind");
-      return 1;
-    }
-
-    listen(sockServer, 1024);
+    limit = 32*1024;
 
     while(!interrupted)
     {
-      /* enter reset mode */
-      *((uint32_t *)(cfg + 0)) &= ~15;
-      /* set default sample rate */
-      *((uint32_t *)(cfg + 4)) = 4;
+      /* read ram writer position */
+      position = *rx_cntr;
 
-      if((sockClient = accept(sockServer, NULL, NULL)) < 0)
+      /* send 256 kB if ready, otherwise sleep 0.1 ms */
+      if((limit > 0 && position > limit) || (limit == 0 && position < 32*1024))
       {
-        perror("accept");
-        return 1;
+        offset = limit > 0 ? 0 : 256*1024;
+        limit = limit > 0 ? 0 : 32*1024;
+        if(send(sock_client, ram + offset, 256*1024, MSG_NOSIGNAL) < 0) break;
       }
-
-      signal(SIGINT, signal_handler);
-
-      printf("new connection\n");
-
-      /* enter normal operating mode */
-      *((uint32_t *)(cfg + 0)) |= 15;
-
-      while(!interrupted)
+      else
       {
-        read(pipefd[0], &buffer, sizeof(buffer));
-        if(send(sockClient, buf, 4096*1024, 0) < 0) break;
-
-        read(pipefd[0], &buffer, sizeof(buffer));
-        if(send(sockClient, buf + 4096*1024, 4096*1024, 0) < 0) break;
+        usleep(100);
       }
-
-      signal(SIGINT, SIG_DFL);
-      close(sockClient);
     }
 
-    /* enter reset mode */
-    *((uint32_t *)(cfg + 0)) &= ~15;
-
-    close(sockServer);
-
-    kill(pid, SIGTERM);
-
-    return 0;
+    signal(SIGINT, SIG_DFL);
+    close(sock_client);
   }
+
+  /* enter reset mode */
+  *rx_rst &= ~1;
+  usleep(100);
+  *rx_rst &= ~2;
+
+  close(sock_server);
+
+  return EXIT_SUCCESS;
 }

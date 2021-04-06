@@ -8,10 +8,10 @@ cell xilinx.com:ip:clk_wiz pll_0 {
   CLKOUT1_REQUESTED_OUT_FREQ 125.0
   CLKOUT2_USED true
   CLKOUT2_REQUESTED_OUT_FREQ 250.0
-  CLKOUT2_REQUESTED_PHASE -112.5
+  CLKOUT2_REQUESTED_PHASE 157.5
   CLKOUT3_USED true
   CLKOUT3_REQUESTED_OUT_FREQ 250.0
-  CLKOUT3_REQUESTED_PHASE -67.5
+  CLKOUT3_REQUESTED_PHASE 202.5
   USE_RESET false
 } {
   clk_in1_p adc_clk_p_i
@@ -21,10 +21,11 @@ cell xilinx.com:ip:clk_wiz pll_0 {
 # Create processing_system7
 cell xilinx.com:ip:processing_system7 ps_0 {
   PCW_IMPORT_BOARD_PRESET cfg/red_pitaya.xml
-  PCW_USE_S_AXI_HP0 1
+  PCW_USE_S_AXI_ACP 1
+  PCW_USE_DEFAULT_ACP_USER_VAL 1
 } {
   M_AXI_GP0_ACLK pll_0/clk_out1
-  S_AXI_HP0_ACLK pll_0/clk_out1
+  S_AXI_ACP_ACLK pll_0/clk_out1
 }
 
 # Create all required interconnections
@@ -76,28 +77,28 @@ cell labdpr:user:axis_rp_dac dac_0 {
 
 # Create axi_cfg_register
 cell labdpr:user:axi_cfg_register cfg_0 {
-  CFG_DATA_WIDTH 128
+  CFG_DATA_WIDTH 160
   AXI_ADDR_WIDTH 32
   AXI_DATA_WIDTH 32
 }
 
 # Create port_slicer
 cell labdpr:user:port_slicer slice_0 {
-  DIN_WIDTH 128 DIN_FROM 0 DIN_TO 0
+  DIN_WIDTH 160 DIN_FROM 0 DIN_TO 0
 } {
   din cfg_0/cfg_data
 }
 
 # Create port_slicer
 cell labdpr:user:port_slicer slice_1 {
-  DIN_WIDTH 128 DIN_FROM 1 DIN_TO 1
+  DIN_WIDTH 160 DIN_FROM 1 DIN_TO 1
 } {
   din cfg_0/cfg_data
 }
 
 # Create port_slicer
 cell labdpr:user:port_slicer slice_2 {
-  DIN_WIDTH 128 DIN_FROM 31 DIN_TO 16
+  DIN_WIDTH 160 DIN_FROM 31 DIN_TO 16
 } {
   din cfg_0/cfg_data
 }
@@ -191,14 +192,14 @@ for {set i 0} {$i <= 1} {incr i} {
 
   # Create port_slicer
   cell labdpr:user:port_slicer slice_[expr $i + 3] {
-    DIN_WIDTH 128 DIN_FROM [expr 32 * $i + 63] DIN_TO [expr 32 * $i + 32]
+    DIN_WIDTH 160 DIN_FROM [expr 32 * $i + 63] DIN_TO [expr 32 * $i + 32]
   } {
     din cfg_0/cfg_data
   }
 
   # Create port_slicer
   cell labdpr:user:port_slicer slice_[expr $i + 5] {
-    DIN_WIDTH 128 DIN_FROM [expr 16 * $i + 111] DIN_TO [expr 16 * $i + 96]
+    DIN_WIDTH 160 DIN_FROM [expr 16 * $i + 111] DIN_TO [expr 16 * $i + 96]
   } {
     din cfg_0/cfg_data
   }
@@ -285,25 +286,12 @@ cell labdpr:user:axi_sts_register sts_0 {
   sts_data concat_1/dout
 }
 
-# Create all required interconnections
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
-  Master /ps_0/M_AXI_GP0
-  Clk Auto
-} [get_bd_intf_pins sts_0/S_AXI]
+addr 0x40000000 4K sts_0/S_AXI /ps_0/M_AXI_GP0
 
-set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_sts_0_reg0]
-set_property OFFSET 0x40002000 [get_bd_addr_segs ps_0/Data/SEG_sts_0_reg0]
+addr 0x40001000 4K cfg_0/S_AXI /ps_0/M_AXI_GP0
 
-# Create all required interconnections
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
-  Master /ps_0/M_AXI_GP0
-  Clk Auto
-} [get_bd_intf_pins cfg_0/S_AXI]
+assign_bd_address [get_bd_addr_segs ps_0/S_AXI_ACP/ACP_DDR_LOWOCM]
 
-set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
-set_property OFFSET 0x40001000 [get_bd_addr_segs ps_0/Data/SEG_cfg_0_reg0]
-
-assign_bd_address [get_bd_addr_segs ps_0/S_AXI_HP0/HP0_DDR_LOWOCM]
 group_bd_cells PS7 [get_bd_cells rst_0] [get_bd_cells pll_0] [get_bd_cells const_0] [get_bd_cells ps_0] [get_bd_cells ps_0_axi_periph]
 group_bd_cells ACQ [get_bd_cells rate_0] [get_bd_cells adc_0] [get_bd_cells subset_0] [get_bd_cells slice_0] [get_bd_cells slice_1] [get_bd_cells conv_0] [get_bd_cells slice_2] [get_bd_cells cic_0] [get_bd_cells writer_0] [get_bd_cells const_1]
 group_bd_cells CMPLX_GEN [get_bd_cells phase_1] [get_bd_cells mult_0] [get_bd_cells dds_0] [get_bd_cells dds_1] [get_bd_cells mult_1] [get_bd_cells slice_3] [get_bd_cells dac_0] [get_bd_cells slice_4] [get_bd_cells slice_5] [get_bd_cells concat_0] [get_bd_cells slice_6] [get_bd_cells phase_0] [get_bd_cells lfsr_0]

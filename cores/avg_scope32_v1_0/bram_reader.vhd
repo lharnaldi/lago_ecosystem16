@@ -15,7 +15,7 @@ entity bram_reader is
          aresetn        : in std_logic;
 
          cfg_data_i     : in std_logic_vector(16-1 downto 0);
-         --sts_data_o     : out std_logic_vector(AXIS_DWIDTH-1 downto 0);
+         sts_data_o     : out std_logic_vector(AXIS_DWIDTH-1 downto 0);
          done_i         : in std_logic;
          send_i         : in std_logic;
          restart_o      : out std_logic;
@@ -53,7 +53,7 @@ signal tlast_s, rst_s, en_s    : std_logic;
 signal tvalid_s                : std_logic;
 signal restart_s               : std_logic;
 signal tkeep_s                 : std_logic_vector(4-1 downto 0);
---signal bram_st_mon             : std_logic_vector(4-1 downto 0);
+signal bram_st_mon             : std_logic_vector(4-1 downto 0);
 signal load_s                  : std_logic;
 signal cntr_reg, cntr_next     : unsigned(DRATIO-1 downto 0); --4 should be enough
 
@@ -104,7 +104,7 @@ begin
 
     case state_reg is
       when ST_IDLE => 
-        --bram_st_mon <= "0000"; --state mon
+        bram_st_mon <= "0000"; --state mon
         rst_s       <= '1';
         addr_next  <= (others => '0');
         if (done_i = '1') and (send_i = '1') then
@@ -114,7 +114,7 @@ begin
         end if;
 
       when ST_EN_BRAM =>
-        --bram_st_mon <= "0001"; --state mon
+        bram_st_mon <= "0001"; --state mon
         if m_axis_tready = '1' then
           en_s <= '1';
           addr_next <= addr_reg + 1;
@@ -129,7 +129,7 @@ begin
         state_next  <= ST_SEND_DATA;
 
       when ST_SEND_DATA =>
-        --bram_st_mon <= "0010"; --state mon
+        bram_st_mon <= "0010"; --state mon
         tvalid_s <= '1';
         tkeep_s  <= (others => '1');
         if m_axis_tready = '1' then
@@ -161,14 +161,14 @@ begin
     --  state_next <= ST_FINISH;
 
       when ST_FINISH =>
-        --bram_st_mon <= "0011"; --state mon
+        bram_st_mon <= "0011"; --state mon
         restart_s <= '1';
         state_next <= ST_IDLE;
 
     end case;
   end process;
 
-  --sts_data_o <= std_logic_vector(resize(addr_reg,AXIS_DWIDTH));
+  sts_data_o <= std_logic_vector(resize(addr_reg,AXIS_DWIDTH));
 
 --m_axis_tdata  <= bram_rddata;
   m_axis_tvalid <= tvalid_s;

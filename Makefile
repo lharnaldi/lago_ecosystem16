@@ -12,62 +12,63 @@ NAME = led_blinker
 PART = xc7z010clg400-1
 PROC = ps7_cortexa9_0
 
-CORES = axi_axis_reader_v1_0 \
-        axi_axis_writer_v1_0 \
-        axi_bram_reader_v1_0 \
-        axi_cfg_register_v1_0 \
-        axi_time_trig_gen_v1_0 \
-        axis_adpll_v1_0 \
-        axis_avgr_v1_0 \
-        axis_avgr16bits_v1_0 \
-        axis_avgr32bits_v1_0 \
-        axis_bram_reader_v1_0 \
-        axis_bram_writer_v1_0 \
-        axis_constant_v1_0 \
-        axis_counter_v1_0 \
-        axis_dc_removal_v1_0 \
-        axis_decimator_v1_0 \
-        axis_fifo_v1_0 \
-        axis_generator_v1_0 \
-        axis_gpio_reader_i_v1_0 \
-        axis_gpio_reader_v1_0 \
-        axis_histogram_v1_0 \
-        axis_histogram_v1_1 \
-        axis_interpolator_v1_0 \
-        axis_lago_trigger_v1_0 \
-        axis_lago_trigger_v1_1 \
-        axis_lago_trigger_v1_2 \
-        axis_lago_trigger_v1_3 \
-        axis_lfsr_v1_0 \
-        axis_lpf_v1_0 \
-        axis_oscilloscope_v1_0 \
-        axis_packetizer_v1_0 \
-        axis_phase_generator_v1_0 \
-        axis_ram_writer_v1_0 \
-        axis_rp_adc_v1_0 \
-        axis_rp_dac_v1_0 \
-        axis_rp_dac_v2_0 \
-        axis_tlast_gen_v1_0 \
-        axis_trigger_v1_0 \
-        axi_sts_register_v1_0 \
-        axis_validator_v1_0 \
-        axis_variable_v1_0 \
-        axis_zero_crossing_det_v1_0 \
-        axis_zeroer_v1_0 \
-        avg_scope_v1_0 \
-        avg_ntoone_v1_0 \
-        bram_counter_v1_0 \
-        bram_selector_v1_0 \
-        dc_removal_v1_0 \
-        dna_reader_v1_0 \
-        int_counter_v1_0 \
+CORES = avg_ntoone_v1_0 \
+				avg_scope32_v1_0 \
+				avg_scope_v1_0 \
+				axi_axis_reader_v1_0 \
+				axi_axis_writer_v1_0 \
+				axi_bram_reader_v1_0 \
+				axi_cfg_register_v1_0 \
+				axi_sts_register_v1_0 \
+				axi_time_trig_gen_v1_0 \
+				axis_adpll_v1_0 \
+				axis_avgr16bits_v1_0 \
+				axis_avgr32bits_v1_0 \
+				axis_avgr_v1_0 \
+				axis_bram_reader_v1_0 \
+				axis_bram_writer_v1_0 \
+				axis_constant_v1_0 \
+				axis_counter_v1_0 \
+				axis_dc_removal_v1_0 \
+				axis_decimator_v1_0 \
+				axis_fifo_v1_0 \
+				axis_generator_v1_0 \
+				axis_gpio_reader_i_v1_0 \
+				axis_gpio_reader_v1_0 \
+				axis_histogram_v1_0 \
+				axis_histogram_v1_1 \
+				axis_interpolator_v1_0 \
+				axis_lago_trigger_v1_0 \
+				axis_lago_trigger_v1_1 \
+				axis_lago_trigger_v1_2 \
+				axis_lago_trigger_v1_3 \
+				axis_lfsr_v1_0 \
+				axis_lpf_v1_0 \
+				axis_oscilloscope_v1_0 \
+				axis_packetizer_v1_0 \
+				axis_phase_generator_v1_0 \
+				axis_ram_writer_v1_0 \
+				axis_rp_adc_v1_0 \
+				axis_rp_dac_v1_0 \
+				axis_rp_dac_v2_0 \
+				axis_tlast_gen_v1_0 \
+				axis_trigger_v1_0 \
+				axis_validator_v1_0 \
+				axis_variable_v1_0 \
+				axis_zero_crossing_det_v1_0 \
+				axis_zeroer_v1_0 \
+				bram_counter_v1_0 \
+				bram_selector_v1_0 \
+				dc_removal_v1_0 \
+				dna_reader_v1_0 \
+				int_counter_v1_0 \
 				port_selector_v1_0 \
 				port_slicer_v1_0 \
-        pps_gen_v1_0 \
-        pps_gen_v1_1 \
-        pwm_gen_v1_0 \
-        ramp_gen_v1_0 \
-        selector_v1_0 \
+				pps_gen_v1_0 \
+				pps_gen_v1_1 \
+				pwm_gen_v1_0 \
+				ramp_gen_v1_0 \
+				selector_v1_0 \
 				time_trig_gen_v1_0 
 
 VIVADO = vivado -nolog -nojournal -mode batch
@@ -157,9 +158,9 @@ uImage: $(LINUX_DIR)
 	make -C $< mrproper
 	make -C $< ARCH=arm xilinx_zynq_defconfig
 	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) \
-	  -j $(shell nproc 2> /dev/null || echo 1) \
-	  CROSS_COMPILE=arm-linux-gnueabihf- UIMAGE_LOADADDR=0x8000 \
-	  uImage modules
+		-j $(shell nproc 2> /dev/null || echo 1) \
+		CROSS_COMPILE=arm-linux-gnueabihf- UIMAGE_LOADADDR=0x8000 \
+		uImage modules
 	cp $</arch/arm/boot/uImage $@
 
 $(UBOOT_DIR)/u-boot.bin: $(UBOOT_DIR)
@@ -174,9 +175,9 @@ boot.bin: tmp/$(NAME).fsbl/executable.elf $(UBOOT_DIR)/u-boot.bin
 
 devicetree.dtb: uImage tmp/$(NAME).tree/system-top.dts
 	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o devicetree.dtb \
-	  -i tmp/$(NAME).tree tmp/$(NAME).tree/system-top.dts
+		-i tmp/$(NAME).tree tmp/$(NAME).tree/system-top.dts
 
-tmp/cores/%: cores/%/core_config.tcl cores/%/*.v
+tmp/cores/%: cores/%/core_config.tcl cores/%/*.vhd
 	mkdir -p $(@D)
 	$(VIVADO) -source scripts/core.tcl -tclargs $* $(PART)
 

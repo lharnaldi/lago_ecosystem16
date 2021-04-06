@@ -16,12 +16,10 @@ entity avg_scope is
          send_i         : in std_logic;
          trig_i         : in std_logic;
          done_o         : out std_logic;
-         --state_mon      : out std_logic_vector(3 downto 0);
+         state_mon      : out std_logic_vector(3 downto 0);
          --nsamples Must be power of 2. Minimum is 8 and maximum is 2^AW
-         en_i           : in std_logic;
-         naverages_i    : in std_logic_vector(ADC_DWIDTH-1 downto 0);
-         nsamples_i     : in std_logic_vector(ADC_DWIDTH-1 downto 0);
-         --avg_o          : out std_logic_vector(16-1 downto 0);
+         cfg_data_i     : in std_logic_vector(80-1 downto 0);
+         avg_o          : out std_logic_vector(16-1 downto 0);
 
          s_axis_cfg_aclk    : in std_logic;
          s_axis_cfg_aresetn : in std_logic;
@@ -73,13 +71,22 @@ signal state_reg, state_next      : state_t;
 signal rstb_s   : std_logic;
 signal tdp_wea  : std_logic;
 signal tdp_addra_reg, tdp_addra_next : unsigned(MEM_AWIDTH-1 downto 0);
+--signal tdp_dia     : std_logic_vector(I_DWIDTH-1 downto 0);
 signal tdp_enb  : std_logic;
 signal tdp_addrb_reg, tdp_addrb_next : unsigned(MEM_AWIDTH-1 downto 0);
+--signal tdp_doa, tdp_dob              : std_logic_vector(I_DWIDTH-1 downto 0);
 signal addrb_s                       : std_logic_vector(MEM_AWIDTH-1 downto 0);
 
+--signal asy_rsta  : std_logic;
+--signal asy_ena   : std_logic;
+--signal asy_enb   : std_logic;
+--signal asy_web   : std_logic;
+--signal asy_doa   : std_logic_vector(ADC_DWIDTH-1 downto 0);
+--signal asy_addra_reg, asy_addra_next : unsigned(MEM_AWIDTH-1 downto 0);
 
 signal done_s, tready_s : std_logic;
 signal avg_reg, avg_next       : unsigned(ADC_DWIDTH-1 downto 0);
+signal nsamples_s, naverages_s : std_logic_vector(16-1 downto 0);
 signal en_s, restart_s         : std_logic;
 signal start_sync, trig_sync, send_sync, restart_sync  : std_logic;
 
@@ -97,13 +104,39 @@ signal reader_cfg              : std_logic_vector(16-1 downto 0);
 
 begin
 
-  --en_s <= not cfg_data_i(32); --mode=0 enables this block
-  --naverages_s <= cfg_data_i(32-1 downto 16);
-  --nsamples_s <= cfg_data_i(16-1 downto 0);
+  en_s <= not cfg_data_i(32); --mode=0 enables this block
+  naverages_s <= cfg_data_i(32-1 downto 16);
+  nsamples_s <= cfg_data_i(16-1 downto 0);
 
   s_axis_tready <= tready_s;
-  --avg_o         <= std_logic_vector(avg_reg);
-  done_o <= done_s;
+  avg_o         <= std_logic_vector(avg_reg);
+
+  --lets synchronize the start signal
+  sync_start: entity work.sync
+  port map(
+            aclk     => s_axis_aclk,
+            aresetn  => s_axis_aresetn,
+            in_async => start_i,
+            out_sync => start_sync
+          );
+
+  --lets synchronize the trigger signal
+  sync_trig: entity work.sync
+  port map(
+            aclk     => s_axis_aclk,
+            aresetn  => s_axis_aresetn,
+            in_async => trig_i,
+            out_sync => trig_sync
+          );
+
+  --lets synchronize the done signal
+  sync_done: entity work.sync
+  port map(
+            aclk     => s_axis_cfg_aclk,
+            aresetn  => s_axis_cfg_aresetn,
+            in_async => done_s,
+            out_sync => done_o
+          );
 
   -- TDP RAM
   -- input assignment 
@@ -123,7 +156,7 @@ begin
   BRAM_CALC_inst: for j in 0 to RATIO-1 generate
   tdp_ram_i : entity work.tdp_ram_pip
   generic map(
-               AWIDTH       => MEM_AWIDTH, 
+               AWIDTH       => MEM_AWIDTH, --log2c(MEM_DEPTH/RATIO),
                DWIDTH       => O_DWIDTH
              )
   port map(
@@ -144,7 +177,7 @@ end generate;
   BRAM_OUT_inst: for j in 0 to RATIO-1 generate
   tdp_ram_i : entity work.tdp_ram_pip
   generic map(
-               AWIDTH       => MEM_AWIDTH, 
+               AWIDTH       => MEM_AWIDTH, --log2c(MEM_DEPTH/RATIO),
                DWIDTH       => O_DWIDTH
              )
   port map(
@@ -177,6 +210,7 @@ end process;
         tvalid_reg    <= '0';
         tdp_addra_reg <= (others => '0');
         tdp_addrb_reg <= (others => '0');
+        --asy_addra_reg <= (others => '0');
         avg_reg       <= (others => '0');
       else
         state_reg     <= state_next;
@@ -184,6 +218,7 @@ end process;
         tvalid_reg    <= tvalid_next;
         tdp_addra_reg <= tdp_addra_next;
         tdp_addrb_reg <= tdp_addrb_next;
+        --asy_addra_reg <= asy_addra_next;
         avg_reg       <= avg_next;
       end if;
     end if;
@@ -192,9 +227,9 @@ end process;
   tvalid_next <= s_axis_tvalid; -- one clk delay
 
   --Next state logic
-  process(state_reg, en_i, start_i, trig_i, nsamples_i, naverages_i, 
-    tdp_addra_reg, tdp_addrb_reg, tdp_dia, tvalid_reg, 
-    avg_reg, m_axis_tready, restart_os)
+  process(state_reg, en_s, start_sync, trig_sync, nsamples_s,
+    naverages_s, tdp_addra_reg, tdp_addrb_reg, tdp_dia, --asy_addra_reg, 
+    tvalid_reg, avg_reg, m_axis_tready,restart_sync)
   begin
     state_next    <= state_reg;
     rstb_s        <= '0';
@@ -203,23 +238,29 @@ end process;
     tdp_dia       <= (others => (others => '0')); 
     tdp_enb       <= '0';
     tdp_addrb_next<= tdp_addrb_reg;
+    --asy_rsta      <= '1';
+    --asy_ena       <= '0';
+    --asy_addra_next<= asy_addra_reg;
     tready_s      <= '0';
     avg_next      <= avg_reg;
     done_s        <= '0';
 
     case state_reg is
       when ST_IDLE => -- Start
+        state_mon      <= "0000"; --state mon
         rstb_s         <= '1';
         tdp_addra_next <= (others => '0');
         tdp_addrb_next <= (others => '0');
+        --asy_addra_next <= (others => '0');
         avg_next       <= (others => '0');
-        if en_i = '1' and start_i = '1' then
+        if en_s = '1' and start_sync = '1' then
           state_next  <= ST_WAIT_TRIG;
         else
           state_next  <= ST_IDLE;
         end if;
 
       when ST_WAIT_TRIG => -- Wait for trigger
+        state_mon <= "0001"; --state mon
         if(trig_i = '1') then
           state_next  <= ST_EN_TDPB;
         else
@@ -227,6 +268,7 @@ end process;
         end if;
 
       when ST_EN_TDPB =>
+        state_mon <= "0010"; --state mon
         if (tvalid_reg = '1') then
           tdp_enb        <= '1';
           tdp_addrb_next <= tdp_addrb_reg + 1;
@@ -234,6 +276,7 @@ end process;
         end if;
 
       when ST_AVG_SCOPE => -- Measure
+        state_mon <= "0011"; --state mon
         if (tvalid_reg = '1') then
           tready_s <= '1';
           tdp_enb  <= '1';
@@ -243,11 +286,11 @@ end process;
           ASSIGN_G1: for I in 0 to RATIO-1 loop
             tdp_dia(I) <= std_logic_vector(signed(tdp_dob(I)) + signed(in_reg(I)));
           end loop;
-          if(tdp_addra_reg = (unsigned(nsamples_i)/RATIO)-1) then
+          if(tdp_addra_reg = (unsigned(nsamples_s)/RATIO)-1) then
             tdp_addra_next <= (others => '0');
             tdp_addrb_next <= (others => '0');
             avg_next <= avg_reg + 1;
-            if (avg_reg = unsigned(naverages_i)-1) then
+            if (avg_reg = unsigned(naverages_s)-1) then
               state_next  <= ST_FINISH;
             else
               state_next  <= ST_WAIT_TRIG;
@@ -258,8 +301,9 @@ end process;
         end if;
 
       when ST_FINISH => 
+        state_mon <= "0100"; 
         done_s    <= '1';
-        if restart_os = '1' then
+        if restart_sync = '1' then
           state_next <= ST_WR_ZEROS;
         end if;
 
@@ -267,23 +311,32 @@ end process;
         state_mon <= "0101";
         tdp_wea   <= '1';
         tdp_addra_next <= tdp_addra_reg + 1; 
-        if (tdp_addra_reg = (unsigned(nsamples_i)/RATIO)-1) then
+        if (tdp_addra_reg = (unsigned(nsamples_s)/RATIO)-1) then
           state_next <= ST_IDLE;
         end if;
 
     end case;
   end process;
 
+  --lets synchronize the send signal
+  sync_send_m: entity work.sync
+  port map(
+            aclk     => m_axis_aclk,
+            aresetn  => m_axis_aresetn,
+            in_async => send_i,
+            out_sync => send_sync
+          );
+
   --lets synchronize the restart signal
-  os_restart_as: entity work.edge_det
+  sync_restart: entity work.edge_det
   port map(
             aclk     => s_axis_aclk,
             aresetn  => s_axis_aresetn,
             sig_i    => restart_s,
-            sig_o    => restart_os
+            sig_o    => restart_sync
           );
 
-  reader_cfg <= std_logic_vector(unsigned(nsamples_i)/RATIO);
+  reader_cfg <= std_logic_vector(unsigned(nsamples_s)/RATIO);
   reader_i: entity work.bram_reader 
   generic map(
             MEM_DEPTH   => MEM_DEPTH,
@@ -294,9 +347,9 @@ end process;
   port map(
 
          cfg_data_i     => reader_cfg, --nsamples_s,
-         --sts_data_o     => open,
+         sts_data_o     => open,
          done_i         => done_s,
-         send_i         => send_i, 
+         send_i         => send_sync,
          restart_o      => restart_s,
 
          -- Master side

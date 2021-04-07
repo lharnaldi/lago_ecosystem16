@@ -78,8 +78,8 @@ signal data_reg, data_next       : std_logic_vector(2*I_DWIDTH-1 downto 0);
 signal samples_reg, samples_next : unsigned(ADC_DWIDTH-1 downto 0);
 
 signal done_s, tready_s : std_logic;
-signal avg_reg, avg_next: unsigned(ADC_DWIDTH-1 downto 0);
-signal restart_s, restart_os : std_logic;
+signal avg_reg, avg_next       : unsigned(ADC_DWIDTH-1 downto 0);
+signal restart_s, restart_os   : std_logic;
 
 signal bram_clk  : std_logic;
 signal bram_rst  : std_logic;
@@ -175,9 +175,9 @@ begin
         tready_s <= '1';
         samples_next <= samples_reg + 1;
         ASSIGN_N: for I in 0 to RATIO-1 loop
-          data_next(2*I_DWIDTH-1-I*2*ADC_DWIDTH downto 2*I_DWIDTH-(I+1)*2*ADC_DWIDTH) <=
-          std_logic_vector(signed(data_reg(2*I_DWIDTH-1-I*2*ADC_DWIDTH downto 2*I_DWIDTH-(I+1)*2*ADC_DWIDTH)) +
-          resize(signed(s_axis_tdata(I_DWIDTH-1-I*ADC_DWIDTH downto I_DWIDTH-((I+1)*ADC_DWIDTH))),ADC_DWIDTH));
+          data_next(2*I_DWIDTH-1-I*O_DWIDTH downto 2*I_DWIDTH-(I+1)*O_DWIDTH) <=
+          std_logic_vector(signed(data_reg(2*I_DWIDTH-1-I*O_DWIDTH downto 2*I_DWIDTH-(I+1)*O_DWIDTH)) +
+          resize(signed(s_axis_tdata(I_DWIDTH-1-I*ADC_DWIDTH downto I_DWIDTH-((I+1)*ADC_DWIDTH))),O_DWIDTH));
         end loop;
         if(samples_reg = (unsigned(nsamples_i)/RATIO)-1) then
           samples_next <= (others => '0');
@@ -189,7 +189,7 @@ begin
         --state_mon <= "0011"; 
         dinbv := (others => '0');
         ASSIGN_AVG1: for K in 0 to RATIO-1 loop
-          dinbv := std_logic_vector(signed(dinbv) + signed(data_reg(2*I_DWIDTH-1-K*2*ADC_DWIDTH downto 2*I_DWIDTH-(K+1)*2*ADC_DWIDTH)));
+          dinbv := std_logic_vector(signed(dinbv) + signed(data_reg(2*I_DWIDTH-1-K*O_DWIDTH downto 2*I_DWIDTH-(K+1)*O_DWIDTH)));
         end loop;
         tdp_dia <= dinbv;
         tdp_wea <= '1';
@@ -222,7 +222,7 @@ begin
           );
 
   naverages_b <= (31 downto 16 => '0') & naverages_i;
-  reader_i: entity work.bram_reader 
+  reader_i: entity work.bram_reader_nt 
   generic map(
                MEM_DEPTH   => MEM_DEPTH,
                MEM_AWIDTH  => MEM_AWIDTH,
@@ -230,8 +230,7 @@ begin
              )
   port map(
 
-            cfg_data_i     => naverages_b,
-            --cfg_data_i     => naverages_i,
+            cfg_data_i     => naverages_s,
             --sts_data_o     => open,
             done_i         => done_s,
             send_i         => send_i,

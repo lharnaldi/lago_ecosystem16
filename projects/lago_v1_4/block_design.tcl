@@ -13,10 +13,12 @@ cell xilinx.com:ip:xlconstant const_0
 # Create proc_sys_reset
 cell xilinx.com:ip:proc_sys_reset rst_0 {} {
   ext_reset_in const_0/dout
-  }
+}
 
 # Create axis_rp_adc
-cell labdpr:user:axis_rp_adc adc_0 {} {
+cell labdpr:user:axis_rp_adc adc_0 {
+  ADC_DATA_WIDTH 14
+} {
   aclk pll_0/clk_out1
   adc_dat_a adc_dat_a_i
   adc_dat_b adc_dat_b_i
@@ -170,10 +172,11 @@ cell labdpr:user:port_slicer reg_trig_scaler_b {
   din cfg_0/cfg_data
 }
 
-# Create xlconstant
-cell xilinx.com:ip:xlconstant const_1 {
-  CONST_WIDTH 32
-  CONST_VAL 503316480
+# Create port_slicer for cfg RAM writer. off=22
+cell labdpr:user:port_slicer cfg_ram_wr {
+  DIN_WIDTH 1024 DIN_FROM 735 DIN_TO 704
+} {
+  din cfg_0/cfg_data
 }
 
 # Create xlslice for set the gpsen_i input
@@ -188,7 +191,6 @@ cell xilinx.com:ip:xlconstant const_2 {
   CONST_WIDTH 16
   CONST_VAL 1
 }
-
 
 #Create concatenator
 cell xilinx.com:ip:xlconcat concat_0 {
@@ -305,12 +307,10 @@ cell labdpr:user:axis_ram_writer writer_0 {
 } {
   S_AXIS conv_0/M_AXIS
   M_AXI ps_0/S_AXI_ACP
-  cfg_data const_1/dout
+  cfg_data cfg_ram_wr/dout
   aclk pll_0/clk_out1
   aresetn reset_2/dout
 }
-
-assign_bd_address [get_bd_addr_segs ps_0/S_AXI_HP0/HP0_DDR_LOWOCM]
 
 #Now all related to the DAC PWM
 # Create xlslice. off=0
@@ -594,7 +594,7 @@ group_bd_cells PS [get_bd_cells axi_intc_0] [get_bd_cells rst_0] [get_bd_cells p
 group_bd_cells hst0 [get_bd_cells hist_0] [get_bd_cells cfg_hst_0] [get_bd_cells reader_0] [get_bd_cells bram_0] [get_bd_cells rst_hst_0]
 group_bd_cells hst1 [get_bd_cells hist_1] [get_bd_cells cfg_hst_1] [get_bd_cells reader_1] [get_bd_cells bram_1] [get_bd_cells rst_hst_1]
 
-group_bd_cells FADC [get_bd_cells bcast_0] [get_bd_cells rst_1] [get_bd_cells const_2] [get_bd_cells dc_removal_0] [get_bd_cells reg_trig_scaler_a] [get_bd_cell reg_trig_scaler_b] [get_bd_cells reg_date] [get_bd_cells tlast_gen_0] [get_bd_cells reset_0] [get_bd_cells subtrig_lvl_a] [get_bd_cells subtrig_lvl_b] [get_bd_cells pps_0] [get_bd_cells gpsen] [get_bd_cells conv_0] [get_bd_cells reset_1] [get_bd_cells trig_lvl_a] [get_bd_cells const_0] [get_bd_cells const_1] [get_bd_cells trig_lvl_b] [get_bd_cells fifo_0] [get_bd_cells reset_2] [get_bd_cells writer_0] [get_bd_cells nsamples] [get_bd_cells trigger_0] [get_bd_cells adc_0] [get_bd_cells reg_temp] [get_bd_cells reg_pressure] [get_bd_cells reg_time] [get_bd_cells reg_satellite] [get_bd_cells reg_longitude] [get_bd_cells reg_latitude] [get_bd_cells reg_altitude]
+group_bd_cells FADC [get_bd_cells bcast_0] [get_bd_cells rst_1] [get_bd_cells const_2] [get_bd_cells dc_removal_0] [get_bd_cells reg_trig_scaler_a] [get_bd_cell reg_trig_scaler_b] [get_bd_cells reg_date] [get_bd_cells tlast_gen_0] [get_bd_cells reset_0] [get_bd_cells subtrig_lvl_a] [get_bd_cells subtrig_lvl_b] [get_bd_cells pps_0] [get_bd_cells gpsen] [get_bd_cells conv_0] [get_bd_cells reset_1] [get_bd_cells trig_lvl_a] [get_bd_cells const_0] [get_bd_cells cfg_ram_wr] [get_bd_cells trig_lvl_b] [get_bd_cells fifo_0] [get_bd_cells reset_2] [get_bd_cells writer_0] [get_bd_cells nsamples] [get_bd_cells trigger_0] [get_bd_cells adc_0] [get_bd_cells reg_temp] [get_bd_cells reg_pressure] [get_bd_cells reg_time] [get_bd_cells reg_satellite] [get_bd_cells reg_longitude] [get_bd_cells reg_latitude] [get_bd_cells reg_altitude]
 
 group_bd_cells AO [get_bd_cells concat_0] [get_bd_cells cfg_dac_pwm_2] [get_bd_cells cfg_dac_pwm_3] [get_bd_cells gen_0] [get_bd_cells gen_1] [get_bd_cells gen_2] [get_bd_cells gen_3] [get_bd_cells reset_3] [get_bd_cells cfg_dac_pwm_0] [get_bd_cells cfg_dac_pwm_1] [get_bd_cells concat_1]
 

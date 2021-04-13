@@ -79,7 +79,7 @@ cell labdpr:user:axis_ram_writer writer_0 {
   aclk /pll_0/clk_out1
   aresetn /reset_2/Dout
   S_AXIS conv_0/M_AXIS
-  M_AXI ps_0/S_AXI_ACP
+  M_AXI /ps_0/S_AXI_ACP
   cfg_data const_1/dout
 }
 

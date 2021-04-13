@@ -1,14 +1,18 @@
 source projects/base_system/block_design.tcl
 
-#Enable interrupts
-set_property -dict [list CONFIG.PCW_USE_FABRIC_INTERRUPT {1} CONFIG.PCW_IRQ_F2P_INTR {1}] [get_bd_cells ps_0]
+# Create all required interconnections
+apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {
+  make_external {FIXED_IO, DDR}
+  Master Disable
+  Slave Disable
+} [get_bd_cells ps_0]
 
 # Create xlconstant
 cell xilinx.com:ip:xlconstant const_0
 
 # Create proc_sys_reset
 cell xilinx.com:ip:proc_sys_reset rst_0 {} {
-    ext_reset_in const_0/dout
+  ext_reset_in const_0/dout
   }
 
 # Create axis_rp_adc
@@ -18,6 +22,9 @@ cell labdpr:user:axis_rp_adc adc_0 {} {
   adc_dat_b adc_dat_b_i
   adc_csn adc_csn_o
 }
+
+#Enable interrupts
+set_property -dict [list CONFIG.PCW_USE_FABRIC_INTERRUPT {1} CONFIG.PCW_IRQ_F2P_INTR {1}] [get_bd_cells ps_0]
 
 # Delete input/output port
 delete_bd_objs [get_bd_ports exp_p_tri_io]
@@ -39,126 +46,126 @@ addr 0x40001000 4K cfg_0/S_AXI /ps_0/M_AXI_GP0
 
 # Create xlslice for reset fifo, pps_gen and trigger modules. off=0
 cell labdpr:user:port_slicer reset_0 {
-  DIN_WIDTH 1024 DIN_FROM 0 DIN_TO 0 
+  DIN_WIDTH 1024 DIN_FROM 0 DIN_TO 0
 } {
   din cfg_0/cfg_data
 }
 
 # Create xlslice for reset tlast_gen. off=0
 cell labdpr:user:port_slicer reset_1 {
-  DIN_WIDTH 1024 DIN_FROM 1 DIN_TO 1 
+  DIN_WIDTH 1024 DIN_FROM 1 DIN_TO 1
 } {
   din cfg_0/cfg_data
 }
 
 # Create xlslice for reset conv_0 and writer_0. off=0
 cell labdpr:user:port_slicer reset_2 {
-  DIN_WIDTH 1024 DIN_FROM 2 DIN_TO 2 
+  DIN_WIDTH 1024 DIN_FROM 2 DIN_TO 2
 } {
   din cfg_0/cfg_data
 }
 
 # Create xlslice for set the # of samples to get. off=1
 cell labdpr:user:port_slicer nsamples {
-  DIN_WIDTH 1024 DIN_FROM 63 DIN_TO 32 
+  DIN_WIDTH 1024 DIN_FROM 63 DIN_TO 32
 } {
   din cfg_0/cfg_data
 }
 
 # Create xlslice for set the trigger_lvl_a. off=2
 cell labdpr:user:port_slicer trig_lvl_a {
-  DIN_WIDTH 1024 DIN_FROM 95 DIN_TO 64 
+  DIN_WIDTH 1024 DIN_FROM 95 DIN_TO 64
 } {
   din cfg_0/cfg_data
 }
 
 # Create xlslice for set the trigger_lvl_b. off=3
 cell labdpr:user:port_slicer trig_lvl_b {
-  DIN_WIDTH 1024 DIN_FROM 127 DIN_TO 96 
+  DIN_WIDTH 1024 DIN_FROM 127 DIN_TO 96
 } {
   din cfg_0/cfg_data
 }
 
 # Create xlslice for set the subtrigger_lvl_a. off=4
 cell labdpr:user:port_slicer subtrig_lvl_a {
-  DIN_WIDTH 1024 DIN_FROM 159 DIN_TO 128 
+  DIN_WIDTH 1024 DIN_FROM 159 DIN_TO 128
 } {
   din cfg_0/cfg_data
 }
 
 # Create xlslice for set the subtrigger_lvl_b. off=5
 cell labdpr:user:port_slicer subtrig_lvl_b {
-  DIN_WIDTH 1024 DIN_FROM 191 DIN_TO 160 
+  DIN_WIDTH 1024 DIN_FROM 191 DIN_TO 160
 } {
   din cfg_0/cfg_data
 }
 
 # Create xlslice for the temperature data. off=6
 cell labdpr:user:port_slicer reg_temp {
-  DIN_WIDTH 1024 DIN_FROM 223 DIN_TO 192 
+  DIN_WIDTH 1024 DIN_FROM 223 DIN_TO 192
 } {
   din cfg_0/cfg_data
 }
 
 # Create xlslice for the pressure data. off=7
 cell labdpr:user:port_slicer reg_pressure {
-  DIN_WIDTH 1024 DIN_FROM 255 DIN_TO 224 
+  DIN_WIDTH 1024 DIN_FROM 255 DIN_TO 224
 } {
   din cfg_0/cfg_data
 }
 
 # Create xlslice for the time data. off=8
 cell labdpr:user:port_slicer reg_time {
-  DIN_WIDTH 1024 DIN_FROM 287 DIN_TO 256 
+  DIN_WIDTH 1024 DIN_FROM 287 DIN_TO 256
 } {
   din cfg_0/cfg_data
 }
 
 # Create xlslice for the date data. off=9
 cell labdpr:user:port_slicer reg_date {
-  DIN_WIDTH 1024 DIN_FROM 319 DIN_TO 288 
+  DIN_WIDTH 1024 DIN_FROM 319 DIN_TO 288
 } {
   din cfg_0/cfg_data
 }
 
 # Create xlslice for the latitude data. off=10
 cell labdpr:user:port_slicer reg_latitude {
-  DIN_WIDTH 1024 DIN_FROM 351 DIN_TO 320 
+  DIN_WIDTH 1024 DIN_FROM 351 DIN_TO 320
 } {
   din cfg_0/cfg_data
 }
 
 # Create xlslice for the longitude data. off=11
 cell labdpr:user:port_slicer reg_longitude {
-  DIN_WIDTH 1024 DIN_FROM 383 DIN_TO 352 
+  DIN_WIDTH 1024 DIN_FROM 383 DIN_TO 352
 } {
   din cfg_0/cfg_data
 }
 
 # Create xlslice for the altitude data. off=12
 cell labdpr:user:port_slicer reg_altitude {
-  DIN_WIDTH 1024 DIN_FROM 415 DIN_TO 384 
+  DIN_WIDTH 1024 DIN_FROM 415 DIN_TO 384
 } {
   din cfg_0/cfg_data
 }
 
 # Create xlslice for the satellite data. off=13
 cell labdpr:user:port_slicer reg_satellite {
-  DIN_WIDTH 1024 DIN_FROM 447 DIN_TO 416 
+  DIN_WIDTH 1024 DIN_FROM 447 DIN_TO 416
 } {
   din cfg_0/cfg_data
 }
 
 # Create xlslice for the trigger scaler a. off=14
 cell labdpr:user:port_slicer reg_trig_scaler_a {
-  DIN_WIDTH 1024 DIN_FROM 479 DIN_TO 448 
+  DIN_WIDTH 1024 DIN_FROM 479 DIN_TO 448
 } {
   din cfg_0/cfg_data
 }
 
 # Create xlslice for the trigger scaler b. off=15
 cell labdpr:user:port_slicer reg_trig_scaler_b {
-  DIN_WIDTH 1024 DIN_FROM 511 DIN_TO 480 
+  DIN_WIDTH 1024 DIN_FROM 511 DIN_TO 480
 } {
   din cfg_0/cfg_data
 }
@@ -171,19 +178,10 @@ cell xilinx.com:ip:xlconstant const_1 {
 
 # Create xlslice for set the gpsen_i input
 cell labdpr:user:port_slicer gpsen {
-  DIN_WIDTH 1024 DIN_FROM 4 DIN_TO 4 
+  DIN_WIDTH 1024 DIN_FROM 4 DIN_TO 4
 } {
   din cfg_0/cfg_data
 }
-
-# Create axis_clock_converter
-#cell xilinx.com:ip:axis_clock_converter fifo_0 {} {
-#  S_AXIS adc_0/M_AXIS
-#  s_axis_aclk pll_0/clk_out1
-#  s_axis_aresetn const_0/dout
-#  m_axis_aclk ps_0/FCLK_CLK0
-#  m_axis_aresetn reset_0/dout
-#}
 
 # Create xlconstant
 cell xilinx.com:ip:xlconstant const_2 {

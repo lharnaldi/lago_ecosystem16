@@ -300,10 +300,11 @@ cell xilinx.com:ip:axis_dwidth_converter conv_0 {
 
 # Create axis_ram_writer
 cell labdpr:user:axis_ram_writer writer_0 {
-  ADDR_WIDTH 20
+  ADDR_WIDTH 22
+  AXI_ID_WIDTH 3
 } {
   S_AXIS conv_0/M_AXIS
-  M_AXI ps_0/S_AXI_HP0
+  M_AXI ps_0/S_AXI_ACP
   cfg_data const_1/dout
   aclk pll_0/clk_out1
   aresetn reset_2/dout

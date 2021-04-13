@@ -229,7 +229,7 @@ end process;
   --Next state logic
   process(state_reg, en_s, start_sync, trig_sync, nsamples_s,
     naverages_s, tdp_addra_reg, tdp_addrb_reg, tdp_dia, --asy_addra_reg, 
-    tvalid_reg, avg_reg, m_axis_tready,restart_sync)
+    tvalid_reg, avg_reg, m_axis_tready, restart_sync)
   begin
     state_next    <= state_reg;
     rstb_s        <= '0';

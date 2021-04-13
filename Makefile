@@ -12,7 +12,8 @@ NAME = led_blinker
 PART = xc7z010clg400-1
 PROC = ps7_cortexa9_0
 
-CORES = avg_ntoone_v1_0 \
+CORES = avg_ntoone32_v1_0 \
+				avg_ntoone_v1_0 \
 				avg_scope32_v1_0 \
 				avg_scope_v1_0 \
 				axi_axis_reader_v1_0 \

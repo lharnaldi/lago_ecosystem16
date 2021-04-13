@@ -1,29 +1,4 @@
-#source projects/base_system/block_design.tcl
-# Create clk_wiz
-cell xilinx.com:ip:clk_wiz pll_0 {
-  PRIMITIVE PLL
-  PRIM_IN_FREQ.VALUE_SRC USER
-  PRIM_IN_FREQ 125.0
-  PRIM_SOURCE Differential_clock_capable_pin
-  CLKOUT1_USED true
-  CLKOUT1_REQUESTED_OUT_FREQ 125.0
-  CLKOUT2_USED true
-  CLKOUT2_REQUESTED_OUT_FREQ 250.0
-  CLKOUT2_REQUESTED_PHASE -90.0
-  USE_RESET false
-} {
-  clk_in1_p adc_clk_p_i
-  clk_in1_n adc_clk_n_i
-}
-
-# Create processing_system7
-cell xilinx.com:ip:processing_system7 ps_0 {
-  PCW_IMPORT_BOARD_PRESET cfg/red_pitaya.xml
-  PCW_USE_S_AXI_HP0 1
-} {
-  M_AXI_GP0_ACLK pll_0/clk_out1
-  S_AXI_HP0_ACLK pll_0/clk_out1
-} 
+source projects/base_system/block_design.tcl
 
 # Create all required interconnections
 apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {
@@ -52,11 +27,11 @@ create_bd_port -dir I -from 7 -to 7 exp_n_tri_io
 create_bd_port -dir O -from 7 -to 7 exp_p_tri_io
 create_bd_port -dir I -from 0 -to 0 ext_resetn
 
-# Create proc_sys_reset
-#cell xilinx.com:ip:proc_sys_reset:5.0 rst_0
 
 # Create axis_rp_adc
-cell labdpr:user:axis_rp_adc adc_0 {} {
+cell labdpr:user:axis_rp_adc adc_0 {
+  ADC_DATA_WIDTH 14
+} {
   aclk pll_0/clk_out1
   adc_dat_a adc_dat_a_i
   adc_dat_b adc_dat_b_i
@@ -246,7 +221,7 @@ module fadc_0 {
   writer_0/sts_data sts_0/sts_data 
   pps_0/resetn_i rst_1/peripheral_aresetn 
   pps_0/int_o axi_intc_0/intr
-	writer_0/M_AXI ps_0/S_AXI_HP0
+	writer_0/M_AXI ps_0/S_AXI_ACP
 	tlast_gen_0/pkt_length nsamples/Dout
 	pps_0/gpsen_i gpsen/Dout
   pps_0/pps_i exp_n_tri_io

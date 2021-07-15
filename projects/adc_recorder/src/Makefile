@@ -5,7 +5,7 @@ CROSS_COMPILE=arm-xilinx-linux-gnueabi-
 
 ####
 PROG=adc_recorder
-EXTRA=
+EXTRA= zynq_io.c
 
 all: $(PROG)
 

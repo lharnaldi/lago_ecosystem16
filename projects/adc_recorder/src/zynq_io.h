@@ -2,12 +2,14 @@
 #define _ZYNQ_IO_H_
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
-#include <unistd.h>
+#include <sys/ioctl.h>
 
+#define CMA_ALLOC _IOWR('Z', 0, uint32_t)
 #define INTC_BASEADDR 0x40000000
 #define INTC_HIGHADDR 0x40000FFF
 
@@ -37,7 +39,8 @@
 
 //CFG
 #define CFG_RESET_GRAL_OFFSET    0x0
-#define CFG_NSAMPLES_OFFSET      0x4
+#define CFG_WR_ADDR_OFFSET       0x4
+#define CFG_NSAMPLES_OFFSET      0x8
 #define CFG_TRLVL_1_OFFSET       0x8
 #define CFG_TRLVL_2_OFFSET       0xC
 #define CFG_STRLVL_1_OFFSET      0x10
@@ -124,8 +127,9 @@
 #define XADC_RDIV_VAL 1.883236177     //voltage divisor in board (15k+16.983k)/16.983k = 1.88
 #define XADC_BASE_HVDIV 0.00294088    //voltage divisor in HV base board (100k/31.3Meg) = 3.194888179. The value I put here is the measured one.
 
-extern int intc_fd, cfg_fd, sts_fd, xadc_fd, mem_fd;
-extern void *intc_ptr, *cfg_ptr, *sts_ptr, *xadc_ptr, *mem_ptr;
+extern int intc_fd, cfg_fd, sts_fd, xadc_fd, mem_fd, cma_fd;
+extern void *intc_ptr, *cfg_ptr, *sts_ptr, *xadc_ptr, *mem_ptr, *cma_ptr;
+extern uint32_t dev_size;
 
 void     dev_write(void *dev_base, uint32_t offset, int32_t value);
 uint32_t dev_read(void *dev_base, uint32_t offset);
@@ -138,6 +142,7 @@ int      cfg_init(void);
 int      sts_init(void);
 int      xadc_init(void);
 int      mem_init(void);
+int      cma_init(void);
 float    get_voltage(uint32_t offset);
 void     set_voltage(uint32_t offset, int32_t value);
 float    get_temp_AD592(uint32_t offset);

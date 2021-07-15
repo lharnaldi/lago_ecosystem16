@@ -76,23 +76,21 @@ VIVADO = vivado -nolog -nojournal -mode batch
 XSCT = xsct
 RM = rm -rf
 
-UBOOT_TAG = xilinx-v2020.2
-LINUX_TAG = 5.4
+UBOOT_TAG = 2021.04
+LINUX_TAG = 5.10
 DTREE_TAG = xilinx-v2020.2
 
-UBOOT_DIR = tmp/u-boot-xlnx-$(UBOOT_TAG)
+UBOOT_DIR = tmp/u-boot-$(UBOOT_TAG)
 LINUX_DIR = tmp/linux-$(LINUX_TAG)
 DTREE_DIR = tmp/device-tree-xlnx-$(DTREE_TAG)
 
-UBOOT_TAR = tmp/u-boot-xlnx-$(UBOOT_TAG).tar.gz
+UBOOT_TAR = tmp/u-boot-$(UBOOT_TAG).tar.bz2
 LINUX_TAR = tmp/linux-$(LINUX_TAG).tar.xz
 DTREE_TAR = tmp/device-tree-xlnx-$(DTREE_TAG).tar.gz
 
-UBOOT_URL = https://github.com/Xilinx/u-boot-xlnx/archive/$(UBOOT_TAG).tar.gz
-LINUX_URL = https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-$(LINUX_TAG).108.tar.xz
+UBOOT_URL = https://ftp.denx.de/pub/u-boot/u-boot-$(UBOOT_TAG).tar.bz2
+LINUX_URL = https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-$(LINUX_TAG).46.tar.xz
 DTREE_URL = https://github.com/Xilinx/device-tree-xlnx/archive/$(DTREE_TAG).tar.gz
-
-LINUX_CFLAGS = "-O2 -march=armv7-a -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard"
 
 RTL8188_TAR = tmp/rtl8188eu-v5.2.2.4.tar.gz
 RTL8188_URL = https://github.com/lwfinger/rtl8188eu/archive/v5.2.2.4.tar.gz
@@ -132,11 +130,10 @@ $(RTL8192_TAR):
 
 $(UBOOT_DIR): $(UBOOT_TAR)
 	mkdir -p $@
-	tar -zxf $< --strip-components=1 --directory=$@
-	patch -d tmp -p 0 < patches/u-boot-xlnx-$(UBOOT_TAG).patch
+	tar -jxf $< --strip-components=1 --directory=$@
+	patch -d tmp -p 0 < patches/u-boot-$(UBOOT_TAG).patch
 	cp patches/zynq_red_pitaya_defconfig $@/configs
 	cp patches/zynq-red-pitaya.dts $@/arch/arm/dts
-	cp patches/u-boot-lantiq.c $@/drivers/net/phy/lantiq.c
 
 $(LINUX_DIR): $(LINUX_TAR) $(RTL8188_TAR) $(RTL8192_TAR)
 	mkdir -p $@
@@ -146,8 +143,8 @@ $(LINUX_DIR): $(LINUX_TAR) $(RTL8188_TAR) $(RTL8192_TAR)
 	tar -zxf $(RTL8188_TAR) --strip-components=1 --directory=$@/drivers/net/wireless/realtek/rtl8188eu
 	tar -zxf $(RTL8192_TAR) --strip-components=1 --directory=$@/drivers/net/wireless/realtek/rtl8192cu
 	patch -d tmp -p 0 < patches/linux-$(LINUX_TAG).patch
-	cp patches/cma.c $@/drivers/misc
 	cp patches/zynq_ocm.c $@/arch/arm/mach-zynq
+	cp patches/cma.c $@/drivers/char
 	cp patches/xilinx_devcfg.c $@/drivers/char
 	cp patches/xilinx_zynq_defconfig $@/arch/arm/configs
 
@@ -158,17 +155,17 @@ $(DTREE_DIR): $(DTREE_TAR)
 uImage: $(LINUX_DIR)
 	make -C $< mrproper
 	make -C $< ARCH=arm xilinx_zynq_defconfig
-	make -C $< ARCH=arm CFLAGS=$(LINUX_CFLAGS) \
-		-j $(shell nproc 2> /dev/null || echo 1) \
-		CROSS_COMPILE=arm-linux-gnueabihf- UIMAGE_LOADADDR=0x8000 \
-		uImage modules
+	make -C $< ARCH=arm -j $(shell nproc 2> /dev/null || echo 1) \
+	  CROSS_COMPILE=arm-linux-gnueabihf- UIMAGE_LOADADDR=0x8000 \
+	  uImage modules
 	cp $</arch/arm/boot/uImage $@
 
 $(UBOOT_DIR)/u-boot.bin: $(UBOOT_DIR)
 	mkdir -p $(@D)
 	make -C $< mrproper
 	make -C $< ARCH=arm zynq_red_pitaya_defconfig
-	make -C $< ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- all
+	make -C $< ARCH=arm -j $(shell nproc 2> /dev/null || echo 1) \
+	  CROSS_COMPILE=arm-linux-gnueabihf- all
 
 boot.bin: tmp/$(NAME).fsbl/executable.elf $(UBOOT_DIR)/u-boot.bin
 	echo "img:{[bootloader] tmp/$(NAME).fsbl/executable.elf [load=0x4000000,startup=0x4000000] $(UBOOT_DIR)/u-boot.bin}" > tmp/boot.bif
@@ -176,7 +173,7 @@ boot.bin: tmp/$(NAME).fsbl/executable.elf $(UBOOT_DIR)/u-boot.bin
 
 devicetree.dtb: uImage tmp/$(NAME).tree/system-top.dts
 	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb -o devicetree.dtb \
-		-i tmp/$(NAME).tree tmp/$(NAME).tree/system-top.dts
+	  -i tmp/$(NAME).tree tmp/$(NAME).tree/system-top.dts
 
 tmp/cores/%: cores/%/core_config.tcl cores/%/*.vhd
 	mkdir -p $(@D)

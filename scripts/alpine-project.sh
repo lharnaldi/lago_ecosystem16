@@ -1,16 +1,16 @@
-alpine_url=http://dl-cdn.alpinelinux.org/alpine/v3.12
+alpine_url=http://dl-cdn.alpinelinux.org/alpine/v3.14
 
-uboot_tar=alpine-uboot-3.12.0-armv7.tar.gz
+uboot_tar=alpine-uboot-3.14.0-armv7.tar.gz
 uboot_url=$alpine_url/releases/armv7/$uboot_tar
 
-tools_tar=apk-tools-static-2.10.5-r1.apk
+tools_tar=apk-tools-static-2.12.5-r1.apk
 tools_url=$alpine_url/main/armv7/$tools_tar
 
-firmware_tar=linux-firmware-other-20200519-r1.apk
+firmware_tar=linux-firmware-other-20210511-r0.apk
 firmware_url=$alpine_url/main/armv7/$firmware_tar
 
-linux_dir=tmp/linux-5.4
-linux_ver=5.4.108-xilinx
+linux_dir=tmp/linux-5.10
+linux_ver=5.10.46-xilinx
 
 modules_dir=alpine-modloop/lib/modules/$linux_ver
 
@@ -23,7 +23,7 @@ test -f $tools_tar || curl -L $tools_url -o $tools_tar
 
 test -f $firmware_tar || curl -L $firmware_url -o $firmware_tar
 
-for tar in linux-firmware-ath9k_htc-20200519-r1.apk linux-firmware-brcm-20200519-r1.apk linux-firmware-rtlwifi-20200519-r1.apk
+for tar in linux-firmware-ath9k_htc-20210511-r0.apk linux-firmware-brcm-20210511-r0.apk linux-firmware-cypress-20210511-r0.apk linux-firmware-rtlwifi-20210511-r0.apk
 do
   url=$alpine_url/main/armv7/$tar
   test -f $tar || curl -L $url -o $tar
@@ -59,7 +59,7 @@ depmod -a -b alpine-modloop $linux_ver
 
 tar -zxf $firmware_tar --directory=alpine-modloop/lib/modules --warning=no-unknown-keyword --strip-components=1 --wildcards lib/firmware/ar* lib/firmware/rt*
 
-for tar in linux-firmware-ath9k_htc-20200519-r1.apk linux-firmware-brcm-20200519-r1.apk linux-firmware-rtlwifi-20200519-r1.apk
+for tar in linux-firmware-ath9k_htc-20210511-r0.apk linux-firmware-brcm-20210511-r0.apk linux-firmware-cypress-20210511-r0.apk linux-firmware-rtlwifi-20210511-r0.apk
 do
   tar -zxf $tar --directory=alpine-modloop/lib/modules --warning=no-unknown-keyword --strip-components=1
 done
@@ -99,31 +99,30 @@ echo $alpine_url/community >> $root_dir/etc/apk/repositories
 chroot $root_dir /bin/sh <<- EOF_CHROOT
 
 apk update
-apk add haveged openssh iw wpa_supplicant dhcpcd dnsmasq hostapd iptables avahi dbus dcron chrony musl-dev curl wget less nano bc
+apk add openssh iw wpa_supplicant dhcpcd dnsmasq hostapd iptables avahi dbus dcron chrony musl-dev curl wget less nano bc
 
-ln -s /etc/init.d/bootmisc etc/runlevels/boot/bootmisc
-ln -s /etc/init.d/hostname etc/runlevels/boot/hostname
-ln -s /etc/init.d/hwdrivers etc/runlevels/boot/hwdrivers
-ln -s /etc/init.d/modloop etc/runlevels/boot/modloop
-ln -s /etc/init.d/swclock etc/runlevels/boot/swclock
-ln -s /etc/init.d/sysctl etc/runlevels/boot/sysctl
-ln -s /etc/init.d/syslog etc/runlevels/boot/syslog
-ln -s /etc/init.d/urandom etc/runlevels/boot/urandom
+rc-update add bootmisc boot
+rc-update add hostname boot
+rc-update add hwdrivers boot
+rc-update add modloop boot
+rc-update add swclock boot
+rc-update add sysctl boot
+rc-update add syslog boot
+rc-update add urandom boot
 
-ln -s /etc/init.d/killprocs etc/runlevels/shutdown/killprocs
-ln -s /etc/init.d/mount-ro etc/runlevels/shutdown/mount-ro
-ln -s /etc/init.d/savecache etc/runlevels/shutdown/savecache
+rc-update add killprocs shutdown
+rc-update add mount-ro shutdown
+rc-update add savecache shutdown
 
-ln -s /etc/init.d/devfs etc/runlevels/sysinit/devfs
-ln -s /etc/init.d/dmesg etc/runlevels/sysinit/dmesg
-ln -s /etc/init.d/mdev etc/runlevels/sysinit/mdev
+rc-update add devfs sysinit
+rc-update add dmesg sysinit
+rc-update add mdev sysinit
 
 rc-update add avahi-daemon default
 rc-update add chronyd default
 rc-update add dhcpcd default
 rc-update add local default
 rc-update add dcron default
-rc-update add haveged default
 rc-update add sshd default
 
 mkdir -p etc/runlevels/wifi
@@ -179,6 +178,6 @@ hostname -F /etc/hostname
 
 rm -rf $root_dir alpine-apk
 
-zip -r red-pitaya-alpine-3.12-armv7-`date +%Y%m%d`-$project.zip apps boot.bin cache devicetree.dtb modloop red-pitaya.apkovl.tar.gz start.sh uEnv.txt uImage uInitrd wifi
+zip -r red-pitaya-alpine-3.14-armv7-`date +%Y%m%d`-$project.zip apps boot.bin cache devicetree.dtb modloop red-pitaya.apkovl.tar.gz start.sh uEnv.txt uImage uInitrd wifi
 
 rm -rf apps cache modloop red-pitaya.apkovl.tar.gz start.sh uInitrd wifi

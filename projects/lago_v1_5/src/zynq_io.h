@@ -2,12 +2,14 @@
 #define _ZYNQ_IO_H_
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
-#include <unistd.h>
+#include <sys/ioctl.h>
 
+#define CMA_ALLOC _IOWR('Z', 0, uint32_t)
 #define INTC_BASEADDR 0x40000000
 #define INTC_HIGHADDR 0x40000FFF
 
@@ -19,6 +21,12 @@
 
 #define XADC_BASEADDR 0x40003000
 #define XADC_HIGHADDR 0x40003FFF
+
+#define HST0_BASEADDR 0x40010000
+#define HST0_HIGHADDR 0x4001FFFF
+
+#define HST1_BASEADDR 0x40020000
+#define HST1_HIGHADDR 0x4002FFFF
 
 #define XIL_AXI_INTC_ISR_OFFSET    0x0
 #define XIL_AXI_INTC_IPR_OFFSET    0x4
@@ -56,6 +64,9 @@
 #define CFG_HV2_OFFSET           0x48 //DAC_PWM2
 #define CFG_HV3_OFFSET           0x40 //DAC_PWM0
 #define CFG_HV4_OFFSET           0x44 //DAC_PWM1
+#define CFG_HST0_OFFSET          0x50
+#define CFG_HST1_OFFSET          0x54
+#define CFG_WR_ADDR_OFFSET       0x58 //writer address
 
 //CFG Slow DAC
 #define CFG_DAC_PWM0_OFFSET 0x40
@@ -121,10 +132,12 @@
 #define XADC_AI3_OFFSET XADC_VAUX_PN_9_OFFSET
 
 #define XADC_CONV_VAL 0.00171191993362 //(A_ip/2^12)*(34.99/4.99)
-#define XADC_RDIV_VAL 1.798     //voltage divisor in board (15k+16.983k)/16.983k = 1.88
+#define XADC_RDIV_VAL 1.883236177     //voltage divisor in board (15k+16.983k)/16.983k = 1.88
+#define XADC_BASE_HVDIV 0.00294088    //voltage divisor in HV base board (100k/31.3Meg) = 3.194888179. The value I put here is the measured one.
 
-extern int intc_fd, cfg_fd, sts_fd, xadc_fd, mem_fd;
-extern void *intc_ptr, *cfg_ptr, *sts_ptr, *xadc_ptr, *mem_ptr;
+extern int intc_fd, cfg_fd, sts_fd, xadc_fd, mem_fd, cma_fd;
+extern void *intc_ptr, *cfg_ptr, *sts_ptr, *xadc_ptr, *mem_ptr, *cma_ptr;
+extern uint32_t dev_size;
 
 void     dev_write(void *dev_base, uint32_t offset, int32_t value);
 uint32_t dev_read(void *dev_base, uint32_t offset);
@@ -137,6 +150,7 @@ int      cfg_init(void);
 int      sts_init(void);
 int      xadc_init(void);
 int      mem_init(void);
+int      cma_init(void);
 float    get_voltage(uint32_t offset);
 void     set_voltage(uint32_t offset, int32_t value);
 float    get_temp_AD592(uint32_t offset);

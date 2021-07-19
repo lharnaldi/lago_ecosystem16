@@ -8,7 +8,7 @@ then
   size=$3
 fi
 
-dd if=/dev/zero of=$image bs=1M count=$size
+dd if=/dev/zero of=$image bs=1M count=$size status=progress
 
 device=`losetup -f`
 

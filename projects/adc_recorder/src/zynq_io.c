@@ -186,7 +186,7 @@ int cfg_init(void)
 
 	dev_size = sysconf(_SC_PAGESIZE);
 
-	// mmap the cfgC device into user space
+	// mmap the cfg device into user space
 	cfg_ptr = mmap(NULL, dev_size, PROT_READ|PROT_WRITE, MAP_SHARED, cfg_fd, CFG_BASEADDR);
 	if (cfg_ptr == MAP_FAILED) {
 		printf("cfg_init: mmap call failure.\n");

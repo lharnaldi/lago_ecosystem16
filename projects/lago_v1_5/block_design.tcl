@@ -67,119 +67,119 @@ cell labdpr:user:port_slicer reset_2 {
   din cfg_0/cfg_data
 }
 
-# Create xlslice for set the # of samples to get. off=1
+# Create xlslice for set the # of samples to get. off=4
 cell labdpr:user:port_slicer nsamples {
   DIN_WIDTH 1024 DIN_FROM 63 DIN_TO 32
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice for set the trigger_lvl_a. off=2
+# Create xlslice for set the trigger_lvl_a. off=8
 cell labdpr:user:port_slicer trig_lvl_a {
   DIN_WIDTH 1024 DIN_FROM 95 DIN_TO 64
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice for set the trigger_lvl_b. off=3
+# Create xlslice for set the trigger_lvl_b. off=C
 cell labdpr:user:port_slicer trig_lvl_b {
   DIN_WIDTH 1024 DIN_FROM 127 DIN_TO 96
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice for set the subtrigger_lvl_a. off=4
+# Create xlslice for set the subtrigger_lvl_a. off=10
 cell labdpr:user:port_slicer subtrig_lvl_a {
   DIN_WIDTH 1024 DIN_FROM 159 DIN_TO 128
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice for set the subtrigger_lvl_b. off=5
+# Create xlslice for set the subtrigger_lvl_b. off=14
 cell labdpr:user:port_slicer subtrig_lvl_b {
   DIN_WIDTH 1024 DIN_FROM 191 DIN_TO 160
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice for the temperature data. off=6
+# Create xlslice for the temperature data. off=18
 cell labdpr:user:port_slicer reg_temp {
   DIN_WIDTH 1024 DIN_FROM 223 DIN_TO 192
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice for the pressure data. off=7
+# Create xlslice for the pressure data. off=1C
 cell labdpr:user:port_slicer reg_pressure {
   DIN_WIDTH 1024 DIN_FROM 255 DIN_TO 224
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice for the time data. off=8
+# Create xlslice for the time data. off=20
 cell labdpr:user:port_slicer reg_time {
   DIN_WIDTH 1024 DIN_FROM 287 DIN_TO 256
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice for the date data. off=9
+# Create xlslice for the date data. off=24
 cell labdpr:user:port_slicer reg_date {
   DIN_WIDTH 1024 DIN_FROM 319 DIN_TO 288
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice for the latitude data. off=10
+# Create xlslice for the latitude data. off=28
 cell labdpr:user:port_slicer reg_latitude {
   DIN_WIDTH 1024 DIN_FROM 351 DIN_TO 320
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice for the longitude data. off=11
+# Create xlslice for the longitude data. off=2C
 cell labdpr:user:port_slicer reg_longitude {
   DIN_WIDTH 1024 DIN_FROM 383 DIN_TO 352
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice for the altitude data. off=12
+# Create xlslice for the altitude data. off=30
 cell labdpr:user:port_slicer reg_altitude {
   DIN_WIDTH 1024 DIN_FROM 415 DIN_TO 384
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice for the satellite data. off=13
+# Create xlslice for the satellite data. off=34
 cell labdpr:user:port_slicer reg_satellite {
   DIN_WIDTH 1024 DIN_FROM 447 DIN_TO 416
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice for the trigger scaler a. off=14
+# Create xlslice for the trigger scaler a. off=38
 cell labdpr:user:port_slicer reg_trig_scaler_a {
   DIN_WIDTH 1024 DIN_FROM 479 DIN_TO 448
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice for the trigger scaler b. off=15
+# Create xlslice for the trigger scaler b. off=3C
 cell labdpr:user:port_slicer reg_trig_scaler_b {
   DIN_WIDTH 1024 DIN_FROM 511 DIN_TO 480
 } {
   din cfg_0/cfg_data
 }
 
-# Create port_slicer for cfg RAM writer. off=22
+# Create port_slicer for cfg RAM writer. off=58
 cell labdpr:user:port_slicer cfg_ram_wr {
   DIN_WIDTH 1024 DIN_FROM 735 DIN_TO 704
 } {
   din cfg_0/cfg_data
 }
 
-# Create xlslice for set the gpsen_i input
+# Create xlslice for set the gpsen_i input. off=0
 cell labdpr:user:port_slicer gpsen {
   DIN_WIDTH 1024 DIN_FROM 4 DIN_TO 4
 } {
@@ -320,28 +320,28 @@ cell labdpr:user:port_slicer reset_3 {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice. off=16 
+# Create xlslice. off=40 
 cell labdpr:user:port_slicer cfg_dac_pwm_0 {
   DIN_WIDTH 1024 DIN_FROM 543 DIN_TO 512 
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice.. off=17
+# Create xlslice.. off=44
 cell labdpr:user:port_slicer cfg_dac_pwm_1 {
   DIN_WIDTH 1024 DIN_FROM 575 DIN_TO 544 
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice.. off=18
+# Create xlslice.. off=48
 cell labdpr:user:port_slicer cfg_dac_pwm_2 {
   DIN_WIDTH 1024 DIN_FROM 607 DIN_TO 576 
 } {
   Din cfg_0/cfg_data
 }
 
-# Create xlslice.. off=19 
+# Create xlslice.. off=4C 
 cell labdpr:user:port_slicer cfg_dac_pwm_3 {
   DIN_WIDTH 1024 DIN_FROM 639 DIN_TO 608 
 } {
@@ -456,7 +456,7 @@ cell labdpr:user:port_slicer rst_hst_0 {
   din cfg_0/cfg_data
 }
 
-# Create port_slicer for cfg hist0. off=20
+# Create port_slicer for cfg hist0. off=50
 cell labdpr:user:port_slicer cfg_hst_0 {
   DIN_WIDTH 1024 DIN_FROM 671 DIN_TO 640
 } {
@@ -470,7 +470,7 @@ cell labdpr:user:port_slicer rst_hst_1 {
   din cfg_0/cfg_data
 }
 
-# Create port_slicer for cfg hist1. off=21
+# Create port_slicer for cfg hist1. off=54
 cell labdpr:user:port_slicer cfg_hst_1 {
   DIN_WIDTH 1024 DIN_FROM 703 DIN_TO 672
 } {

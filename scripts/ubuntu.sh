@@ -6,8 +6,8 @@ root_dir=`mktemp -d /tmp/ROOT.XXXXXXXXXX`
 linux_dir=tmp/linux-5.10
 linux_ver=5.10.46-xilinx
 
-root_tar=ubuntu-base-14.04.5-base-armhf.tar.gz
-root_url=http://cdimage.ubuntu.com/ubuntu-base/releases/14.04/release/$root_tar
+root_tar=ubuntu-base-20.04.2-base-armhf.tar.gz
+root_url=http://cdimage.ubuntu.com/ubuntu-base/releases/20.04/release/$root_tar
 
 passwd=escondido
 timezone=America/Argentina/Mendoza

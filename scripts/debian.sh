@@ -9,10 +9,10 @@ linux_ver=5.10.46-xilinx
 # Choose mirror automatically, depending the geographic and network location
 mirror=http://deb.debian.org/debian
 
-distro=stretch
+distro=buster
 arch=armhf
 
-passwd=changeme
+passwd=escondido
 timezone=Europe/Brussels
 
 # Create partitions

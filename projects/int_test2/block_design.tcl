@@ -29,8 +29,8 @@ cell xilinx.com:ip:axi_intc:4.1 axi_intc_0 {
   C_S_AXI_ACLK_FREQ_MHZ 143
   C_PROCESSOR_CLK_FREQ_MHZ 143
 } {
-  intr counter_0/int_o
   irq ps_0/IRQ_F2P
+  intr counter_0/int_o
 }
 
 # Create all required interconnections

@@ -10,5 +10,15 @@
 .ipynb_checkpoints
 #Xilinx checks and Vivado log files
 .Xil
+*.apk
+*.bin
+*.dtb
+*.img
+*.tar.gz
+*.zip
+vivado*
+webtalk*
+tmp
+uImage
 *.str
 

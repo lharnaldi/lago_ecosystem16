@@ -1,7 +1,7 @@
-diff -rupN old/linux-5.4/arch/arm/mach-zynq/common.c linux-5.4/arch/arm/mach-zynq/common.c
---- old/linux-5.4/arch/arm/mach-zynq/common.c
-+++ linux-5.4/arch/arm/mach-zynq/common.c
-@@ -95,6 +95,7 @@ static void __init zynq_init_late(void)
+diff -rupN old/linux-4.19/arch/arm/mach-zynq/common.c linux-4.19/arch/arm/mach-zynq/common.c
+--- old/linux-4.19/arch/arm/mach-zynq/common.c
++++ linux-4.19/arch/arm/mach-zynq/common.c
+@@ -102,6 +102,7 @@ static void __init zynq_init_late(void)
  {
  	zynq_core_pm_init();
  	zynq_pm_late_init();
@@ -9,7 +9,7 @@ diff -rupN old/linux-5.4/arch/arm/mach-zynq/common.c linux-5.4/arch/arm/mach-zyn
  }
  
  /**
-@@ -186,8 +187,13 @@ static const char * const zynq_dt_match[
+@@ -193,8 +194,13 @@ static const char * const zynq_dt_match[
  
  DT_MACHINE_START(XILINX_EP107, "Xilinx Zynq Platform")
  	/* 64KB way size, 8-way associativity, parity disabled */
@@ -24,10 +24,10 @@ diff -rupN old/linux-5.4/arch/arm/mach-zynq/common.c linux-5.4/arch/arm/mach-zyn
  	.smp		= smp_ops(zynq_smp_ops),
  	.map_io		= zynq_map_io,
  	.init_irq	= zynq_irq_init,
-diff -rupN old/linux-5.4/arch/arm/mach-zynq/common.h linux-5.4/arch/arm/mach-zynq/common.h
---- old/linux-5.4/arch/arm/mach-zynq/common.h
-+++ linux-5.4/arch/arm/mach-zynq/common.h
-@@ -15,6 +15,7 @@ extern void zynq_slcr_cpu_stop(int cpu);
+diff -rupN old/linux-4.19/arch/arm/mach-zynq/common.h linux-4.19/arch/arm/mach-zynq/common.h
+--- old/linux-4.19/arch/arm/mach-zynq/common.h
++++ linux-4.19/arch/arm/mach-zynq/common.h
+@@ -23,6 +23,7 @@ extern void zynq_slcr_cpu_stop(int cpu);
  extern void zynq_slcr_cpu_start(int cpu);
  extern bool zynq_slcr_cpu_state_read(int cpu);
  extern void zynq_slcr_cpu_state_write(int cpu, bool die);
@@ -35,7 +35,7 @@ diff -rupN old/linux-5.4/arch/arm/mach-zynq/common.h linux-5.4/arch/arm/mach-zyn
  extern u32 zynq_slcr_get_device_id(void);
  
  #ifdef CONFIG_SMP
-@@ -29,6 +30,22 @@ extern void __iomem *zynq_scu_base;
+@@ -37,6 +38,22 @@ extern void __iomem *zynq_scu_base;
  
  void zynq_pm_late_init(void);
  
@@ -58,9 +58,9 @@ diff -rupN old/linux-5.4/arch/arm/mach-zynq/common.h linux-5.4/arch/arm/mach-zyn
  static inline void zynq_core_pm_init(void)
  {
  	/* A9 clock gating */
-diff -rupN old/linux-5.4/arch/arm/mach-zynq/Kconfig linux-5.4/arch/arm/mach-zynq/Kconfig
---- old/linux-5.4/arch/arm/mach-zynq/Kconfig
-+++ linux-5.4/arch/arm/mach-zynq/Kconfig
+diff -rupN old/linux-4.19/arch/arm/mach-zynq/Kconfig linux-4.19/arch/arm/mach-zynq/Kconfig
+--- old/linux-4.19/arch/arm/mach-zynq/Kconfig
++++ linux-4.19/arch/arm/mach-zynq/Kconfig
 @@ -17,3 +17,19 @@ config ARCH_ZYNQ
  	select SOC_BUS
  	help
@@ -81,54 +81,20 @@ diff -rupN old/linux-5.4/arch/arm/mach-zynq/Kconfig linux-5.4/arch/arm/mach-zynq
 +endmenu
 +
 +endif
-diff -rupN old/linux-5.4/arch/arm/mach-zynq/Makefile linux-5.4/arch/arm/mach-zynq/Makefile
---- old/linux-5.4/arch/arm/mach-zynq/Makefile
-+++ linux-5.4/arch/arm/mach-zynq/Makefile
-@@ -4,5 +4,5 @@
+diff -rupN old/linux-4.19/arch/arm/mach-zynq/Makefile linux-4.19/arch/arm/mach-zynq/Makefile
+--- old/linux-4.19/arch/arm/mach-zynq/Makefile
++++ linux-4.19/arch/arm/mach-zynq/Makefile
+@@ -3,5 +3,5 @@
  #
  
  # Common support
 -obj-y				:= common.o slcr.o pm.o
 +obj-y				:= common.o slcr.o zynq_ocm.o pm.o
  obj-$(CONFIG_SMP)		+= headsmp.o platsmp.o
-diff -rupN old/linux-5.4/arch/arm/mach-zynq/platsmp.c linux-5.4/arch/arm/mach-zynq/platsmp.c
---- old/linux-5.4/arch/arm/mach-zynq/platsmp.c
-+++ linux-5.4/arch/arm/mach-zynq/platsmp.c
-@@ -15,6 +15,7 @@
- #include <linux/init.h>
- #include <linux/io.h>
- #include <asm/cacheflush.h>
-+#include <asm/smp_plat.h>
- #include <asm/smp_scu.h>
- #include <linux/irqchip/arm-gic.h>
- #include "common.h"
-@@ -30,6 +31,7 @@ int zynq_cpun_start(u32 address, int cpu
- {
- 	u32 trampoline_code_size = &zynq_secondary_trampoline_end -
- 						&zynq_secondary_trampoline;
-+	u32 phy_cpuid = cpu_logical_map(cpu);
- 
- 	/* MS: Expectation that SLCR are directly map and accessible */
- 	/* Not possible to jump to non aligned address */
-@@ -39,7 +41,7 @@ int zynq_cpun_start(u32 address, int cpu
- 		u32 trampoline_size = &zynq_secondary_trampoline_jump -
- 						&zynq_secondary_trampoline;
- 
--		zynq_slcr_cpu_stop(cpu);
-+		zynq_slcr_cpu_stop(phy_cpuid);
- 		if (address) {
- 			if (__pa(PAGE_OFFSET)) {
- 				zero = ioremap(0, trampoline_code_size);
-@@ -68,7 +70,7 @@ int zynq_cpun_start(u32 address, int cpu
- 			if (__pa(PAGE_OFFSET))
- 				iounmap(zero);
- 		}
--		zynq_slcr_cpu_start(cpu);
-+		zynq_slcr_cpu_start(phy_cpuid);
- 
- 		return 0;
- 	}
-@@ -113,6 +115,7 @@ static void __init zynq_smp_prepare_cpus
+diff -rupN old/linux-4.19/arch/arm/mach-zynq/platsmp.c linux-4.19/arch/arm/mach-zynq/platsmp.c
+--- old/linux-4.19/arch/arm/mach-zynq/platsmp.c
++++ linux-4.19/arch/arm/mach-zynq/platsmp.c
+@@ -121,6 +121,7 @@ static void __init zynq_smp_prepare_cpus
  static void zynq_secondary_init(unsigned int cpu)
  {
  	zynq_core_pm_init();
@@ -136,10 +102,10 @@ diff -rupN old/linux-5.4/arch/arm/mach-zynq/platsmp.c linux-5.4/arch/arm/mach-zy
  }
  
  #ifdef CONFIG_HOTPLUG_CPU
-diff -rupN old/linux-5.4/arch/arm/mach-zynq/slcr.c linux-5.4/arch/arm/mach-zynq/slcr.c
---- old/linux-5.4/arch/arm/mach-zynq/slcr.c
-+++ linux-5.4/arch/arm/mach-zynq/slcr.c
-@@ -20,6 +20,7 @@
+diff -rupN old/linux-4.19/arch/arm/mach-zynq/slcr.c linux-4.19/arch/arm/mach-zynq/slcr.c
+--- old/linux-4.19/arch/arm/mach-zynq/slcr.c
++++ linux-4.19/arch/arm/mach-zynq/slcr.c
+@@ -29,6 +29,7 @@
  #define SLCR_REBOOT_STATUS_OFFSET	0x258 /* PS Reboot Status */
  #define SLCR_PSS_IDCODE			0x530 /* PS IDCODE */
  #define SLCR_L2C_RAM			0xA1C /* L2C_RAM in AR#54190 */
@@ -147,7 +113,7 @@ diff -rupN old/linux-5.4/arch/arm/mach-zynq/slcr.c linux-5.4/arch/arm/mach-zynq/
  
  #define SLCR_UNLOCK_MAGIC		0xDF0D
  #define SLCR_A9_CPU_CLKSTOP		0x10
-@@ -116,6 +117,19 @@ static struct notifier_block zynq_slcr_r
+@@ -125,6 +126,19 @@ static struct notifier_block zynq_slcr_r
  };
  
  /**
@@ -167,37 +133,35 @@ diff -rupN old/linux-5.4/arch/arm/mach-zynq/slcr.c linux-5.4/arch/arm/mach-zynq/
   * zynq_slcr_cpu_start - Start cpu
   * @cpu:	cpu number
   */
-diff -rupN old/linux-5.4/drivers/char/Kconfig linux-5.4/drivers/char/Kconfig
---- old/linux-5.4/drivers/char/Kconfig
-+++ linux-5.4/drivers/char/Kconfig
-@@ -535,6 +535,14 @@ config ADI
+diff -rupN old/linux-4.19/drivers/char/Kconfig linux-4.19/drivers/char/Kconfig
+--- old/linux-4.19/drivers/char/Kconfig
++++ linux-4.19/drivers/char/Kconfig
+@@ -552,6 +552,13 @@ config ADI
  	  and SSM (Silicon Secured Memory).  Intended consumers of this
  	  driver include crash and makedumpfile.
  
-+config DEVCMA
-+	bool "/dev/cma virtual device support"
-+	default y
-+
 +config XILINX_DEVCFG
 +	tristate "Xilinx Device Configuration"
 +	depends on ARCH_ZYNQ
++	help
++	  This option enables support for the Xilinx device configuration driver.
++	  If unsure, say N
 +
  endmenu
  
  config RANDOM_TRUST_CPU
-diff -rupN old/linux-5.4/drivers/char/Makefile linux-5.4/drivers/char/Makefile
---- old/linux-5.4/drivers/char/Makefile
-+++ linux-5.4/drivers/char/Makefile
-@@ -52,3 +52,5 @@ js-rtc-y = rtc.o
+diff -rupN old/linux-4.19/drivers/char/Makefile linux-4.19/drivers/char/Makefile
+--- old/linux-4.19/drivers/char/Makefile
++++ linux-4.19/drivers/char/Makefile
+@@ -58,3 +58,4 @@ js-rtc-y = rtc.o
  obj-$(CONFIG_XILLYBUS)		+= xillybus/
  obj-$(CONFIG_POWERNV_OP_PANEL)	+= powernv-op-panel.o
  obj-$(CONFIG_ADI)		+= adi.o
-+obj-$(CONFIG_DEVCMA)		+= cma.o
 +obj-$(CONFIG_XILINX_DEVCFG)	+= xilinx_devcfg.o
-diff -rupN old/linux-5.4/drivers/net/phy/intel-xway.c linux-5.4/drivers/net/phy/intel-xway.c
---- old/linux-5.4/drivers/net/phy/intel-xway.c
-+++ linux-5.4/drivers/net/phy/intel-xway.c
-@@ -159,6 +159,12 @@ static int xway_gphy_config_init(struct
+diff -rupN old/linux-4.19/drivers/net/phy/intel-xway.c linux-4.19/drivers/net/phy/intel-xway.c
+--- old/linux-4.19/drivers/net/phy/intel-xway.c
++++ linux-4.19/drivers/net/phy/intel-xway.c
+@@ -168,6 +168,12 @@ static int xway_gphy_config_init(struct
  	/* Clear all pending interrupts */
  	phy_read(phydev, XWAY_MDIO_ISTAT);
  
@@ -210,7 +174,7 @@ diff -rupN old/linux-5.4/drivers/net/phy/intel-xway.c linux-5.4/drivers/net/phy/
  	phy_write_mmd(phydev, MDIO_MMD_VEND2, XWAY_MMD_LEDCH,
  		      XWAY_MMD_LEDCH_NACS_NONE |
  		      XWAY_MMD_LEDCH_SBF_F02HZ |
-@@ -168,20 +174,16 @@ static int xway_gphy_config_init(struct
+@@ -177,20 +183,16 @@ static int xway_gphy_config_init(struct
  		      XWAY_MMD_LEDCH_SCAN_NONE);
  
  	/**
@@ -237,36 +201,47 @@ diff -rupN old/linux-5.4/drivers/net/phy/intel-xway.c linux-5.4/drivers/net/phy/
  
  	return 0;
  }
-diff -rupN old/linux-5.4/drivers/net/wireless/realtek/Kconfig linux-5.4/drivers/net/wireless/realtek/Kconfig
---- old/linux-5.4/drivers/net/wireless/realtek/Kconfig
-+++ linux-5.4/drivers/net/wireless/realtek/Kconfig
-@@ -13,8 +13,9 @@ config WLAN_VENDOR_REALTEK
+diff -rupN old/linux-4.19/drivers/net/wireless/realtek/Kconfig linux-4.19/drivers/net/wireless/realtek/Kconfig
+--- old/linux-4.19/drivers/net/wireless/realtek/Kconfig
++++ linux-4.19/drivers/net/wireless/realtek/Kconfig
+@@ -12,7 +12,7 @@ config WLAN_VENDOR_REALTEK
  if WLAN_VENDOR_REALTEK
  
  source "drivers/net/wireless/realtek/rtl818x/Kconfig"
 -source "drivers/net/wireless/realtek/rtlwifi/Kconfig"
- source "drivers/net/wireless/realtek/rtl8xxxu/Kconfig"
- source "drivers/net/wireless/realtek/rtw88/Kconfig"
+-source "drivers/net/wireless/realtek/rtl8xxxu/Kconfig"
 +source "drivers/net/wireless/realtek/rtl8188eu/Kconfig"
 +source "drivers/net/wireless/realtek/rtl8192cu/Kconfig"
  
  endif # WLAN_VENDOR_REALTEK
-diff -rupN old/linux-5.4/drivers/net/wireless/realtek/Makefile linux-5.4/drivers/net/wireless/realtek/Makefile
---- old/linux-5.4/drivers/net/wireless/realtek/Makefile
-+++ linux-5.4/drivers/net/wireless/realtek/Makefile
-@@ -5,7 +5,8 @@
+diff -rupN old/linux-4.19/drivers/net/wireless/realtek/Makefile linux-4.19/drivers/net/wireless/realtek/Makefile
+--- old/linux-4.19/drivers/net/wireless/realtek/Makefile
++++ linux-4.19/drivers/net/wireless/realtek/Makefile
+@@ -4,6 +4,6 @@
  
  obj-$(CONFIG_RTL8180)		+= rtl818x/
  obj-$(CONFIG_RTL8187)		+= rtl818x/
 -obj-$(CONFIG_RTLWIFI)		+= rtlwifi/
- obj-$(CONFIG_RTL8XXXU)		+= rtl8xxxu/
- obj-$(CONFIG_RTW88)		+= rtw88/
+-obj-$(CONFIG_RTL8XXXU)		+= rtl8xxxu/
 +obj-$(CONFIG_RTL8188EU)		+= rtl8188eu/
 +obj-$(CONFIG_RTL8192CU)		+= rtl8192cu/
  
-diff -rupN old/linux-5.4/drivers/net/wireless/realtek/rtl8192cu/Kconfig linux-5.4/drivers/net/wireless/realtek/rtl8192cu/Kconfig
---- old/linux-5.4/drivers/net/wireless/realtek/rtl8192cu/Kconfig
-+++ linux-5.4/drivers/net/wireless/realtek/rtl8192cu/Kconfig
+diff -rupN old/linux-4.19/drivers/net/wireless/realtek/rtl8188eu/Kconfig linux-4.19/drivers/net/wireless/realtek/rtl8188eu/Kconfig
+--- old/linux-4.19/drivers/net/wireless/realtek/rtl8188eu/Kconfig
++++ linux-4.19/drivers/net/wireless/realtek/rtl8188eu/Kconfig
+@@ -0,0 +1,9 @@
++config RTL8188EU
++	tristate "Realtek 8188EU USB WiFi"
++	depends on MAC80211 && USB
++	select CFG80211_WEXT
++	select WIRELESS_EXT
++	select WEXT_PRIV
++	---help---
++	  This option adds the Realtek RTL8188EU USB device.
++
+diff -rupN old/linux-4.19/drivers/net/wireless/realtek/rtl8192cu/Kconfig linux-4.19/drivers/net/wireless/realtek/rtl8192cu/Kconfig
+--- old/linux-4.19/drivers/net/wireless/realtek/rtl8192cu/Kconfig
++++ linux-4.19/drivers/net/wireless/realtek/rtl8192cu/Kconfig
 @@ -0,0 +1,9 @@
 +config RTL8192CU
 +	tristate "Realtek 8192CU USB WiFi"
@@ -277,21 +252,21 @@ diff -rupN old/linux-5.4/drivers/net/wireless/realtek/rtl8192cu/Kconfig linux-5.
 +	---help---
 +	  This option adds the Realtek RTL8192CU USB device.
 +
-diff -rupN old/linux-5.4/drivers/pps/clients/pps-gpio.c linux-5.4/drivers/pps/clients/pps-gpio.c
---- old/linux-5.4/drivers/pps/clients/pps-gpio.c
-+++ linux-5.4/drivers/pps/clients/pps-gpio.c
-@@ -145,6 +145,8 @@ static int pps_gpio_setup(struct platfor
+diff -rupN old/linux-4.19/drivers/pps/clients/pps-gpio.c linux-4.19/drivers/pps/clients/pps-gpio.c
+--- old/linux-4.19/drivers/pps/clients/pps-gpio.c
++++ linux-4.19/drivers/pps/clients/pps-gpio.c
+@@ -119,6 +119,8 @@ static int pps_gpio_probe(struct platfor
  
- 	if (of_property_read_bool(np, "assert-falling-edge"))
- 		data->assert_falling_edge = true;
-+	if (of_get_property(np, "capture-clear", NULL))
-+		data->capture_clear = true;
- 	return 0;
- }
+ 		if (of_get_property(np, "assert-falling-edge", NULL))
+ 			data->assert_falling_edge = true;
++		if (of_get_property(np, "capture-clear", NULL))
++			data->capture_clear = true;
+ 	}
  
-diff -rupN old/linux-5.4/drivers/usb/chipidea/ci_hdrc_usb2.c linux-5.4/drivers/usb/chipidea/ci_hdrc_usb2.c
---- old/linux-5.4/drivers/usb/chipidea/ci_hdrc_usb2.c
-+++ linux-5.4/drivers/usb/chipidea/ci_hdrc_usb2.c
+ 	/* GPIO setup */
+diff -rupN old/linux-4.19/drivers/usb/chipidea/ci_hdrc_usb2.c linux-4.19/drivers/usb/chipidea/ci_hdrc_usb2.c
+--- old/linux-4.19/drivers/usb/chipidea/ci_hdrc_usb2.c
++++ linux-4.19/drivers/usb/chipidea/ci_hdrc_usb2.c
 @@ -30,6 +30,7 @@ static const struct ci_hdrc_platform_dat
  
  static struct ci_hdrc_platform_data ci_zynq_pdata = {
@@ -310,11 +285,11 @@ diff -rupN old/linux-5.4/drivers/usb/chipidea/ci_hdrc_usb2.c linux-5.4/drivers/u
  	}
  
  	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
-diff -rupN old/linux-5.4/drivers/usb/chipidea/host.c linux-5.4/drivers/usb/chipidea/host.c
---- old/linux-5.4/drivers/usb/chipidea/host.c
-+++ linux-5.4/drivers/usb/chipidea/host.c
-@@ -57,6 +57,14 @@ static int ehci_ci_portpower(struct usb_
- 		priv->enabled = enable;
+diff -rupN old/linux-4.19/drivers/usb/chipidea/host.c linux-4.19/drivers/usb/chipidea/host.c
+--- old/linux-4.19/drivers/usb/chipidea/host.c
++++ linux-4.19/drivers/usb/chipidea/host.c
+@@ -54,6 +54,14 @@ static int ehci_ci_portpower(struct usb_
+ 		}
  	}
  
 +	if (ci->platdata->flags & CI_HDRC_PHY_VBUS_CONTROL &&
@@ -328,9 +303,9 @@ diff -rupN old/linux-5.4/drivers/usb/chipidea/host.c linux-5.4/drivers/usb/chipi
  	if (enable && (ci->platdata->phy_mode == USBPHY_INTERFACE_MODE_HSIC)) {
  		/*
  		 * Marvell 28nm HSIC PHY requires forcing the port to HS mode.
-diff -rupN old/linux-5.4/drivers/usb/chipidea/otg_fsm.c linux-5.4/drivers/usb/chipidea/otg_fsm.c
---- old/linux-5.4/drivers/usb/chipidea/otg_fsm.c
-+++ linux-5.4/drivers/usb/chipidea/otg_fsm.c
+diff -rupN old/linux-4.19/drivers/usb/chipidea/otg_fsm.c linux-4.19/drivers/usb/chipidea/otg_fsm.c
+--- old/linux-4.19/drivers/usb/chipidea/otg_fsm.c
++++ linux-4.19/drivers/usb/chipidea/otg_fsm.c
 @@ -471,6 +471,11 @@ static void ci_otg_drv_vbus(struct otg_f
  				return;
  			}
@@ -354,9 +329,9 @@ diff -rupN old/linux-5.4/drivers/usb/chipidea/otg_fsm.c linux-5.4/drivers/usb/ch
  		fsm->a_bus_drop = 1;
  		fsm->a_bus_req = 0;
  	}
-diff -rupN old/linux-5.4/drivers/usb/phy/phy-ulpi.c linux-5.4/drivers/usb/phy/phy-ulpi.c
---- old/linux-5.4/drivers/usb/phy/phy-ulpi.c
-+++ linux-5.4/drivers/usb/phy/phy-ulpi.c
+diff -rupN old/linux-4.19/drivers/usb/phy/phy-ulpi.c linux-4.19/drivers/usb/phy/phy-ulpi.c
+--- old/linux-4.19/drivers/usb/phy/phy-ulpi.c
++++ linux-4.19/drivers/usb/phy/phy-ulpi.c
 @@ -13,9 +13,16 @@
  #include <linux/kernel.h>
  #include <linux/slab.h>
@@ -420,7 +395,7 @@ diff -rupN old/linux-5.4/drivers/usb/phy/phy-ulpi.c linux-5.4/drivers/usb/phy/ph
  
  	otg->usb_phy	= phy;
  	otg->set_host	= ulpi_set_host;
-@@ -271,3 +303,82 @@ otg_ulpi_create(struct usb_phy_io_ops *o
+@@ -271,3 +303,70 @@ otg_ulpi_create(struct usb_phy_io_ops *o
  }
  EXPORT_SYMBOL_GPL(otg_ulpi_create);
  
@@ -437,23 +412,11 @@ diff -rupN old/linux-5.4/drivers/usb/phy/phy-ulpi.c linux-5.4/drivers/usb/phy/ph
 +		return -ENOMEM;
 +
 +	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!res) {
-+		dev_err(&pdev->dev, "no phy I/O memory resource defined\n");
-+		return -ENODEV;
-+	}
-+
 +	uphy->regs = devm_ioremap(&pdev->dev, res->start, resource_size(res));
-+	if (!uphy->regs) {
-+		dev_err(&pdev->dev, "failed to map phy I/O memory\n");
-+		return -EFAULT;
-+	}
-+
 +	if (IS_ERR(uphy->regs))
 +		return PTR_ERR(uphy->regs);
 +
-+	if (of_property_read_u32(np, "view-port", &uphy->vp_offset))
-+		dev_dbg(&pdev->dev, "Missing view-port property\n");
-+
++	ret = of_property_read_u32(np, "view-port", &uphy->vp_offset);
 +	if (IS_ERR(uphy->regs)) {
 +		dev_err(&pdev->dev, "view-port register not specified\n");
 +		return PTR_ERR(uphy->regs);
@@ -503,14 +466,14 @@ diff -rupN old/linux-5.4/drivers/usb/phy/phy-ulpi.c linux-5.4/drivers/usb/phy/ph
 +
 +MODULE_DESCRIPTION("ULPI PHY driver");
 +MODULE_LICENSE("GPL v2");
-diff -rupN old/linux-5.4/include/linux/usb/chipidea.h linux-5.4/include/linux/usb/chipidea.h
---- old/linux-5.4/include/linux/usb/chipidea.h
-+++ linux-5.4/include/linux/usb/chipidea.h
-@@ -62,6 +62,7 @@ struct ci_hdrc_platform_data {
+diff -rupN old/linux-4.19/include/linux/usb/chipidea.h linux-4.19/include/linux/usb/chipidea.h
+--- old/linux-4.19/include/linux/usb/chipidea.h
++++ linux-4.19/include/linux/usb/chipidea.h
+@@ -60,6 +60,7 @@ struct ci_hdrc_platform_data {
+ #define CI_HDRC_OVERRIDE_RX_BURST	BIT(11)
+ #define CI_HDRC_OVERRIDE_PHY_CONTROL	BIT(12) /* Glue layer manages phy */
  #define CI_HDRC_REQUIRES_ALIGNED_DMA	BIT(13)
- #define CI_HDRC_IMX_IS_HSIC		BIT(14)
- #define CI_HDRC_PMQOS			BIT(15)
-+#define CI_HDRC_PHY_VBUS_CONTROL	BIT(16)
++#define CI_HDRC_PHY_VBUS_CONTROL	BIT(14)
  	enum usb_dr_mode	dr_mode;
  #define CI_HDRC_CONTROLLER_RESET_EVENT		0
  #define CI_HDRC_CONTROLLER_STOPPED_EVENT	1

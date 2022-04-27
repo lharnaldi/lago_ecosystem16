@@ -242,7 +242,7 @@ diff -rupN old/linux-5.10/drivers/net/wireless/realtek/rtl8188eu/Kconfig linux-5
  	  Help message of RTL8188EU
  
 diff -rupN old/linux-5.10/drivers/net/wireless/realtek/rtl8192cu/Kconfig linux-5.10/drivers/net/wireless/realtek/rtl8192cu/Kconfig
---- old/linux-5.10/drivers/net/wireless/realtek/rtl8192cu/Kconfig	1970-01-01 00:00:00.000000000 +0000
+--- old/linux-5.10/drivers/net/wireless/realtek/rtl8192cu/Kconfig
 +++ linux-5.10/drivers/net/wireless/realtek/rtl8192cu/Kconfig
 @@ -0,0 +1,9 @@
 +config RTL8192CU
@@ -492,3 +492,15 @@ diff -rupN old/linux-5.10/include/linux/usb/chipidea.h linux-5.10/include/linux/
  	enum usb_dr_mode	dr_mode;
  #define CI_HDRC_CONTROLLER_RESET_EVENT		0
  #define CI_HDRC_CONTROLLER_STOPPED_EVENT	1
+diff -rupN old/linux-5.10/scripts/gcc-plugins/Kconfig linux-5.10/scripts/gcc-plugins/Kconfig
+--- old/linux-5.10/scripts/gcc-plugins/Kconfig
++++ linux-5.10/scripts/gcc-plugins/Kconfig
+@@ -9,7 +9,7 @@ menuconfig GCC_PLUGINS
+ 	bool "GCC plugins"
+ 	depends on HAVE_GCC_PLUGINS
+ 	depends on CC_IS_GCC
+-	depends on $(success,test -e $(shell,$(CC) -print-file-name=plugin)/include/plugin-version.h)
++	depends on $(success,test -e $(shell,$(HOSTCC) -print-file-name=plugin)/include/plugin-version.h)
+ 	default y
+ 	help
+ 	  GCC plugins are loadable modules that provide extra features to the

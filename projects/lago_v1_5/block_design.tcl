@@ -1,11 +1,5 @@
 source projects/base_system/block_design.tcl
 
-# Create all required interconnections
-apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {
-  make_external {FIXED_IO, DDR}
-  Master Disable
-  Slave Disable
-} [get_bd_cells ps_0]
 
 # Create xlconstant
 cell xilinx.com:ip:xlconstant const_0
@@ -14,6 +8,9 @@ cell xilinx.com:ip:xlconstant const_0
 cell xilinx.com:ip:proc_sys_reset rst_0 {} {
   ext_reset_in const_0/dout
 }
+
+#Enable interrupts
+set_property -dict [list CONFIG.PCW_USE_FABRIC_INTERRUPT {1} CONFIG.PCW_IRQ_F2P_INTR {1}] [get_bd_cells ps_0]
 
 # Create axis_rp_adc
 cell labdpr:user:axis_rp_adc adc_0 {
@@ -24,9 +21,6 @@ cell labdpr:user:axis_rp_adc adc_0 {
   adc_dat_b adc_dat_b_i
   adc_csn adc_csn_o
 }
-
-#Enable interrupts
-set_property -dict [list CONFIG.PCW_USE_FABRIC_INTERRUPT {1} CONFIG.PCW_IRQ_F2P_INTR {1}] [get_bd_cells ps_0]
 
 # Delete input/output port
 delete_bd_objs [get_bd_ports exp_p_tri_io]

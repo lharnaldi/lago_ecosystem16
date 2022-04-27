@@ -1,11 +1,5 @@
 source projects/base_system/block_design.tcl
 
-# Create all required interconnections
-apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {
-  make_external {FIXED_IO, DDR}
-  Master Disable
-  Slave Disable
-} [get_bd_cells ps_0]
 
 # Create xlconstant
 cell xilinx.com:ip:xlconstant const_0
@@ -27,7 +21,6 @@ create_bd_port -dir I -from 7 -to 7 exp_n_tri_io
 create_bd_port -dir O -from 7 -to 7 exp_p_tri_io
 create_bd_port -dir I -from 0 -to 0 ext_resetn
 
-
 # Create axis_rp_adc
 cell labdpr:user:axis_rp_adc adc_0 {
   ADC_DATA_WIDTH 14
@@ -46,14 +39,14 @@ cell labdpr:user:axi_cfg_register cfg_0 {
 }
 
 #Create concatenator
-cell xilinx.com:ip:xlconcat xlconcat_0 {
+cell xilinx.com:ip:xlconcat concat_0 {
   NUM_PORTS 6
 } {
   dout led_o
 }
 
 #Create concatenator
-cell xilinx.com:ip:xlconcat xlconcat_1 {
+cell xilinx.com:ip:xlconcat concat_1 {
   NUM_PORTS 4
 } {
   dout dac_pwm_o
@@ -226,8 +219,8 @@ module fadc_0 {
 	pps_0/gpsen_i gpsen/Dout
   pps_0/pps_i exp_n_tri_io
   pps_0/pps_sig_o exp_p_tri_io
-  pps_0/pps_gps_led_o xlconcat_0/In0
-  pps_0/false_pps_led_o xlconcat_0/In1
+  pps_0/pps_gps_led_o concat_0/In0
+  pps_0/false_pps_led_o concat_0/In1
 }
 
 #Now all related to the DAC PWM
@@ -269,23 +262,23 @@ cell labdpr:user:port_slicer cfg_dac_pwm_3 {
 module slow_dac_0 {
   source projects/lago_v1_3/slow_dac.tcl
 } {
-	gen_0/pwm_o	xlconcat_1/In0
-	gen_0/led_o xlconcat_0/In2
+	gen_0/pwm_o	concat_1/In0
+	gen_0/led_o concat_0/In2
 	gen_0/data_i cfg_dac_pwm_0/Dout
-	gen_1/pwm_o	xlconcat_1/In1
-	gen_1/led_o xlconcat_0/In3
+	gen_1/pwm_o	concat_1/In1
+	gen_1/led_o concat_0/In3
 	gen_1/data_i cfg_dac_pwm_1/Dout
-	gen_2/pwm_o	xlconcat_1/In2
-	gen_2/led_o xlconcat_0/In4
+	gen_2/pwm_o	concat_1/In2
+	gen_2/led_o concat_0/In4
 	gen_2/data_i cfg_dac_pwm_2/Dout
-	gen_3/pwm_o	xlconcat_1/In3
-	gen_3/led_o xlconcat_0/In5
+	gen_3/pwm_o	concat_1/In3
+	gen_3/led_o concat_0/In5
 	gen_3/data_i cfg_dac_pwm_3/Dout
 }
 
 #XADC related
 # Create xadc
-cell xilinx.com:ip:xadc_wiz:3.3 xadc_wiz_0 {
+cell xilinx.com:ip:xadc_wiz xadc_wiz_0 {
 	DCLK_FREQUENCY 125
 	ADC_CONVERSION_RATE 500
   XADC_STARUP_SELECTION channel_sequencer
@@ -322,14 +315,7 @@ connect_bd_intf_net [get_bd_intf_ports Vaux1] [get_bd_intf_pins xadc_wiz_0/Vaux1
 connect_bd_intf_net [get_bd_intf_ports Vaux8] [get_bd_intf_pins xadc_wiz_0/Vaux8]
 connect_bd_intf_net [get_bd_intf_ports Vaux9] [get_bd_intf_pins xadc_wiz_0/Vaux9]
 
-# Create all required interconnections
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {
-  Master /ps_0/M_AXI_GP0
-  Clk Auto
-} [get_bd_intf_pins axi_intc_0/s_axi]
-
-set_property RANGE 4K [get_bd_addr_segs ps_0/Data/SEG_axi_intc_0_Reg]
-set_property OFFSET 0x40000000 [get_bd_addr_segs ps_0/Data/SEG_axi_intc_0_Reg]
+addr 0x40000000 4K axi_intc_0/S_AXI /ps_0/M_AXI_GP0
 
 addr 0x40001000 4K cfg_0/S_AXI /ps_0/M_AXI_GP0
 

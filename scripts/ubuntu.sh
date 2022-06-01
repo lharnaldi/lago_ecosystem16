@@ -4,9 +4,9 @@ boot_dir=`mktemp -d /tmp/BOOT.XXXXXXXXXX`
 root_dir=`mktemp -d /tmp/ROOT.XXXXXXXXXX`
 
 linux_dir=tmp/linux-5.10
-linux_ver=5.10.46-xilinx
+linux_ver=5.10.107-xilinx
 
-root_tar=ubuntu-base-20.04.2-base-armhf.tar.gz
+root_tar=ubuntu-base-20.04.4-base-armhf.tar.gz
 root_url=http://cdimage.ubuntu.com/ubuntu-base/releases/20.04/release/$root_tar
 
 passwd=escondido

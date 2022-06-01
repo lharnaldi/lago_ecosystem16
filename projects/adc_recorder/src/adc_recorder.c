@@ -75,8 +75,8 @@ int main(int argc, char *argv[])
 
 	// print IN1 and IN2 samples
 	for(i = 0; i < 1024 * 1024; ++i){
-		ch[0] = *((int16_t *)(cma_ptr + 2*i + 0));
-		ch[1] = *((int16_t *)(cma_ptr + 2*i + 2));
+		ch[0] = cma_ptr[2*i + 0];
+		ch[1] = cma_ptr[2*i + 2];
 		wo = *((uint32_t *)(cma_ptr + i));
 		printf("%5d %5d %10d\n", ch[0], ch[1], wo);
 //		ch[0] = cma_ptr[2 * i + 0];

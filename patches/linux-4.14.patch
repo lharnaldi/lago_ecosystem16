@@ -365,3 +365,27 @@ diff -rupN old/linux-4.14/include/linux/usb/chipidea.h linux-4.14/include/linux/
  	enum usb_dr_mode	dr_mode;
  #define CI_HDRC_CONTROLLER_RESET_EVENT		0
  #define CI_HDRC_CONTROLLER_STOPPED_EVENT	1
+ diff -rupN old/linux-4.14/scripts/dtc/dtc-lexer.l linux-4.14/scripts/dtc/dtc-lexer.l
+--- old/linux-4.14/scripts/dtc/dtc-lexer.l	2023-05-23 05:03:24.517404828 -0300
++++ linux-4.14/scripts/dtc/dtc-lexer.l	2023-05-23 05:07:44.331033841 -0300
+@@ -38,7 +38,7 @@ LINECOMMENT	"//".*\n
+ #include "srcpos.h"
+ #include "dtc-parser.tab.h"
+
+-YYLTYPE yylloc;
++extern YYLTYPE yylloc;
+ extern bool treesource_error;
+
+ /* CAUTION: this will stop working if we ever use yyless() or yyunput() */
+diff -rupN old/linux-4.14/scripts/dtc/dtc-lexer.lex.c_shipped linux-4.14/scripts/dtc/dtc-lexer.lex.c_shipped 
+--- old/linux-4.14/scripts/dtc/dtc-lexer.lex.c_shipped	2023-05-23 05:27:10.659451375 -0300
++++ linux-4.14/scripts/dtc/dtc-lexer.lex.c_shipped	2023-05-23 05:27:35.163654345 -0300
+@@ -631,7 +631,7 @@ char *yytext;
+ #include "srcpos.h"
+ #include "dtc-parser.tab.h"
+ 
+-YYLTYPE yylloc;
++extern YYLTYPE yylloc;
+ extern bool treesource_error;
+ 
+ /* CAUTION: this will stop working if we ever use yyless() or yyunput() */
